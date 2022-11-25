@@ -1,9 +1,14 @@
 fastapi==0.63.0
 uvicorn==0.14.0
 pydantic==1.9.0
+ujson==5.1.0
+
 
 web3~=5.30.0
 tenacity~=7.0.0
+requests~=2.25.1
+urllib3~=1.26.5
+
 
 # logging
 elastic-apm~=6.9.1

@@ -8,21 +8,21 @@ from fastapi import FastAPI, Request, Response
 from starlette.datastructures import Headers
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import Scope, Receive, Send
+
 from utils.logger import get_logger, set_correlation_id, set_session_id
 
 
 class RouteLoggerMiddleware(BaseHTTPMiddleware):
-
-    _cid_header: str = 'x-request-id'   # request correlation key header name
-    _sid_header: str = 'x-session-id'   # session correlation key header name
+    _cid_header: str = 'x-request-id'  # request correlation key header name
+    _sid_header: str = 'x-session-id'  # session correlation key header name
     _cfray_header: str = 'cf-ray'
 
     def __init__(
-        self,
-        app: FastAPI,
-        *,
-        logger: typing.Optional[logging.Logger] = None,
-        skip_routes: typing.List[str] = None,
+            self,
+            app: FastAPI,
+            *,
+            logger: typing.Optional[logging.Logger] = None,
+            skip_routes: typing.List[str] = None,
     ):
         self._logger = logger or get_logger(__name__)
         self._skip_routes = skip_routes or []
@@ -59,7 +59,7 @@ class RouteLoggerMiddleware(BaseHTTPMiddleware):
         )
 
     async def _execute_request_with_logging(
-        self, request: Request, call_next: Callable
+            self, request: Request, call_next: Callable
     ) -> Response:
         start_time = time.perf_counter()
 

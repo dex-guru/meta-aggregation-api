@@ -91,6 +91,24 @@ class CustomContextLogger(LoggerAdapter):
         return session_id.get()
 
 
+class LogArgs:
+    # Log arguments defined in this class are kept for backward compatibility.
+    chain_id = "chain_id"  # blockchain identifier
+    token = "token"  # ERC20Token details
+    token_address = "token_address"
+    token_finances = "token_finances",  # token address to token finance map
+    token_finances_list = "token_finances_list"
+    token_idx = "token_idx"
+    msg = "msg"  # async message details
+    web3_url = "web3_url"
+    error_count = "error_count"
+    errors_list = "errors_list"
+    ex = "ex"  # human readable exception description
+    ex_trace = "ex_trace"  # exception trace
+    model_name = "model_name"
+    aggregation_provider = "aggregation_provider"  # meta aggregation provider
+
+
 def get_logger(name: str, extra: Optional[dict] = None, corr_id: Optional[str] = None) -> "CustomContextLogger":
     dictConfig(CONFIG)
 
