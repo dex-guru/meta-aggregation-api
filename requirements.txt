@@ -1,0 +1,13 @@
+fastapi==0.63.0
+web3~=5.30.0
+pydantic==1.9.0
+elastic-apm~=6.9.1
+python-logstash-async
+logstash_formatter
+tenacity~=7.0.0
+
+
+# testing
+pytest==6.2.4
+pytest-cov
+pytest-asyncio==0.15.1

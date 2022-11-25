@@ -1,0 +1,25 @@
+# Python
+venv
+.venv/
+.cache
+.env
+.tox
+__pycache__
+*.py[co]
+.coverage
+.pytest_cache
+
+# data
+seed_data
+
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+es_logs
+db/*
