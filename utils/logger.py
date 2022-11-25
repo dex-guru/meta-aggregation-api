@@ -95,8 +95,7 @@ def get_logger(name: str, extra: Optional[dict] = None, corr_id: Optional[str] =
     dictConfig(CONFIG)
 
     extra = extra or {}
-    if config.CHAIN_ID and CHAIN_ID not in extra:
-        extra[CHAIN_ID] = config.CHAIN_ID
+
     if config.PIPELINE and PIPELINE not in extra:
         extra[PIPELINE] = config.PIPELINE
 

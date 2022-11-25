@@ -6,6 +6,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from api.middlewares import RouteLoggerMiddleware
+from api.routes.rpc import v1_rpc
 from config import Config
 from utils.httputils import setup_client_session, teardown_client_session
 from utils.logger import get_logger
@@ -62,7 +63,7 @@ def create_app(config: Config):
     async def shutdown_event():
         await teardown_client_session()
 
-    @app.get("/health_check")
+    @app.get("/health_check", include_in_schema=False)
     def health_check():
         """
         Health check
@@ -116,5 +117,4 @@ def register_elastic_apm(app: FastAPI):
 
 
 def register_route(app: FastAPI):
-    # app.include_router(meta_aggregation_router, prefix="", tags=["Meta Aggregation"])
-    pass
+    app.include_router(v1_rpc, prefix="", tags=["RPC Requests"])
