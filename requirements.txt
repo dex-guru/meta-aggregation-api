@@ -1,11 +1,14 @@
 fastapi==0.63.0
-web3~=5.30.0
+uvicorn==0.14.0
 pydantic==1.9.0
+
+web3~=5.30.0
+tenacity~=7.0.0
+
+# logging
 elastic-apm~=6.9.1
 python-logstash-async
 logstash_formatter
-tenacity~=7.0.0
-
 
 # testing
 pytest==6.2.4
