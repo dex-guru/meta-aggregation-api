@@ -6,16 +6,15 @@ from logging import DEBUG as LOG_DEBUG
 from typing import Optional, Union, List, Dict
 
 from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
-from clients.proxy.api_providers.base_provider import BaseProvider
-from clients.proxy.base import SwapQuoteResponse, SwapPriceResponse
 from dexguru_utils import get_chain_id_by_network
 from dexguru_utils.enums import NetworkChoices, NativeTokenAddresses, AggregationProviderChoices
 from pydantic import ValidationError
-from services.erc20_tokens_service import ERC20TokensService
-from services.models.meta_aggregation import SwapSources
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, before_log
 
 from config import config
+from models.meta_aggregation_models import SwapQuoteResponse, SwapPriceResponse
+from models.meta_aggregation_models import SwapSources
+from provider_clients.base_provider import BaseProvider
 from utils.errors import EstimationError, AggregationProviderError, InsufficientLiquidityError, UserBalanceError, \
     AllowanceError, TokensError
 from utils.logger import get_logger, LogArgs
@@ -30,7 +29,7 @@ ONE_INCH_ERRORS = {
     'fromtokenaddress cannot be equals to totokenaddress': TokensError,
     'not enough \w+ balance': UserBalanceError,
     'not enough allowance': AllowanceError,
-    'cannot sync \w': TokensError,
+    'cannot sync \w+': TokensError,
 }
 
 MAX_RESULT_PRESET = {
@@ -150,7 +149,7 @@ class OneInchProvider(BaseProvider):
             query['statuses'] = statuses
         try:
             response = await self.get_response(url, query)
-        except (ClientResponseError, TimeoutError, ServerDisconnectedError) as e:
+        except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
             e = self.handle_exception(e, url=url, params=query, wallet=trader)
             raise e
         return response
@@ -202,9 +201,9 @@ class OneInchProvider(BaseProvider):
         except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
             e = self.handle_exception(e, params=query, token_address=sell_token, network=network)
             raise e
-        price = await self.calculate_price_from_amounts(
-            network, buy_token, sell_token, response['toTokenAmount'], response['fromTokenAmount'],
-        )
+        sell_amount = int(sell_amount) / 10 ** response['fromToken'].decimals
+        buy_amount = int(response['toTokenAmount']) / 10 ** response['toToken'].decimals
+        price = buy_amount / sell_amount
         value = '0'
         if sell_token.lower() == config.NATIVE_TOKEN_ADDRESS:
             value = str(sell_amount)
@@ -282,9 +281,9 @@ class OneInchProvider(BaseProvider):
         except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
             exc = self.handle_exception(e, params=query, token_address=sell_token, network=network)
             raise exc
-        price = await self.calculate_price_from_amounts(
-            network, buy_token, sell_token, response['toTokenAmount'], response['fromTokenAmount'],
-        )
+        sell_amount = int(sell_amount) / 10 ** response['fromToken']['decimals']
+        buy_amount = int(response['toTokenAmount']) / 10 ** response['toToken']['decimals']
+        price = buy_amount / sell_amount
         return self._convert_response_from_swap_quote(response, price, url=url, query=query)
 
     def _convert_response_from_swap_quote(
@@ -325,30 +324,6 @@ class OneInchProvider(BaseProvider):
             sources.append(SwapSources(name=source['name'], proportion=source['part']))
         quote.sources = sources
         return quote
-
-    async def calculate_price_from_amounts(
-            self,
-            network: NetworkChoices,
-            buy_token_address: str,
-            sell_token_address: str,
-            buy_amount: int,
-            sell_amount: int,
-    ):
-        if sell_token_address.lower() == config.NATIVE_TOKEN_ADDRESS:
-            sell_token_address = NativeTokenAddresses[network].value
-        if buy_token_address.lower() == config.NATIVE_TOKEN_ADDRESS:
-            buy_token_address = NativeTokenAddresses[network].value
-
-        buy_erc20_token, sell_erc20_token = await asyncio.gather(
-            self.erc20_token_inventory.get_erc20_token_by_address_network(buy_token_address.lower(), network),
-            self.erc20_token_inventory.get_erc20_token_by_address_network(sell_token_address.lower(), network),
-        )
-        if buy_erc20_token and sell_erc20_token:
-            sell_amount = int(sell_amount) / 10 ** sell_erc20_token.decimals
-            buy_amount = int(buy_amount) / 10 ** buy_erc20_token.decimals
-            return buy_amount / sell_amount
-
-        return 0
 
     def handle_exception(
             self,

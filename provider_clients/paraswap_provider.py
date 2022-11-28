@@ -3,17 +3,17 @@ import logging
 import re
 from decimal import Decimal
 from itertools import chain
+from time import time
 from typing import Optional, Union
 
 import ujson
 import yarl
 from aiohttp import ClientResponseError, ServerDisconnectedError
-from clients.proxy.api_providers.base_provider import BaseProvider
-from clients.proxy.base import SwapQuoteResponse, SwapPriceResponse
-from dexguru_utils.common import timestamp_now, get_chain_id_by_network
+from provider_clients.base_provider import BaseProvider
+from models.meta_aggregation_models import SwapQuoteResponse, SwapPriceResponse, SwapSources
+from dexguru_utils.common import get_chain_id_by_network
 from dexguru_utils.enums import NetworkChoices, AggregationProviderChoices
 from pydantic import ValidationError
-from services.models.meta_aggregation import SwapSources
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
 
 from config import config
@@ -31,7 +31,7 @@ PARASWAP_ERRORS = {
     'computePrice Error': PriceError,
     'Bad USD price': PriceError,
     'ERROR_GETTING_PRICES': PriceError,
-    # ----
+    # ---- quote errors
     'Unable to check price impact': PriceError,
     'not enough \w+ balance': UserBalanceError,
     'not enough \w+ allowance': AllowanceError,
@@ -98,7 +98,7 @@ class ParaSwapProvider(BaseProvider):
         )
         return {"result": [{
             "source": "MEDIAN",
-            "timestamp": timestamp_now(),
+            "timestamp": time(),
             "fast": swap_quote.gasPrice,
             "standart": swap_quote.gasPrice,
             "low": swap_quote.gasPrice,

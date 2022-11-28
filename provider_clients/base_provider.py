@@ -2,10 +2,10 @@ import asyncio
 from typing import Optional, Dict, List
 
 from aiohttp import ClientSession, ServerDisconnectedError
-from clients.proxy.base import SwapPriceResponse, SwapQuoteResponse
+from models.meta_aggregation_models import SwapPriceResponse, SwapQuoteResponse
 from dexguru_utils.enums import NetworkChoices
 from pydantic import ValidationError
-from utils.capture_exc_in_apm import capture_exception
+from utils.logger import capture_exception
 
 from utils.errors import ParseResponseError, BaseAggregationProviderError, ProviderTimeoutError
 
@@ -26,7 +26,7 @@ class BaseProvider:
             buy_token: str,
             sell_token: str,
             sell_amount: int,
-            network: Optional[NetworkChoicesProxy] = None,
+            network: Optional[NetworkChoices] = None,
             affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
@@ -41,7 +41,7 @@ class BaseProvider:
             buy_token: str,
             sell_token: str,
             sell_amount: int,
-            network: Optional[NetworkChoicesProxy] = None,
+            network: Optional[NetworkChoices] = None,
             affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,

@@ -3,7 +3,7 @@ from decimal import Decimal
 from time import time
 from typing import Optional, Tuple, List
 
-from clients.blockchain.base import EVMBase
+from clients.blockchain.evm import EVMBase
 from clients.proxy.base import SwapPriceResponse
 from dexguru_utils import get_chain_id_by_network
 from dexguru_utils.enums import NetworkChoices, AggregationProviderChoices, NativeTokenAddresses, CurrencyChoices
