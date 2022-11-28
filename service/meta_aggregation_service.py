@@ -4,12 +4,8 @@ from time import time
 from typing import Optional, Tuple, List
 
 from clients.blockchain.evm import EVMBase
-from clients.proxy.base import SwapPriceResponse
-from dexguru_utils import get_chain_id_by_network
-from dexguru_utils.enums import NetworkChoices, AggregationProviderChoices, NativeTokenAddresses, CurrencyChoices
-from services.candle_service import CandleService
-from services.erc20_tokens_service import ERC20TokensService
-from services.models.meta_aggregation import MetaPriceModel, MetaSwapPriceResponse
+from models.meta_agg_models import MetaPriceModel
+from models.provider_response_models import SwapPriceResponse
 from utils.node import find_most_synced_node_in_pool
 from web3 import Web3
 from web3.contract import Contract
@@ -63,7 +59,7 @@ def get_approve_cost(
 
 
 async def get_approve_costs_per_provider(
-        network: NetworkChoices,
+        network: str,
         sell_token: str,
         erc20_contract: Contract,
         sell_amount: int,

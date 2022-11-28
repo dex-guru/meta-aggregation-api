@@ -2,7 +2,7 @@ import asyncio
 from typing import Optional, Dict, List
 
 from aiohttp import ClientSession, ServerDisconnectedError
-from models.meta_aggregation_models import SwapPriceResponse, SwapQuoteResponse
+from models.provider_response_models import SwapPriceResponse, SwapQuoteResponse
 from dexguru_utils.enums import NetworkChoices
 from pydantic import ValidationError
 from utils.logger import capture_exception

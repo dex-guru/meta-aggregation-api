@@ -26,15 +26,3 @@ class SwapPriceResponse(BaseModel):
     value: str
     price: str
 
-
-class SwapQuoteResponse(BaseModel):
-    sources: list
-    buyAmount: str
-    gas: str
-    sellAmount: str
-    to: str
-    data: str
-    gasPrice: str
-    value: str
-    price: str
-

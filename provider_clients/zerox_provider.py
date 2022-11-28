@@ -5,13 +5,14 @@ import ssl
 from typing import Union, Optional, List
 
 from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
-from clients.proxy.api_providers.base_provider import BaseProvider, NetworkChoicesProxy
-from clients.proxy.base import SwapQuoteResponse, SwapPriceResponse
 from dexguru_utils.enums import NetworkChoices, AggregationProviderChoices
 from pydantic import ValidationError
-from services.models.meta_aggregation import SwapSources
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
 
+from config.chains import ChainsConfig
+from models.meta_agg_models import SwapQuoteResponse, SwapSources
+from models.provider_response_models import SwapPriceResponse
+from provider_clients.base_provider import BaseProvider
 from utils.errors import AggregationProviderError, UserBalanceError
 from utils.logger import get_logger
 
@@ -29,7 +30,7 @@ class ZeroXProvider(BaseProvider):
 
     @classmethod
     def _api_domain_builder(cls, network: Optional[NetworkChoicesProxy] = None) -> str:
-        network = '' if not network or network in (NetworkChoicesProxy.mainnet, NetworkChoices.eth) else f'{network}.'
+        network = '' if not network or network == ChainsConfig.eth else f'{network}.'
         return f'{network}{cls.api_domain}'
 
     @classmethod
@@ -90,13 +91,14 @@ class ZeroXProvider(BaseProvider):
     def convert_sources_for_meta_aggregation(
             quote: Optional[Union[SwapPriceResponse, SwapQuoteResponse]],
     ) -> Optional[Union[SwapPriceResponse, SwapQuoteResponse]]:
-        # Temporary solution for meta aggregation.
         if not quote:
             return
         sources = []
         for source in quote.sources:
             if not float(source['proportion']):
                 continue
+            if source.get('hops'):
+                source['hops'] = [hop['name'] for hop in source['hops']]
             sources.append(
                 SwapSources(
                     name=source['name'],

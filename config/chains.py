@@ -5,12 +5,13 @@ from models.chain import ChainModel
 
 
 class ChainsConfig(BaseSettings):
+    __slots__ = ('eth', 'bsc')
 
     def __init__(self, **data):
-        self.get_chains()
+        self._set_chains()
         super().__init__(**data)
 
-    def get_chains(self):
+    def _set_chains(self):
         chains = requests.get('https://api.dev.dex.guru/v1/chain').json()
         for chain in chains['data']:
             self.__setattr__(chain['name'].lower(), ChainModel(**chain['chain_id']))

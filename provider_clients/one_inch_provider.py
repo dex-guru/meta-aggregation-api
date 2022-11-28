@@ -6,14 +6,13 @@ from logging import DEBUG as LOG_DEBUG
 from typing import Optional, Union, List, Dict
 
 from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
-from dexguru_utils import get_chain_id_by_network
-from dexguru_utils.enums import NetworkChoices, NativeTokenAddresses, AggregationProviderChoices
 from pydantic import ValidationError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, before_log
 
 from config import config
-from models.meta_aggregation_models import SwapQuoteResponse, SwapPriceResponse
-from models.meta_aggregation_models import SwapSources
+from models.meta_agg_models import SwapQuoteResponse
+from models.provider_response_models import SwapPriceResponse
+from models.provider_response_models import SwapSources
 from provider_clients.base_provider import BaseProvider
 from utils.errors import EstimationError, AggregationProviderError, InsufficientLiquidityError, UserBalanceError, \
     AllowanceError, TokensError
