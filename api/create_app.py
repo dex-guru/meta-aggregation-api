@@ -1,5 +1,5 @@
 import pydantic
-from elasticapm.contrib.starlette import make_apm_client, ElasticAPM
+from elasticapm.contrib.starlette import ElasticAPM
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from api.middlewares import RouteLoggerMiddleware
 from api.routes.rpc import v1_rpc
+from clients.apm_client import apm_client
 from config import Config
 from utils.httputils import setup_client_session, teardown_client_session
 from utils.logger import get_logger
@@ -102,18 +103,7 @@ def register_route_logging(app: FastAPI):
 def register_elastic_apm(app: FastAPI):
     app_config: Config = app.config
     if app_config.APM_ENABLED:
-        apm_config = {
-            'SERVICE_NAME': app_config.SERVICE_NAME,
-            'SERVER_URL': app_config.APM_SERVER_URL,
-            'ENABLED': app_config.APM_ENABLED,
-            'RECORDING': app_config.APM_RECORDING,
-            'CAPTURE_HEADERS': app_config.APM_CAPTURE_HEADERS,
-            'LOG_LEVEL': app_config.LOG_LEVEL,
-            'ENVIRONMENT': app_config.ENVIRONMENT,
-            'SERVICE_VERSION': app_config.VERSION,
-        }
-        client = make_apm_client(apm_config)
-        app.add_middleware(ElasticAPM, client=client)
+        app.add_middleware(ElasticAPM, client=apm_client.client)
 
 
 def register_route(app: FastAPI):

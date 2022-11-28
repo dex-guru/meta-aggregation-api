@@ -1,9 +1,10 @@
 from contextvars import ContextVar
 from logging import LoggerAdapter, getLogger
 from logging.config import dictConfig
-from typing import Optional
+from typing import Optional, Tuple
 from uuid import uuid4
 
+from clients.apm_client import apm_client
 from config import config
 
 CORRELATION_ID = "cid"
@@ -134,3 +135,14 @@ def set_new_correlation_id():
 
 def set_session_id(sid: str):
     session_id.set(sid)
+
+
+def capture_exception(exc_info: Optional[Tuple] = None) -> Optional[int]:
+    """Capture exception in APM.
+
+    Args:
+        exc_info: Optional[tuple]: A (type, value, traceback) tuple as returned by sys.exc_info().
+                If not provided, it will be captured automatically,
+                if capture_message() was called in an except block.
+    """
+    return apm_client.client.capture_exception(exc_info)
