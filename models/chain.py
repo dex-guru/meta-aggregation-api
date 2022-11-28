@@ -12,7 +12,7 @@ class ChainModel(BaseModel):
     name: str
     chain_id: int
     description: str
-    native_token: TokenModel
+    native_token: TokenModel = None
 
     def get_name_by_id(self, chain_id: int) -> str:
         for name, chain in self.__dict__.items():
