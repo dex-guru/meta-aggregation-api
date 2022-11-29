@@ -2,12 +2,12 @@ import asyncio
 from typing import Optional, Dict, List
 
 from aiohttp import ClientSession, ServerDisconnectedError
-from models.provider_response_models import SwapPriceResponse, SwapQuoteResponse
-from dexguru_utils.enums import NetworkChoices
 from pydantic import ValidationError
-from utils.logger import capture_exception
 
+from models.meta_agg_models import SwapQuoteResponse
+from models.provider_response_models import SwapPriceResponse
 from utils.errors import ParseResponseError, BaseAggregationProviderError, ProviderTimeoutError
+from utils.logger import capture_exception
 
 
 class BaseProvider:
@@ -26,7 +26,7 @@ class BaseProvider:
             buy_token: str,
             sell_token: str,
             sell_amount: int,
-            network: Optional[NetworkChoices] = None,
+            chain_id: Optional[int] = None,
             affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
@@ -41,7 +41,7 @@ class BaseProvider:
             buy_token: str,
             sell_token: str,
             sell_amount: int,
-            network: Optional[NetworkChoices] = None,
+            chain_id: Optional[int] = None,
             affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
@@ -51,7 +51,7 @@ class BaseProvider:
     ) -> SwapPriceResponse:
         raise NotImplementedError
 
-    async def get_gas_prices(self, network: Optional[str] = None) -> dict:
+    async def get_gas_prices(self, chain_id: Optional[int] = None) -> dict:
         raise NotImplementedError
 
     async def get_orders_by_trader(
@@ -59,14 +59,14 @@ class BaseProvider:
             trader: str,
             maker_token: str,
             taker_token: str,
-            network: Optional[str] = None,
+            chain_id: Optional[int] = None,
             statuses: Optional[List[str]] = None,
     ) -> List[Dict]:
         raise NotImplementedError
 
     async def get_order_by_hash(
             self,
-            network: NetworkChoices,
+            chain_id: int,
             order_hash: str,
     ) -> Dict:
         raise NotImplementedError

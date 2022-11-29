@@ -5,11 +5,10 @@ import ssl
 from typing import Union, Optional, List
 
 from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
-from dexguru_utils.enums import NetworkChoices, AggregationProviderChoices
 from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
 
-from config.chains import ChainsConfig
+from config.chains import chains
 from models.meta_agg_models import SwapQuoteResponse, SwapSources
 from models.provider_response_models import SwapPriceResponse
 from provider_clients.base_provider import BaseProvider
@@ -20,17 +19,19 @@ logger = get_logger(__name__)
 
 ZERO_X_ERRORS = {
     'Insufficient funds for transaction': UserBalanceError,
+    # TODO add more errors
 }
 
 
 class ZeroXProvider(BaseProvider):
     """ Docs: https://0x.org/docs/api#introduction """
     api_domain = 'api.0x.org'
-    _provider_name = AggregationProviderChoices.zero_x.name
+    _provider_name = 'zero_x'
+    supported_chains = (1, 56)
 
     @classmethod
-    def _api_domain_builder(cls, network: Optional[NetworkChoicesProxy] = None) -> str:
-        network = '' if not network or network == ChainsConfig.eth else f'{network}.'
+    def _api_domain_builder(cls, chain_id: int = None) -> str:
+        network = '' if not chain_id or chain_id == chains.eth.chain_id else f'{chains.get_chain_by_id(chain_id).name}.'
         return f'{network}{cls.api_domain}'
 
     @classmethod
@@ -39,9 +40,9 @@ class ZeroXProvider(BaseProvider):
             path: str,
             version: Union[int, float],
             endpoint: str,
-            network: Optional[str] = None
+            chain_id: Optional[str] = None
     ) -> str:
-        domain = cls._api_domain_builder(network)
+        domain = cls._api_domain_builder(chain_id)
         return f'https://{domain}/{path}/v{version}/{endpoint}'
 
     @retry(retry=(retry_if_exception_type(asyncio.TimeoutError) | retry_if_exception_type(ServerDisconnectedError)),
@@ -112,7 +113,7 @@ class ZeroXProvider(BaseProvider):
     def _convert_response_from_swap_price(self, response: dict) -> Optional[SwapPriceResponse]:
         try:
             prepared_response = SwapPriceResponse(
-                provider=AggregationProviderChoices.zero_x,
+                provider=self._provider_name,
                 sources=response['sources'],
                 buyAmount=response['buyAmount'],
                 gas=response['gas'],
@@ -132,7 +133,7 @@ class ZeroXProvider(BaseProvider):
             buy_token: str,
             sell_token: str,
             sell_amount: int,
-            network: Optional[NetworkChoicesProxy] = None,
+            chain_id: Optional[int] = None,
             affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
@@ -149,7 +150,7 @@ class ZeroXProvider(BaseProvider):
             - https://api.0x.org/swap/v1/quote?buyToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&sellAmount=1000000000000000000&sellToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
             - https://api.0x.org/swap/v1/quote?affiliateAddress=0x720c9244473Dfc596547c1f7B6261c7112A3dad4&buyToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&gasPrice=26000000000&sellAmount=1000000000000000000&sellToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&slippagePercentage=0.0100&takerAddress=0xA0942D8352FFaBCc0f6dEE32b2b081C703e726A5
         """
-        url = self._api_path_builder('swap', 1, 'quote', network)
+        url = self._api_path_builder('swap', 1, 'quote', chain_id)
         ignore_checks = str(ignore_checks).lower()
         query = {
             'buyToken': buy_token,
@@ -178,7 +179,7 @@ class ZeroXProvider(BaseProvider):
         try:
             response = await self._get_response(url, params=query)
         except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            e = self.handle_exception(e, query=query, method='get_swap_quote', network=network)
+            e = self.handle_exception(e, query=query, method='get_swap_quote', chain_id=chain_id)
             raise e
         logger.info(f'Got quote from 0x.org: {response}')
         return self._convert_response_from_swap_quote(response)
@@ -188,7 +189,7 @@ class ZeroXProvider(BaseProvider):
             taker_token: str,
             maker_token: str,
             trader: str,
-            network: Optional[str] = None,
+            chain_id: Optional[int] = None,
             statuses: Optional[List] = None,
     ) -> dict:
         """
@@ -197,7 +198,7 @@ class ZeroXProvider(BaseProvider):
         Examples:
             https://docs.0x.org/0x-api-orderbook/api-references
         """
-        url = self._api_path_builder('orderbook', 1, 'orders', network)
+        url = self._api_path_builder('orderbook', 1, 'orders', chain_id)
         query = {}
 
         if taker_token:
@@ -217,7 +218,7 @@ class ZeroXProvider(BaseProvider):
             buy_token: str,
             sell_token: str,
             sell_amount: int,
-            network: Optional[NetworkChoicesProxy] = None,
+            chain_id: Optional[int] = None,
             affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
@@ -228,7 +229,7 @@ class ZeroXProvider(BaseProvider):
         """
         Docs: https://0x.org/docs/api#get-swapv1price
         """
-        url = self._api_path_builder('swap', 1, 'price', network)
+        url = self._api_path_builder('swap', 1, 'price', chain_id)
         query = {
             'buyToken': buy_token,
             'sellToken': sell_token,
@@ -255,12 +256,12 @@ class ZeroXProvider(BaseProvider):
         try:
             response = await self._get_response(url, params=query)
         except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            e = self.handle_exception(e, query=query, method='get_swap_price', network=network)
+            e = self.handle_exception(e, query=query, method='get_swap_price', chain_id=chain_id)
             raise e
         return self._convert_response_from_swap_price(response) if response else None
 
-    async def get_gas_prices(self, network: Optional[NetworkChoicesProxy] = None) -> dict:
-        domain = self._api_domain_builder(network)
+    async def get_gas_prices(self, chain_id: Optional[int] = None) -> dict:
+        domain = self._api_domain_builder(chain_id)
         url = f'https://gas.{domain}'
 
         return await self._get_response(url)

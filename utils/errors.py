@@ -5,27 +5,15 @@ from fastapi import HTTPException
 from utils.logger import LogArgs
 
 
-class NotConfiguredError(Exception):
-    """for not configured env variables"""
+class RequestException(Exception):
+    def __init__(self, e):
+        try:
+            self.msg = f"Check field {e['detail'][0]['loc'][1]}: {e['detail'][0]['msg']}"
+        except (IndexError, TypeError, KeyError):
+            self.msg = e.get('detail', e.get('message', e))
 
-
-class UserServiceError(ValueError):
-    """common error for users service"""
-
-
-class UserServiceBadValueError(UserServiceError):
-    """bad value error for users service"""
-    # prepare for delete
-
-
-class UserServiceBadSignatureError(UserServiceError):
-    """bad signature error for users service"""
-    # prepare for delete
-
-
-class UserServiceBadCredentialsError(UserServiceError):
-    """bad credentials error for users service"""
-    # prepare for delete
+    def __str__(self):
+        return self.msg
 
 
 class UserMistakes:

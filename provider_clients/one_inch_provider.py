@@ -63,11 +63,10 @@ class OneInchProvider(BaseProvider):
     limit_orders_domain = 'limit-orders.1inch.io'
     trading_api_domain = 'api.1inch.io'
     limit_order = 'limit-order'
-    _provider_name = AggregationProviderChoices.one_inch.name
+    _provider_name = 'one_inch'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.erc20_token_inventory = ERC20TokensService()
 
     @classmethod
     def _limit_order_path_builder(
@@ -118,7 +117,7 @@ class OneInchProvider(BaseProvider):
 
     async def get_orders_by_trader(
             self,
-            network: Optional[str],
+            chain_id: Optional[int],
             trader: str,
             maker_token: Optional[str] = None,
             taker_token: Optional[str] = None,
@@ -133,7 +132,7 @@ class OneInchProvider(BaseProvider):
             version=LIMIT_ORDER_VERSION,
             endpoint=endpoint,
             path=path,
-            chain_id=get_chain_id_by_network(network),
+            chain_id=chain_id,
         )
         query = {
             'limit': 100,
@@ -155,7 +154,7 @@ class OneInchProvider(BaseProvider):
 
     async def get_order_by_hash(
             self,
-            network: Optional[str],
+            chain_id: Optional[int],
             order_hash: str,
     ) -> Optional[Dict[str, List[Dict]]]:
         path = 'events'
@@ -164,7 +163,7 @@ class OneInchProvider(BaseProvider):
             version=LIMIT_ORDER_VERSION,
             endpoint=endpoint,
             path=path,
-            chain_id=get_chain_id_by_network(network),
+            chain_id=chain_id,
         )
         try:
             response = await self.get_response(url, None)
@@ -174,7 +173,7 @@ class OneInchProvider(BaseProvider):
         return response
 
     async def get_swap_price(self, buy_token: str, sell_token: str, sell_amount: int,
-                             network: Optional[NetworkChoices] = None, affiliate_address: Optional[str] = None,
+                             chain_id: Optional[int] = None, affiliate_address: Optional[str] = None,
                              gas_price: Optional[int] = None, slippage_percentage: Optional[float] = 1,
                              taker_address: Optional[str] = None, fee_recipient: Optional[str] = None,
                              buy_token_percentage_fee: Optional[float] = None):
@@ -182,7 +181,7 @@ class OneInchProvider(BaseProvider):
         url = self._trading_api_path_builder(
             version=TRADING_API_VERSION,
             path=path,
-            chain_id=get_chain_id_by_network(network),
+            chain_id=chain_id,
         )
         query = {
             'toTokenAddress': buy_token,
@@ -198,7 +197,7 @@ class OneInchProvider(BaseProvider):
         try:
             response = await self.get_response(url, query)
         except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            e = self.handle_exception(e, params=query, token_address=sell_token, network=network)
+            e = self.handle_exception(e, params=query, token_address=sell_token, chain_id=chain_id)
             raise e
         sell_amount = int(sell_amount) / 10 ** response['fromToken'].decimals
         buy_amount = int(response['toTokenAmount']) / 10 ** response['toToken'].decimals
@@ -208,7 +207,7 @@ class OneInchProvider(BaseProvider):
             value = str(sell_amount)
         try:
             res = SwapPriceResponse(
-                provider=AggregationProviderChoices.one_inch,
+                provider=self._provider_name,
                 sources=response['protocols'],
                 buyAmount=response['toTokenAmount'],
                 gas=response['estimatedGas'],
@@ -219,7 +218,7 @@ class OneInchProvider(BaseProvider):
             )
         except (KeyError, ValidationError) as e:
             e = self.handle_exception(e, response=response, method='_convert_response_from_swap_quote',
-                                      price=price, url=url, params=query, network=network)
+                                      price=price, url=url, params=query, chain_id=chain_id)
             raise e
         return self.convert_sources_for_meta_aggregation(res)
 
@@ -228,7 +227,7 @@ class OneInchProvider(BaseProvider):
             buy_token: str,
             sell_token: str,
             sell_amount: int,
-            network: Optional[NetworkChoices] = None,
+            chain_id: Optional[int] = None,
             affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
@@ -238,8 +237,8 @@ class OneInchProvider(BaseProvider):
             ignore_checks: bool = False,
     ) -> Optional[SwapQuoteResponse]:
         """https://docs.1inch.io/docs/aggregation-protocol/api/swap-params"""
-        if not network:
-            raise ValueError('Network is required')
+        if not chain_id:
+            raise ValueError('chain_id is required')
 
         if not slippage_percentage:
             slippage_percentage = DEFAULT_SLIPPAGE_PERCENTAGE
@@ -252,7 +251,7 @@ class OneInchProvider(BaseProvider):
         url = self._trading_api_path_builder(
             version=TRADING_API_VERSION,
             path=path,
-            chain_id=get_chain_id_by_network(network),
+            chain_id=chain_id,
         )
         ignore_checks = str(ignore_checks).lower()
         query = {
@@ -278,7 +277,7 @@ class OneInchProvider(BaseProvider):
         try:
             response = await self.get_response(url, query)
         except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            exc = self.handle_exception(e, params=query, token_address=sell_token, network=network)
+            exc = self.handle_exception(e, params=query, token_address=sell_token, chain_id=chain_id)
             raise exc
         sell_amount = int(sell_amount) / 10 ** response['fromToken']['decimals']
         buy_amount = int(response['toTokenAmount']) / 10 ** response['toToken']['decimals']
@@ -354,8 +353,8 @@ class OneInchProvider(BaseProvider):
         if isinstance(exc, EstimationError):
             logger.warning(
                 f'potentially blacklist. %({LogArgs.token_idx})s',
-                {LogArgs.token_idx: f'{kwargs.get("token_address")}-{kwargs.get("network")}'},
-                extra={'token_address': kwargs.get('token_address'), 'network': kwargs.get('network')},
+                {LogArgs.token_idx: f'{kwargs.get("token_address")}-{kwargs.get("chain_id")}'},
+                extra={'token_address': kwargs.get('token_address'), 'chain_id': kwargs.get('chain_id')},
             )
         logger.warning(*exc.to_log_args(), extra=exc.to_dict())
         return exc

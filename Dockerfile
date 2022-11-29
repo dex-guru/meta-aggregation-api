@@ -1,5 +1,5 @@
 # https://github.com/numpy/numpy/issues/17569#issuecomment-922447582
-FROM registry.gitlab.com/telekomconsalting/dexguru/dexguru-backend/python:3.10-slim
+FROM registry.gitlab.com/telekomconsalting/dexguru/dexguru-backend/python:3.11-slim
 
 # Create a group and user to run our app
 ARG APP_USER=appuser

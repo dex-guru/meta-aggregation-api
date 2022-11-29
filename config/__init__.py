@@ -11,6 +11,9 @@ class Config(APMConfig, LoggerConfig, metaclass=Singleton):
     PIPELINE: str = 'stage'
     NATIVE_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     VERSION = '0.0.1'
+    WEB3_URL = ''
+    API_KEY = ''
+    PUBLIC_API_VERSION = 1
 
 
 config = Config()

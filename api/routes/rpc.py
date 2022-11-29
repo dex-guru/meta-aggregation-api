@@ -4,6 +4,7 @@ from fastapi.security import HTTPBearer
 from pydantic import constr
 from starlette.requests import Request
 
+from config import chains, config
 from utils.logger import get_logger
 
 v1_rpc = APIRouter()
@@ -17,10 +18,10 @@ async def send_rpc(
         network: str = Path(None, description="Network name"),
 ):
     from utils.httputils import CLIENT_SESSION
-    # chain_id = get_chain_id_by_network(network)
+    chain_id = chains[network].chain_id
     #
     # node = await find_most_synced_node_in_pool(logger=logger, chain_id=chain_id)
-    node = ''
+    node = config.WEB3_URL
     if node is None:
         return {}
     try:

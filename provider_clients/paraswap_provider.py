@@ -3,14 +3,11 @@ import logging
 import re
 from decimal import Decimal
 from itertools import chain
-from time import time
 from typing import Optional, Union
 
 import ujson
 import yarl
 from aiohttp import ClientResponseError, ServerDisconnectedError
-from dexguru_utils.common import get_chain_id_by_network
-from dexguru_utils.enums import NetworkChoices, AggregationProviderChoices
 from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
 
@@ -56,14 +53,7 @@ PARASWAP_ERRORS = {
 class ParaSwapProvider(BaseProvider):
     MAIN_API_URL: yarl.URL = yarl.URL("https://apiv5.paraswap.io/")
     PARTNER: str = "DexGuru"
-    NETWORK_TOKEN_PAIRS = {
-        NetworkChoices.arbitrum: (
-            "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",
-            "0xed3fb761414da74b74f33e5c5a1f78104b188dfc",
-            1000000,
-        ),
-    }
-    _provider_name = AggregationProviderChoices.paraswap.name
+    _provider_name = 'paraswap'
 
     @retry(retry=(retry_if_exception_type(asyncio.TimeoutError) | retry_if_exception_type(ServerDisconnectedError)),
            stop=stop_after_attempt(3), reraise=True, before=before_log(logger, logging.DEBUG))
@@ -87,30 +77,12 @@ class ParaSwapProvider(BaseProvider):
                 )
         return ujson.loads(data)
 
-    async def get_gas_prices(self, network: Optional[str] = None) -> dict:
-        if network is None:
-            return {}
-
-        sell_token, buy_token, amount = self.NETWORK_TOKEN_PAIRS[network]
-        swap_quote = await self.get_swap_quote(
-            buy_token=buy_token,
-            sell_token=sell_token,
-            sell_amount=amount,
-        )
-        return {"result": [{
-            "source": "MEDIAN",
-            "timestamp": time(),
-            "fast": swap_quote.gasPrice,
-            "standart": swap_quote.gasPrice,
-            "low": swap_quote.gasPrice,
-        }]}
-
     async def get_swap_price(
             self,
             buy_token: str,
             sell_token: str,
             sell_amount: int,
-            network: Optional[str] = None,
+            chain_id: Optional[int] = None,
             affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
@@ -124,7 +96,7 @@ class ParaSwapProvider(BaseProvider):
             "destToken": buy_token,
             "amount": sell_amount,
             "side": "SELL",
-            "network": get_chain_id_by_network(network),
+            "network": chain_id,
             "otherExchangePrices": 'false',
             'partner': self.PARTNER,
         }
@@ -132,7 +104,7 @@ class ParaSwapProvider(BaseProvider):
         try:
             quotes = await self.request(method="get", path=path, params=params)
         except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            e = self.handle_exception(e, method='get_swap_price', params=params, network=network)
+            e = self.handle_exception(e, method='get_swap_price', params=params, chain_id=chain_id)
             raise e
         response = self._convert_response_from_swap_price(quotes)
         response.gasPrice = gas_price or 0
@@ -145,7 +117,7 @@ class ParaSwapProvider(BaseProvider):
             buy_token: str,
             sell_token: str,
             sell_amount: int,
-            network: Optional[str] = None,
+            chain_id: Optional[int] = None,
             affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
@@ -159,7 +131,7 @@ class ParaSwapProvider(BaseProvider):
             "destToken": buy_token,
             "amount": sell_amount,
             "side": "SELL",
-            "network": get_chain_id_by_network(network),
+            "network": chain_id,
             "otherExchangePrices": 'false',
             'partner': self.PARTNER,
         }
@@ -168,7 +140,7 @@ class ParaSwapProvider(BaseProvider):
         try:
             response = await self.request(method="get", path="prices", params=params)
         except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            e = self.handle_exception(e, method='get_swap_quote', params=params, network=network)
+            e = self.handle_exception(e, method='get_swap_quote', params=params, chain_id=chain_id)
             raise e
 
         price_route = response["priceRoute"]
@@ -205,7 +177,7 @@ class ParaSwapProvider(BaseProvider):
                 json=data,
             )
         except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            e = self.handle_exception(e, response=response, data=data, params=params, network=network)
+            e = self.handle_exception(e, response=response, data=data, params=params, chain_id=chain_id)
             raise e
         return self._convert_response_from_swap_quote(response, price_route)
 
@@ -241,7 +213,7 @@ class ParaSwapProvider(BaseProvider):
         price = dst_amount / src_amount
         try:
             prepared_response = SwapPriceResponse(
-                provider=AggregationProviderChoices.paraswap,
+                provider=self._provider_name,
                 sources=price_response['bestRoute'],
                 buyAmount=str(price_response["destAmount"]),
                 gas=price_response['gasCost'],
@@ -294,8 +266,8 @@ class ParaSwapProvider(BaseProvider):
         if isinstance(exc, EstimationError):
             logger.warning(
                 f'potentially blacklist. %({LogArgs.token_idx})',
-                {LogArgs.token_idx: f'{kwargs.get("token_address")}-{kwargs.get("network")}'},
-                extra={'token_address': kwargs.get('token_address'), 'network': kwargs.get('network')},
+                {LogArgs.token_idx: f'{kwargs.get("token_address")}-{kwargs.get("chain_id")}'},
+                extra={'token_address': kwargs.get('token_address'), 'chain_id': kwargs.get('chain_id')},
             )
         logger.warning(*exc.to_log_args(), extra=exc.to_dict())
         return exc

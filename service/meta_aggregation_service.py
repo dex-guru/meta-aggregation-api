@@ -1,17 +1,16 @@
 import asyncio
 from decimal import Decimal
-from time import time
 from typing import Optional, Tuple, List
 
-from clients.blockchain.evm import EVMBase
-from models.meta_agg_models import MetaPriceModel
-from models.provider_response_models import SwapPriceResponse
-from utils.node import find_most_synced_node_in_pool
+from dexguru_sdk import DexGuru
 from web3 import Web3
 from web3.contract import Contract
 
 from clients.blockchain.custom_http_provider import CustomHTTPProvider
-from config import config
+from clients.blockchain.evm import EVMBase
+from config import config, chains
+from models.meta_agg_models import MetaPriceModel, MetaSwapPriceResponse
+from models.provider_response_models import SwapPriceResponse
 from provider_clients.one_inch_provider import OneInchProvider
 from provider_clients.paraswap_provider import ParaSwapProvider
 from provider_clients.zerox_provider import ZeroXProvider
@@ -19,11 +18,16 @@ from utils.async_utils import async_from_sync
 from utils.errors import ProviderNotFound, SpenderAddressNotFound
 from utils.logger import get_logger
 
-PROVIDERS = {
-    AggregationProviderChoices.zero_x: ZeroXProvider,
-    AggregationProviderChoices.one_inch: OneInchProvider,
-    AggregationProviderChoices.paraswap: ParaSwapProvider,
-}
+
+class Providers:
+    zero_x = ZeroXProvider,
+    one_inch = OneInchProvider,
+    paraswap = ParaSwapProvider,
+
+    @classmethod
+    def get(cls, provider_name: str):
+        return getattr(cls, provider_name, None)
+
 
 logger = get_logger(__name__)
 
@@ -59,14 +63,12 @@ def get_approve_cost(
 
 
 async def get_approve_costs_per_provider(
-        network: str,
         sell_token: str,
         erc20_contract: Contract,
         sell_amount: int,
         providers: list,
         taker_address: Optional[str] = None,
 ) -> dict:
-    logger.debug('Getting approve costs for network %s', network)
     approve_costs_per_provider = {}
     for provider in providers:
         if not taker_address:
@@ -90,15 +92,17 @@ async def get_approve_costs_per_provider(
     return approve_costs_per_provider
 
 
-async def get_base_gas_price(network: Optional[str], web3_url: Optional[str] = None) -> int:
-    logger.debug('Getting gas prices for network %s', network)
-    if not web3_url and not network:
-        raise ValueError('Either network or web3_url must be provided')
+async def get_base_gas_price(chain_id: Optional[int], web3_url: Optional[str] = None) -> int:
+    logger.debug('Getting gas prices for network %s', chain_id)
+    if not web3_url and not chain_id:
+        raise ValueError('Either chain_id or web3_url must be provided')
     if not web3_url:
-        web3_url = await find_most_synced_node_in_pool(logger, get_chain_id_by_network(network))
+        # TODO get web3 url from public api
+        pass
+        # web3_url = await find_most_synced_node_in_pool(logger, get_chain_id_by_network(network))
     w3 = Web3(CustomHTTPProvider(endpoint_uri=web3_url))
     gas_price = w3.eth.gas_price
-    logger.info('Gas price for network %s is %s', network, gas_price)
+    logger.info('Gas price for chain %s is %s', chain_id, gas_price)
     return gas_price
 
 
@@ -106,7 +110,7 @@ async def get_swap_meta_price(
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        network: NetworkChoices,
+        chain_id: int,
         affiliate_address: Optional[str] = None,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
@@ -115,28 +119,28 @@ async def get_swap_meta_price(
         buy_token_percentage_fee: Optional[float] = None,
         spender_addresses: Optional[list[dict]] = None,
 ) -> List[MetaPriceModel]:
-    web3_url = await find_most_synced_node_in_pool(logger, get_chain_id_by_network(network))
+    # web3_url = await find_most_synced_node_in_pool(logger, get_chain_id_by_network(network))
+    # TODO get web3 url from public api
+    web3_url = config.WEB3_URL
     erc20_contract = EVMBase(web3_url).get_erc20_contract(Web3.toChecksumAddress(sell_token))
-    approve_costs = asyncio.create_task(get_approve_costs_per_provider(network, sell_token, erc20_contract,
+    approve_costs = asyncio.create_task(get_approve_costs_per_provider(sell_token, erc20_contract,
                                                                        sell_amount, spender_addresses, taker_address))
-    get_decimals_task = asyncio.create_task(get_decimals_for_native_and_buy_token(network, buy_token))
-    get_buy_token_price_task = asyncio.create_task(CandleService().get_price_from_candle_by_ts(
-        buy_token, network, time(), CurrencyChoices.native,
-    ))
+    get_decimals_task = asyncio.create_task(get_decimals_for_native_and_buy_token(chain_id, buy_token))
+    get_buy_token_price_task = asyncio.create_task(DexGuru(config.API_KEY).get_token_finance(chain_id, buy_token))
     if not gas_price:
-        gas_price = await get_base_gas_price(network, web3_url)
+        gas_price = await get_base_gas_price(chain_id, web3_url)
 
     quotes_tasks = []
     for provider in spender_addresses:
         if provider is None:
             continue
         provider_name = provider['provider']
-        provider_class = PROVIDERS.get(provider_name)
+        provider_class = Providers.get(provider_name)
         if not provider_class:
             continue
         provider_instance = provider_class()
         quotes_tasks.append(asyncio.create_task(provider_instance.get_swap_price(
-            buy_token, sell_token, sell_amount, network,
+            buy_token, sell_token, sell_amount, chain_id,
             affiliate_address, gas_price, slippage_percentage, taker_address,
             fee_recipient, buy_token_percentage_fee,
         )))
@@ -150,7 +154,7 @@ async def get_swap_meta_price(
                 'buy_token': buy_token,
                 'sell_token': sell_token,
                 'sell_amount': sell_amount,
-                'network': network,
+                'chain_id': chain_id,
                 'providers': list(quotes.keys()),
             }
         )
@@ -158,10 +162,11 @@ async def get_swap_meta_price(
     approve_costs = await approve_costs
     native_decimals, buy_token_decimals = await get_decimals_task
     buy_token_price = await get_buy_token_price_task
+    buy_token_price = buy_token_price.price_eth
     best_provider, quote = choose_best_provider(quotes, approve_costs, native_decimals, buy_token_decimals,
                                                 buy_token_price)
     logger.info(
-        'Got swap prices for network %s', network,
+        'Got swap prices for chain %s', chain_id,
         extra={
             'best_provider': best_provider,
             'buy_token': buy_token,
@@ -176,23 +181,23 @@ async def get_swap_meta_price(
     ]
 
 
-async def get_decimals_for_native_and_buy_token(network: NetworkChoices, buy_token: str) -> Tuple[int, int]:
-    wrapped_native_for_network = NativeTokenAddresses[network].value
-    logger.debug('Getting decimals for native %s and buy tokens %s', wrapped_native_for_network, buy_token)
-    erc20_token_inv_service = ERC20TokensService()
-    if buy_token == config.NATIVE_TOKEN_ADDRESS or buy_token == wrapped_native_for_network:
-        buy_token_inventory = await erc20_token_inv_service.get_erc20_token_by_address_network(
-            wrapped_native_for_network, network)
+async def get_decimals_for_native_and_buy_token(chain_id: int, buy_token: str) -> Tuple[int, int]:
+    wrapped_native_for_chain = chains.get_chain_by_id(chain_id).native_token.address
+    logger.debug('Getting decimals for native %s and buy tokens %s', wrapped_native_for_chain, buy_token)
+    guru_sdk = DexGuru(config.API_KEY)
+    if buy_token == config.NATIVE_TOKEN_ADDRESS or buy_token == wrapped_native_for_chain:
+        buy_token_inventory = await guru_sdk.get_token_inventory_by_address(
+            chain_id, wrapped_native_for_chain)
         buy_token_decimals = buy_token_inventory.decimals
         native_decimals = buy_token_decimals
     else:
         buy_token_inventory, native_token_inventory = await asyncio.gather(
-            erc20_token_inv_service.get_erc20_token_by_address_network(buy_token, network),
-            erc20_token_inv_service.get_erc20_token_by_address_network(
-                wrapped_native_for_network, network))
+            guru_sdk.get_token_inventory_by_address(chain_id, buy_token),
+            guru_sdk.get_token_inventory_by_address(
+                chain_id, wrapped_native_for_chain))
         buy_token_decimals = buy_token_inventory.decimals
         native_decimals = native_token_inventory.decimals
-    logger.debug('Got decimals for native %s and buy tokens %s', wrapped_native_for_network, buy_token)
+    logger.debug('Got decimals for native %s and buy tokens %s', wrapped_native_for_chain, buy_token)
     return native_decimals, buy_token_decimals
 
 
@@ -202,7 +207,7 @@ def choose_best_provider(
         native_decimals: int,
         buy_token_decimals: int,
         buy_token_price: float,
-) -> Tuple[AggregationProviderChoices, MetaSwapPriceResponse]:
+) -> Tuple[str, MetaSwapPriceResponse]:
     best_provider = None
     best_quote = None
     best_profit = None
@@ -227,15 +232,15 @@ async def get_meta_swap_quote(
         sell_token: str,
         sell_amount: int,
         taker_address: str,
-        provider: AggregationProviderChoices,
-        network: NetworkChoices,
+        provider: str,
+        chain_id: int,
         affiliate_address: Optional[str],
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
 ):
-    provider_class = PROVIDERS.get(provider)
+    provider_class = Providers.get(provider)
     if not provider_class:
         return
     provider = provider_class()
@@ -243,7 +248,7 @@ async def get_meta_swap_quote(
         buy_token=buy_token,
         sell_token=sell_token,
         sell_amount=sell_amount,
-        network=network,
+        chain_id=chain_id,
         affiliate_address=affiliate_address,
         gas_price=gas_price,
         slippage_percentage=slippage_percentage,
@@ -258,8 +263,8 @@ async def get_provider_price(
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        network: NetworkChoices,
-        provider: Optional[AggregationProviderChoices],
+        chain_id: int,
+        provider: Optional[str],
         affiliate_address: Optional[str] = None,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
@@ -268,7 +273,7 @@ async def get_provider_price(
         buy_token_percentage_fee: Optional[float] = None,
         spender_addresses: Optional[list[dict]] = None,
 ) -> MetaPriceModel:
-    provider_class = PROVIDERS.get(provider)
+    provider_class = Providers.get(provider)
     if not provider_class:
         raise ProviderNotFound(provider)
 
@@ -278,10 +283,10 @@ async def get_provider_price(
         raise SpenderAddressNotFound(provider)
     provider_instance = provider_class()
 
-    web3_url = await find_most_synced_node_in_pool(logger, get_chain_id_by_network(network))
+    web3_url = config.WEB3_URL
     erc20_contract = EVMBase(web3_url).get_erc20_contract(Web3.toChecksumAddress(sell_token))
     if not gas_price:
-        gas_price = asyncio.create_task(get_base_gas_price(network, web3_url))
+        gas_price = asyncio.create_task(get_base_gas_price(chain_id, web3_url))
     allowance = await get_token_allowance(sell_token, spender_address, erc20_contract, taker_address)
     approve_cost = 0
     if allowance < sell_amount:
@@ -292,7 +297,7 @@ async def get_provider_price(
         )
     gas_price = await gas_price if isinstance(gas_price, asyncio.Task) else gas_price
     price = await provider_instance.get_swap_price(
-        buy_token, sell_token, sell_amount, network,
+        buy_token, sell_token, sell_amount, chain_id,
         affiliate_address, gas_price, slippage_percentage, taker_address,
         fee_recipient, buy_token_percentage_fee,
     )

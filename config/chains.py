@@ -15,7 +15,8 @@ class ChainsConfig(metaclass=Singleton):
         from config import chains
 
         chain = chains.eth
-        chain.chain_id == 1
+        chain.chain_id
+        # 1
     """
 
     def __init__(self):
