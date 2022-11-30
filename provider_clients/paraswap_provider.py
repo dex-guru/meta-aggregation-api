@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import re
+import ssl
 from decimal import Decimal
 from itertools import chain
 from typing import Optional, Union
@@ -60,7 +61,7 @@ class ParaSwapProvider(BaseProvider):
     async def request(self, method: str, path: str, *args, **kwargs):
         request_function = getattr(self.aiohttp_session, method.lower())
         url = self.MAIN_API_URL / path
-        async with request_function(url, *args, timeout=5, **kwargs) as response:
+        async with request_function(url, *args, timeout=5, **kwargs, ssl=ssl.SSLContext()) as response:
             logger.debug("Request '%s' to '%s'", method, url)
             data = await response.text()
             try:
@@ -103,7 +104,7 @@ class ParaSwapProvider(BaseProvider):
 
         try:
             quotes = await self.request(method="get", path=path, params=params)
-        except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
+        except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError, Exception) as e:
             e = self.handle_exception(e, method='get_swap_price', params=params, chain_id=chain_id)
             raise e
         response = self._convert_response_from_swap_price(quotes)

@@ -199,8 +199,8 @@ class OneInchProvider(BaseProvider):
         except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
             e = self.handle_exception(e, params=query, token_address=sell_token, chain_id=chain_id)
             raise e
-        sell_amount = int(sell_amount) / 10 ** response['fromToken'].decimals
-        buy_amount = int(response['toTokenAmount']) / 10 ** response['toToken'].decimals
+        sell_amount = int(sell_amount) / 10 ** response['fromToken']['decimals']
+        buy_amount = int(response['toTokenAmount']) / 10 ** response['toToken']['decimals']
         price = buy_amount / sell_amount
         value = '0'
         if sell_token.lower() == config.NATIVE_TOKEN_ADDRESS:

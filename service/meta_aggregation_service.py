@@ -182,22 +182,14 @@ async def get_swap_meta_price(
 
 
 async def get_decimals_for_native_and_buy_token(chain_id: int, buy_token: str) -> Tuple[int, int]:
-    wrapped_native_for_chain = chains.get_chain_by_id(chain_id).native_token.address
-    logger.debug('Getting decimals for native %s and buy tokens %s', wrapped_native_for_chain, buy_token)
-    guru_sdk = DexGuru(config.API_KEY)
-    if buy_token == config.NATIVE_TOKEN_ADDRESS or buy_token == wrapped_native_for_chain:
-        buy_token_inventory = await guru_sdk.get_token_inventory_by_address(
-            chain_id, wrapped_native_for_chain)
-        buy_token_decimals = buy_token_inventory.decimals
-        native_decimals = buy_token_decimals
+    wrapped_native = chains.get_chain_by_id(chain_id).native_token
+    native_decimals = wrapped_native.decimals
+    guru_sdk = DexGuru(config.API_KEY, domain='http://localhost:8001')
+    if buy_token == config.NATIVE_TOKEN_ADDRESS or buy_token == wrapped_native:
+        buy_token_decimals = native_decimals
     else:
-        buy_token_inventory, native_token_inventory = await asyncio.gather(
-            guru_sdk.get_token_inventory_by_address(chain_id, buy_token),
-            guru_sdk.get_token_inventory_by_address(
-                chain_id, wrapped_native_for_chain))
+        buy_token_inventory = await guru_sdk.get_token_inventory_by_address(chain_id, buy_token)
         buy_token_decimals = buy_token_inventory.decimals
-        native_decimals = native_token_inventory.decimals
-    logger.debug('Got decimals for native %s and buy tokens %s', wrapped_native_for_chain, buy_token)
     return native_decimals, buy_token_decimals
 
 
@@ -271,14 +263,13 @@ async def get_provider_price(
         taker_address: Optional[str] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
-        spender_addresses: Optional[list[dict]] = None,
 ) -> MetaPriceModel:
     provider_class = Providers.get(provider)
     if not provider_class:
         raise ProviderNotFound(provider)
 
-    spender_address = next((spender['address'] for spender in spender_addresses if spender['name'] == provider),
-                           None)
+    spender_address = next((spender['address'] for spender in config.providers[str(chain_id)]['market_order']
+                            if spender['name'] == provider), None)
     if not spender_address:
         raise SpenderAddressNotFound(provider)
     provider_instance = provider_class()
@@ -292,7 +283,7 @@ async def get_provider_price(
     if allowance < sell_amount:
         approve_cost = await get_approve_cost(
             owner_address=taker_address,
-            spender_addresses=spender_addresses,
+            spender_address=spender_address,
             erc20_contract=erc20_contract,
         )
     gas_price = await gas_price if isinstance(gas_price, asyncio.Task) else gas_price
