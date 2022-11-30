@@ -13,3 +13,14 @@ class ChainModel(BaseModel):
     chain_id: int
     description: str
     native_token: TokenModel = None
+
+
+class ProviderInfoModel(BaseModel):
+    display_name: str
+    address: str
+    name: str
+
+
+class ProvidersConfigModel(BaseModel):
+    limit_order: list[ProviderInfoModel]
+    market_order: list[ProviderInfoModel]

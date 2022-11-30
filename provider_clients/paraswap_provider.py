@@ -17,7 +17,7 @@ from models.meta_agg_models import SwapQuoteResponse
 from models.provider_response_models import SwapPriceResponse, SwapSources
 from provider_clients.base_provider import BaseProvider
 from utils.errors import AggregationProviderError, EstimationError, UserBalanceError, TokensError, PriceError, \
-    AllowanceError, ValidationFailedError
+    AllowanceError, ValidationFailedError, BaseAggregationProviderError
 from utils.logger import get_logger, LogArgs
 
 logger = get_logger(__name__)
@@ -245,7 +245,7 @@ class ParaSwapProvider(BaseProvider):
         return quote
 
     def handle_exception(self, exception: Union[ClientResponseError, KeyError, ValidationError],
-                         **kwargs) -> AggregationProviderError:
+                         **kwargs) -> BaseAggregationProviderError:
         """
         exception.message: "{"error": "Not enough liquidity for this trade"}"
         """

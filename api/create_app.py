@@ -6,6 +6,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from api.middlewares import RouteLoggerMiddleware
+from api.routes.info import info_route
 from api.routes.rpc import v1_rpc
 from api.routes.swap import swap_route
 from clients.apm_client import apm_client
@@ -109,4 +110,5 @@ def register_elastic_apm(app: FastAPI):
 
 def register_route(app: FastAPI):
     app.include_router(v1_rpc, prefix="", tags=["RPC Requests"])
-    app.include_router(swap_route, prefix="", tags=["RPC Requests"])
+    app.include_router(info_route, prefix="/info", tags=["Info"])
+    app.include_router(swap_route, prefix="/market", tags=["Swap"])

@@ -5,7 +5,7 @@ from pydantic import BaseSettings
 
 
 class ProvidersConfig(BaseSettings):
-    providers: Any = ujson.loads(open('config/providers_config.json', 'r').read())
+    providers: dict = ujson.loads(open('config/providers_config.json', 'r').read())
 
     # def __init__(self, **data: Any) -> None:
     #     with open('config/providers_config.json', 'r') as f:

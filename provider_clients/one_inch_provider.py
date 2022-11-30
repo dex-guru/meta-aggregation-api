@@ -15,7 +15,7 @@ from models.provider_response_models import SwapPriceResponse
 from models.provider_response_models import SwapSources
 from provider_clients.base_provider import BaseProvider
 from utils.errors import EstimationError, AggregationProviderError, InsufficientLiquidityError, UserBalanceError, \
-    AllowanceError, TokensError
+    AllowanceError, TokensError, BaseAggregationProviderError
 from utils.logger import get_logger, LogArgs
 
 LIMIT_ORDER_VERSION = 2.0
@@ -327,7 +327,7 @@ class OneInchProvider(BaseProvider):
             self,
             exception: Union[ClientResponseError, KeyError, ValidationError],
             **kwargs,
-    ) -> AggregationProviderError:
+    ) -> BaseAggregationProviderError:
         """
         exception.message: [
             {"code": 400, "description": "cannot estimate"}

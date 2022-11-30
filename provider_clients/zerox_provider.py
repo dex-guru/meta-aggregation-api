@@ -12,7 +12,7 @@ from config.chains import chains
 from models.meta_agg_models import SwapQuoteResponse, SwapSources
 from models.provider_response_models import SwapPriceResponse
 from provider_clients.base_provider import BaseProvider
-from utils.errors import AggregationProviderError, UserBalanceError
+from utils.errors import AggregationProviderError, UserBalanceError, BaseAggregationProviderError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -267,7 +267,7 @@ class ZeroXProvider(BaseProvider):
         return await self._get_response(url)
 
     def handle_exception(self, exception: Union[ClientResponseError, KeyError, ValidationError],
-                         **kwargs) -> AggregationProviderError:
+                         **kwargs) -> BaseAggregationProviderError:
         """
         exception.message: [
             {
