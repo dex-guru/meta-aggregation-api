@@ -20,9 +20,9 @@ from utils.logger import get_logger
 
 
 class Providers:
-    zero_x = ZeroXProvider,
-    one_inch = OneInchProvider,
-    paraswap = ParaSwapProvider,
+    zero_x = ZeroXProvider
+    one_inch = OneInchProvider
+    paraswap = ParaSwapProvider
 
     @classmethod
     def get(cls, provider_name: str):
@@ -72,7 +72,7 @@ async def get_approve_costs_per_provider(
     approve_costs_per_provider = {}
     for provider in providers:
         if not taker_address:
-            approve_costs_per_provider[provider['provider']] = 0
+            approve_costs_per_provider[provider['name']] = 0
             continue
         spender_address = provider['address']
         allowance = await get_token_allowance(sell_token, spender_address, erc20_contract, taker_address)
@@ -86,9 +86,9 @@ async def get_approve_costs_per_provider(
         if allowance < sell_amount:
             logger.debug('Allowance is not enough, getting approve cost')
             approve_cost = await get_approve_cost(taker_address, spender_address, erc20_contract)
-            approve_costs_per_provider[provider['provider']] = approve_cost
+            approve_costs_per_provider[provider['name']] = approve_cost
         else:
-            approve_costs_per_provider[provider['provider']] = 0
+            approve_costs_per_provider[provider['name']] = 0
     return approve_costs_per_provider
 
 
@@ -117,8 +117,8 @@ async def get_swap_meta_price(
         taker_address: Optional[str] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
-        spender_addresses: Optional[list[dict]] = None,
 ) -> List[MetaPriceModel]:
+    spender_addresses = config.providers[str(chain_id)]['market_order']
     # web3_url = await find_most_synced_node_in_pool(logger, get_chain_id_by_network(network))
     # TODO get web3 url from public api
     web3_url = config.WEB3_URL
@@ -134,7 +134,7 @@ async def get_swap_meta_price(
     for provider in spender_addresses:
         if provider is None:
             continue
-        provider_name = provider['provider']
+        provider_name = provider['name']
         provider_class = Providers.get(provider_name)
         if not provider_class:
             continue

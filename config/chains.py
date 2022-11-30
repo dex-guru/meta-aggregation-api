@@ -23,7 +23,7 @@ class ChainsConfig(metaclass=Singleton):
         self._set_chains()
 
     def _set_chains(self):
-        chains = requests.get('https://api.dev.dex.guru/v1/chain').json()
+        chains = requests.get('http://localhost:8001/v1/chain').json()
         for chain in chains['data']:
             self.__dict__[chain['name'].lower()] = ChainModel(**chain)
 
