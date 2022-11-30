@@ -1,0 +1,223 @@
+[
+  {
+    "chain_id": 1,
+    "limit_order": {
+      "spender_addresses": [
+        {
+          "display_name": "1inch",
+          "address": "0x119c71d3bbac22029622cbaec24854d3d32d2828",
+          "name": "one_inch"
+        }
+      ]
+    },
+    "market_order": {
+      "spender_addresses": [
+        {
+          "display_name": "0x",
+          "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+          "name": "zero_x"
+        },
+        {
+          "display_name": "1inch",
+          "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+          "name": "one_inch"
+        },
+        {
+          "display_name": "ParaSwap",
+          "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+          "name": "paraswap"
+        }
+      ]
+    }
+  },
+  {
+    "chain_id": 10,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x11431a89893025d2a48dca4eddc396f8c8117187",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef1abe32c034e558cdd535791643c58a13acc10",
+        "name": "zero_x"
+      },
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      },
+      {
+        "display_name": "ParaSwap",
+        "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+        "name": "paraswap"
+      }
+    ]
+  },
+  {
+    "chain_id": 56,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x1e38eff998df9d3669e32f4ff400031385bf6362",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+        "name": "zero_x"
+      },
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      },
+      {
+        "display_name": "ParaSwap",
+        "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+        "name": "paraswap"
+      }
+    ]
+  },
+  {
+    "chain_id": 137,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x94bc2a1c732bcad7343b25af48385fe76e08734f",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+        "name": "zero_x"
+      },
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      },
+      {
+        "display_name": "ParaSwap",
+        "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+        "name": "paraswap"
+      }
+    ]
+  },
+  {
+    "chain_id": 250,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x7f069df72b7a39bce9806e3afaf579e54d8cf2b9",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef189deaef76e379df891899eb5a00a94cbc250",
+        "name": "zero_x"
+      },
+      {
+        "display_name": "ParaSwap",
+        "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+        "name": "paraswap"
+      },
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      }
+    ]
+  },
+  {
+    "chain_id": 42161,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x7f069df72b7a39bce9806e3afaf579e54d8cf2b9",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+        "name": "zero_x"
+      },
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      },
+      {
+        "display_name": "ParaSwap",
+        "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+        "name": "paraswap"
+      }
+    ]
+  },
+  {
+    "chain_id": 42220,
+    "limit_order": [],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+        "name": "zero_x"
+      }
+    ]
+  },
+  {
+    "chain_id": 43114,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x0f85a912448279111694f4ba4f85dc641c54b594",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+        "name": "zero_x"
+      },
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      },
+      {
+        "display_name": "ParaSwap",
+        "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+        "name": "paraswap"
+      }
+    ]
+  },
+  {
+    "chain_id": 100,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x54431918cec22932fcf97e54769f4e00f646690f",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      }
+    ]
+  }
+]
