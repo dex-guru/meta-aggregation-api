@@ -14,8 +14,8 @@ swap_route = APIRouter()
 address_to_lower = constr(strip_whitespace=True, min_length=42, max_length=42, to_lower=True)
 
 
-@swap_route.get('/market/{network}/price', response_model=MetaPriceModel)
-@swap_route.get('/market/{network}/price/', response_model=MetaPriceModel, include_in_schema=False)
+@swap_route.get('/market/{chain_id}/price', response_model=MetaPriceModel)
+@swap_route.get('/market/{chain_id}/price/', response_model=MetaPriceModel, include_in_schema=False)
 async def get_swap_price(
         buy_token: address_to_lower = Query(..., alias='buyToken'),
         sell_token: address_to_lower = Query(..., alias='sellToken'),
@@ -56,8 +56,8 @@ async def get_swap_price(
     return next((quote for quote in res if quote.is_best), None)
 
 
-@swap_route.get('/market/{network}/price/all')
-@swap_route.get('/market/{network}/price/all/', include_in_schema=False)
+@swap_route.get('/market/{chain_id}/price/all')
+@swap_route.get('/market/{chain_id}/price/all/', include_in_schema=False)
 async def get_swap_price(
         request: Request,
         buy_token: address_to_lower = Query(..., alias='buyToken'),
@@ -95,8 +95,8 @@ async def get_swap_price(
     return res
 
 
-@swap_route.get('/market/{network}/quote', response_model=SwapQuoteResponse)
-@swap_route.get('/market/{network}/quote/', response_model=SwapQuoteResponse, include_in_schema=False)
+@swap_route.get('/market/{chain_id}/quote', response_model=SwapQuoteResponse)
+@swap_route.get('/market/{chain_id}/quote/', response_model=SwapQuoteResponse, include_in_schema=False)
 async def get_swap_quote(
         buy_token: address_to_lower = Query(..., alias='buyToken'),
         sell_token: address_to_lower = Query(..., alias='sellToken'),
