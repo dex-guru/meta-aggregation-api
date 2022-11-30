@@ -1,7 +1,7 @@
 from typing import Optional
 
-from elasticapm.contrib.starlette import make_apm_client
 from elasticapm.base import Client
+from elasticapm.contrib.starlette import make_apm_client
 
 from config import config as cfg, Config
 

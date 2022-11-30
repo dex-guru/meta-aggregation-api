@@ -10,14 +10,13 @@ from models.meta_agg_models import SwapQuoteResponse
 from service.meta_aggregation_service import get_swap_meta_price, get_meta_swap_quote, get_provider_price
 from utils.errors import BaseAggregationProviderError
 
-meta_aggregation_router = APIRouter()
+swap_route = APIRouter()
 address_to_lower = constr(strip_whitespace=True, min_length=42, max_length=42, to_lower=True)
 
 
-@meta_aggregation_router.get('/market/{network}/price', response_model=MetaPriceModel)
-@meta_aggregation_router.get('/market/{network}/price/', response_model=MetaPriceModel, include_in_schema=False)
+@swap_route.get('/market/{network}/price', response_model=MetaPriceModel)
+@swap_route.get('/market/{network}/price/', response_model=MetaPriceModel, include_in_schema=False)
 async def get_swap_price(
-        request: Request,
         buy_token: address_to_lower = Query(..., alias='buyToken'),
         sell_token: address_to_lower = Query(..., alias='sellToken'),
         sell_amount: conint(gt=0) = Query(..., alias='sellAmount'),
@@ -57,8 +56,8 @@ async def get_swap_price(
     return next((quote for quote in res if quote.is_best), None)
 
 
-@meta_aggregation_router.get('/market/{network}/price/all')
-@meta_aggregation_router.get('/market/{network}/price/all/', include_in_schema=False)
+@swap_route.get('/market/{network}/price/all')
+@swap_route.get('/market/{network}/price/all/', include_in_schema=False)
 async def get_swap_price(
         request: Request,
         buy_token: address_to_lower = Query(..., alias='buyToken'),
@@ -96,8 +95,8 @@ async def get_swap_price(
     return res
 
 
-@meta_aggregation_router.get('/market/{network}/quote', response_model=SwapQuoteResponse)
-@meta_aggregation_router.get('/market/{network}/quote/', response_model=SwapQuoteResponse, include_in_schema=False)
+@swap_route.get('/market/{network}/quote', response_model=SwapQuoteResponse)
+@swap_route.get('/market/{network}/quote/', response_model=SwapQuoteResponse, include_in_schema=False)
 async def get_swap_quote(
         buy_token: address_to_lower = Query(..., alias='buyToken'),
         sell_token: address_to_lower = Query(..., alias='sellToken'),

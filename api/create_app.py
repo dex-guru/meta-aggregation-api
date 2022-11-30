@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from api.middlewares import RouteLoggerMiddleware
 from api.routes.rpc import v1_rpc
+from api.routes.swap import swap_route
 from clients.apm_client import apm_client
 from config import Config
 from utils.httputils import setup_client_session, teardown_client_session
@@ -108,3 +109,4 @@ def register_elastic_apm(app: FastAPI):
 
 def register_route(app: FastAPI):
     app.include_router(v1_rpc, prefix="", tags=["RPC Requests"])
+    app.include_router(swap_route, prefix="", tags=["RPC Requests"])

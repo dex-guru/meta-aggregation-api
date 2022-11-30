@@ -25,4 +25,3 @@ class SwapPriceResponse(BaseModel):
     gasPrice: str
     value: str
     price: str
-
