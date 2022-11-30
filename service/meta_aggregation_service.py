@@ -98,7 +98,7 @@ async def get_base_gas_price(chain_id: Optional[int], web3_url: Optional[str] = 
         raise ValueError('Either chain_id or web3_url must be provided')
     if not web3_url:
         # TODO get web3 url from public api
-        pass
+        web3_url = config.WEB3_URL
         # web3_url = await find_most_synced_node_in_pool(logger, get_chain_id_by_network(network))
     w3 = Web3(CustomHTTPProvider(endpoint_uri=web3_url))
     gas_price = w3.eth.gas_price
