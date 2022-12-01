@@ -184,7 +184,7 @@ async def get_swap_meta_price(
 async def get_decimals_for_native_and_buy_token(chain_id: int, buy_token: str) -> Tuple[int, int]:
     wrapped_native = chains.get_chain_by_id(chain_id).native_token
     native_decimals = wrapped_native.decimals
-    guru_sdk = DexGuru(config.API_KEY, domain='http://localhost:8001')
+    guru_sdk = DexGuru(config.API_KEY)
     if buy_token == config.NATIVE_TOKEN_ADDRESS or buy_token == wrapped_native:
         buy_token_decimals = native_decimals
     else:
