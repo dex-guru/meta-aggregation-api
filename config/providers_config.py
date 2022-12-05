@@ -7,6 +7,8 @@ from pydantic import BaseSettings
 class ProvidersConfig(BaseSettings):
     providers: dict = ujson.loads(open('config/providers_config.json', 'r').read())
 
+    # TODO: remove redundant commented code
+
     # def __init__(self, **data: Any) -> None:
     #     with open('config/providers_config.json', 'r') as f:
     #         self.providers = ujson.load(f)

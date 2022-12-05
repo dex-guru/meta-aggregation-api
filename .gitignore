@@ -23,3 +23,7 @@ seed_data
 
 es_logs
 db/*
+
+
+# TODO: remove redundant ignores like seed_data, es_logs, db
+# suggestion: use gitingore generator like https://www.toptal.com/developers/gitignore/api/python

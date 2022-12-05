@@ -13,7 +13,7 @@ async def get_all_info():
     return config.providers
 
 
-@info_route.get('/{chain_id}', response_model=ProvidersConfigModel)
+@info_route.get('/{chain_id}', response_model=ProvidersConfigModel)     # TODO: for all endpoints: document resposne status codes to be displayed in OpenAPI Spec (Swagger)
 @info_route.get('/{chain_id}/', include_in_schema=False, response_model=ProvidersConfigModel)
 async def get_info(
         chain_id: int = Path(None, description='Chain ID'),

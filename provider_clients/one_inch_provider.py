@@ -32,7 +32,7 @@ ONE_INCH_ERRORS = {
 }
 
 MAX_RESULT_PRESET = {
-    "complexityLevel": 2,
+    "complexityLevel": 2,     # TODO: use either single or double quotes for strings consistently. (preferable double quotes)
     "mainRouteParts": 10,
     "parts": 50,
     "virtualParts": 50,

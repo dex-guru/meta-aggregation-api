@@ -29,7 +29,7 @@ def _get_session(*args, **kwargs):
 
 def make_post_request(endpoint_uri, data, *args, **kwargs):
     kwargs.setdefault('timeout', config.WEB3_TIMEOUT)
-    kwargs['headers'].update({'x-sys-key': config.X_SYS_KEY})
+    kwargs['headers'].update({'x-sys-key': config.X_SYS_KEY})    # TODO: don't add x-sys-key to request, if config.X_SYS_KEY is not specified
     session = _get_session(endpoint_uri)
     response = session.post(endpoint_uri, data=data, *args, **kwargs)
     response.raise_for_status()

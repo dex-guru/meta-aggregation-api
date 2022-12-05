@@ -9,10 +9,10 @@ from config import config
 
 CORRELATION_ID = "cid"
 SESSION_ID = "sid"
-CHAIN_ID = "chain_id"
-PIPELINE = "pipeline"
-ERR = "err"  # error object log argument
-ERR_TYPE = "err_type"  # error type log argument
+CHAIN_ID = "chain_id"       # TODO: delete as redundant (used for workers only)
+PIPELINE = "pipeline"       # TODO: delete as redundant (used for workers only)
+ERR = "err"  # error object log argument            # TODO: can be deleted (belongs to a new but unused logger)
+ERR_TYPE = "err_type"  # error type log argument    # TODO: can be deleted (belongs to a new but unused logger)
 
 # This field is keyword argument from <https://github.com/python/cpython/blob/3.10/Lib/logging/__init__.py#L1600>
 #   and never changed.
@@ -78,8 +78,8 @@ class CustomContextLogger(LoggerAdapter):
             # assigning a user session correlation key to all log messages
             kwargs[EXTRA][SESSION_ID] = sid
 
-        if ERR in kwargs[EXTRA] and ERR_TYPE not in kwargs[EXTRA]:
-            kwargs[EXTRA][ERR_TYPE] = type(kwargs[EXTRA][ERR]).__name__
+        if ERR in kwargs[EXTRA] and ERR_TYPE not in kwargs[EXTRA]:          # TODO: can be deleted (belongs to a new but unused logger)
+            kwargs[EXTRA][ERR_TYPE] = type(kwargs[EXTRA][ERR]).__name__     # TODO: can be deleted (belongs to a new but unused logger)
 
         return msg, kwargs
 
@@ -116,7 +116,7 @@ def get_logger(name: str, extra: Optional[dict] = None, corr_id: Optional[str] =
     extra = extra or {}
 
     if config.PIPELINE and PIPELINE not in extra:
-        extra[PIPELINE] = config.PIPELINE
+        extra[PIPELINE] = config.PIPELINE               # TODO: delete as redundant
 
     if corr_id:
         correlation_id.set(corr_id)

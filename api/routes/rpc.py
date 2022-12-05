@@ -12,7 +12,7 @@ address_to_lower = constr(strip_whitespace=True, min_length=42, max_length=42, t
 logger = get_logger(__name__)
 
 
-@v1_rpc.post('/rpc/{network}', dependencies=[Depends(HTTPBearer())])
+@v1_rpc.post('/rpc/{network}', dependencies=[Depends(HTTPBearer())])  # TODO: document endpoint for OpenApi Spec (Swagger): description, maybe links to external documentation for requests and responses
 async def send_rpc(
         request: Request,
         network: str = Path(None, description="Network name"),
