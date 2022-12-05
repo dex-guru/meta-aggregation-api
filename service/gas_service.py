@@ -1,13 +1,13 @@
 from statistics import mean
 from time import time
 from typing import Optional
-from urllib.parse import urljoin
 
 from web3 import Web3
 
 from clients.blockchain.custom_http_provider import CustomHTTPProvider
-from config import config, chains
+from config import chains
 from utils.async_utils import async_from_sync
+from utils.common import get_web3_url
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 async def get_gas_prices(chain_id: int) -> dict:
     logger.debug('Getting gas prices for network %s', chain_id)
-    web3_url = urljoin(config.WEB3_URL, f'/{chain_id}/{config.PUBLIC_KEY}')
+    web3_url = get_web3_url(chain_id)
     w3 = Web3(CustomHTTPProvider(endpoint_uri=web3_url))
     if chains.get_chain_by_id(chain_id).eip1559:
         return await get_gas_prices_eip1559(w3)

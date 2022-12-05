@@ -1,5 +1,3 @@
-from typing import Any
-
 import ujson
 from pydantic import BaseSettings
 

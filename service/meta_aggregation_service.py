@@ -1,14 +1,11 @@
 import asyncio
 from decimal import Decimal
-from statistics import mean
 from typing import Optional, Tuple, List
-from urllib.parse import urljoin
 
 from dexguru_sdk import DexGuru
 from web3 import Web3
 from web3.contract import Contract
 
-from clients.blockchain.custom_http_provider import CustomHTTPProvider
 from clients.blockchain.evm import EVMBase
 from config import config, chains
 from models.meta_agg_models import MetaPriceModel, MetaSwapPriceResponse
@@ -16,7 +13,9 @@ from models.provider_response_models import SwapPriceResponse
 from provider_clients.one_inch_provider import OneInchProvider
 from provider_clients.paraswap_provider import ParaSwapProvider
 from provider_clients.zerox_provider import ZeroXProvider
+from service.gas_service import get_gas_prices
 from utils.async_utils import async_from_sync
+from utils.common import get_web3_url
 from utils.errors import ProviderNotFound, SpenderAddressNotFound
 from utils.logger import get_logger
 
@@ -101,14 +100,14 @@ async def get_swap_meta_price(
         buy_token_percentage_fee: Optional[float] = None,
 ) -> List[MetaPriceModel]:
     spender_addresses = config.providers[str(chain_id)]['market_order']
-    web3_url = urljoin(config.WEB3_URL, f'/{chain_id}/{config.PUBLIC_KEY}')
+    web3_url = get_web3_url(chain_id)
     erc20_contract = EVMBase(web3_url).get_erc20_contract(Web3.toChecksumAddress(sell_token))
     approve_costs = asyncio.create_task(get_approve_costs_per_provider(sell_token, erc20_contract,
                                                                        sell_amount, spender_addresses, taker_address))
     get_decimals_task = asyncio.create_task(get_decimals_for_native_and_buy_token(chain_id, buy_token))
     get_buy_token_price_task = asyncio.create_task(DexGuru(config.API_KEY).get_token_finance(chain_id, buy_token))
     if not gas_price:
-        gas_price = await get_gas_prices(chain_id, web3_url)
+        gas_price = await get_gas_prices(chain_id)
 
     quotes_tasks = []
     for provider in spender_addresses:
@@ -248,10 +247,10 @@ async def get_provider_price(
         raise SpenderAddressNotFound(provider)
     provider_instance = provider_class()
 
-    web3_url = urljoin(config.WEB3_URL, f'/{chain_id}/{config.PUBLIC_KEY}')
+    web3_url = get_web3_url(chain_id)
     erc20_contract = EVMBase(web3_url).get_erc20_contract(Web3.toChecksumAddress(sell_token))
     if not gas_price:
-        gas_price = asyncio.create_task(get_gas_prices(chain_id, web3_url))
+        gas_price = asyncio.create_task(get_gas_prices(chain_id))
     allowance = await get_token_allowance(sell_token, spender_address, erc20_contract, taker_address)
     approve_cost = 0
     if allowance < sell_amount:
