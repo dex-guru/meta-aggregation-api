@@ -1,4 +1,4 @@
-import requests
+from dexguru_sdk import DexGuru
 
 from models.chain import ChainModel
 from utils.common import Singleton
@@ -19,13 +19,10 @@ class ChainsConfig(metaclass=Singleton):
         # 1
     """
 
-    def __init__(self):
-        self._set_chains()
-
-    def _set_chains(self):
-        chains = requests.get('http://localhost:8001/v1/chain').json()
-        for chain in chains['data']:
-            self.__dict__[chain['name'].lower()] = ChainModel(**chain)
+    async def set_chains(self, api_key: str, domain: str):
+        chains_ = await DexGuru(api_key=api_key, domain=domain).get_chains()
+        for chain in chains_.data:
+            self.__dict__[chain.name.lower()] = ChainModel.parse_obj(chain.dict())
 
     def __contains__(self, item: str | int):
         return item in self.__dict__.keys() or item in [chain.chain_id for chain in self.__dict__.values()]

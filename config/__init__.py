@@ -12,7 +12,8 @@ class Config(APMConfig, LoggerConfig, ProvidersConfig):
     NATIVE_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     VERSION = '0.0.1'
     WEB3_URL = 'https://api-proxy-stage-lax.dexguru.biz'
-    API_KEY = 'default'
+    PUBLIC_KEY = 'default'
+    PUBLIC_API_DOMAIN = 'http://localhost:8001'
     PUBLIC_API_VERSION = 1
     WEB3_TIMEOUT: int = 10
     X_SYS_KEY = 'default'

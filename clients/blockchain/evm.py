@@ -1,14 +1,18 @@
 from pathlib import Path
-from typing import Optional, Type, Union
+from typing import Optional, Type, Union, List
 
 import ujson
 from web3 import Web3
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
+from web3.types import FeeHistory
 
 from clients.blockchain.custom_http_provider import CustomHTTPProvider
+from utils.logger import get_logger
 
 ERC20_ABI_PATH = Path(__file__).parent / 'abi' / 'ERC20.json'
+
+logger = get_logger(__name__)
 
 
 class EVMBase:
@@ -24,3 +28,18 @@ class EVMBase:
         if address:
             params['address'] = Web3.toChecksumAddress(address)
         return self.w3.eth.contract(**params)
+
+    def get_fee_history(self,
+                        block_count: int,
+                        newest_block: Union[int, str] = 'latest',
+                        reward_percentiles: Optional[List[float]] = None) -> Optional[FeeHistory]:
+        node_uri = self.w3.manager.provider.endpoint_uri
+        try:
+            response: FeeHistory = self.w3.eth.fee_history(block_count, newest_block, reward_percentiles)
+        except ValueError as e:
+            logger.error(f"Issue getting fee prices, probably block is not in cache of {node_uri} anymore {e}")
+            return None
+        if 'reward' not in response:
+            logger.error(f'Node {node_uri} not have fee history data for block {newest_block}')
+            return None
+        return response

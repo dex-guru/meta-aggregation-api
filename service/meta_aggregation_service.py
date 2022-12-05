@@ -1,6 +1,8 @@
 import asyncio
 from decimal import Decimal
+from statistics import mean
 from typing import Optional, Tuple, List
+from urllib.parse import urljoin
 
 from dexguru_sdk import DexGuru
 from web3 import Web3
@@ -40,7 +42,7 @@ def get_token_allowance(
         owner_address: Optional[str] = None,
 ) -> int:
     logger.debug('Getting allowance for token %s', token_address)
-    if token_address == config.NATIVE_TOKEN_ADDRESS:
+    if token_address == config.NATIVE_TOKEN_ADDRESS or not owner_address:
         return 2 ** 256 - 1
     owner_address = Web3.toChecksumAddress(owner_address)
     spender_address = Web3.toChecksumAddress(spender_address)
@@ -76,13 +78,7 @@ async def get_approve_costs_per_provider(
             continue
         spender_address = provider['address']
         allowance = await get_token_allowance(sell_token, spender_address, erc20_contract, taker_address)
-        logger.info('Got allowance for token %s: %s', sell_token, allowance,
-                    extra={
-                        'taker_address': taker_address,
-                        'spender_address': spender_address,
-                        'token_address': sell_token,
-                    })
-
+        logger.debug('Got allowance for token %s: %s', sell_token, allowance)
         if allowance < sell_amount:
             logger.debug('Allowance is not enough, getting approve cost')
             approve_cost = await get_approve_cost(taker_address, spender_address, erc20_contract)
@@ -90,20 +86,6 @@ async def get_approve_costs_per_provider(
         else:
             approve_costs_per_provider[provider['name']] = 0
     return approve_costs_per_provider
-
-
-async def get_base_gas_price(chain_id: Optional[int], web3_url: Optional[str] = None) -> int:
-    logger.debug('Getting gas prices for network %s', chain_id)
-    if not web3_url and not chain_id:
-        raise ValueError('Either chain_id or web3_url must be provided')
-    if not web3_url:
-        # TODO get web3 url from public api
-        web3_url = config.WEB3_URL
-        # web3_url = await find_most_synced_node_in_pool(logger, get_chain_id_by_network(network))
-    w3 = Web3(CustomHTTPProvider(endpoint_uri=web3_url))
-    gas_price = w3.eth.gas_price
-    logger.info('Gas price for chain %s is %s', chain_id, gas_price)
-    return gas_price
 
 
 async def get_swap_meta_price(
@@ -119,16 +101,14 @@ async def get_swap_meta_price(
         buy_token_percentage_fee: Optional[float] = None,
 ) -> List[MetaPriceModel]:
     spender_addresses = config.providers[str(chain_id)]['market_order']
-    # web3_url = await find_most_synced_node_in_pool(logger, get_chain_id_by_network(network))
-    # TODO get web3 url from public api
-    web3_url = config.WEB3_URL
+    web3_url = urljoin(config.WEB3_URL, f'/{chain_id}/{config.PUBLIC_KEY}')
     erc20_contract = EVMBase(web3_url).get_erc20_contract(Web3.toChecksumAddress(sell_token))
     approve_costs = asyncio.create_task(get_approve_costs_per_provider(sell_token, erc20_contract,
                                                                        sell_amount, spender_addresses, taker_address))
     get_decimals_task = asyncio.create_task(get_decimals_for_native_and_buy_token(chain_id, buy_token))
     get_buy_token_price_task = asyncio.create_task(DexGuru(config.API_KEY).get_token_finance(chain_id, buy_token))
     if not gas_price:
-        gas_price = await get_base_gas_price(chain_id, web3_url)
+        gas_price = await get_gas_prices(chain_id, web3_url)
 
     quotes_tasks = []
     for provider in spender_addresses:
@@ -150,13 +130,8 @@ async def get_swap_meta_price(
     if not any(quotes):
         logger.error(
             'No prices found',
-            extra={
-                'buy_token': buy_token,
-                'sell_token': sell_token,
-                'sell_amount': sell_amount,
-                'chain_id': chain_id,
-                'providers': list(quotes.keys()),
-            }
+            extra={'buy_token': buy_token, 'sell_token': sell_token, 'sell_amount': sell_amount,
+                   'chain_id': chain_id, 'providers': list(quotes.keys())}
         )
         raise ValueError('No prices found')
     approve_costs = await approve_costs
@@ -267,17 +242,16 @@ async def get_provider_price(
     provider_class = Providers.get(provider)
     if not provider_class:
         raise ProviderNotFound(provider)
-
     spender_address = next((spender['address'] for spender in config.providers[str(chain_id)]['market_order']
                             if spender['name'] == provider), None)
     if not spender_address:
         raise SpenderAddressNotFound(provider)
     provider_instance = provider_class()
 
-    web3_url = config.WEB3_URL
+    web3_url = urljoin(config.WEB3_URL, f'/{chain_id}/{config.PUBLIC_KEY}')
     erc20_contract = EVMBase(web3_url).get_erc20_contract(Web3.toChecksumAddress(sell_token))
     if not gas_price:
-        gas_price = asyncio.create_task(get_base_gas_price(chain_id, web3_url))
+        gas_price = asyncio.create_task(get_gas_prices(chain_id, web3_url))
     allowance = await get_token_allowance(sell_token, spender_address, erc20_contract, taker_address)
     approve_cost = 0
     if allowance < sell_amount:

@@ -6,11 +6,12 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from api.middlewares import RouteLoggerMiddleware
+from api.routes.gas import gas_routes
 from api.routes.info import info_route
 from api.routes.rpc import v1_rpc
 from api.routes.swap import swap_route
 from clients.apm_client import apm_client
-from config import Config
+from config import Config, ChainsConfig
 from utils.httputils import setup_client_session, teardown_client_session
 from utils.logger import get_logger
 
@@ -61,6 +62,7 @@ def create_app(config: Config):
     @app.on_event("startup")
     async def startup_event():
         await setup_client_session()
+        await ChainsConfig().set_chains(app.config.PUBLIC_KEY, app.config.PUBLIC_API_DOMAIN)
 
     @app.on_event("shutdown")
     async def shutdown_event():
@@ -110,5 +112,6 @@ def register_elastic_apm(app: FastAPI):
 
 def register_route(app: FastAPI):
     app.include_router(v1_rpc, prefix="", tags=["RPC Requests"])
+    app.include_router(gas_routes, prefix="/gas", tags=["Gas"])
     app.include_router(info_route, prefix="/info", tags=["Info"])
     app.include_router(swap_route, prefix="/market", tags=["Swap"])

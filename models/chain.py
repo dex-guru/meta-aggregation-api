@@ -13,6 +13,7 @@ class ChainModel(BaseModel):
     chain_id: int
     description: str
     native_token: TokenModel = None
+    eip1559: bool
 
 
 class ProviderInfoModel(BaseModel):
