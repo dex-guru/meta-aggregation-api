@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+# TODO: NO VALIDATION ON MODELS?
+
 
 class TokenModel(BaseModel):
     address: str

@@ -17,10 +17,13 @@ async def send_rpc(
         request: Request,
         network: str = Path(None, description="Network name"),
 ):
+    # TODO: Add rpc endpoint description
     from utils.httputils import CLIENT_SESSION
+    # TODO: don't forget to remove
     chain_id = chains[network].chain_id
     #
     # node = await find_most_synced_node_in_pool(logger=logger, chain_id=chain_id)
+    # TODO: app.config?
     node = config.WEB3_URL
     if node is None:
         return {}

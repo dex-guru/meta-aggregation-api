@@ -50,6 +50,8 @@ PARASWAP_ERRORS = {
     'ERROR_BUILDING_TRANSACTION': EstimationError,
 }
 
+# TODO: Add description, links to one paraswap docs
+
 
 class ParaSwapProvider(BaseProvider):
     MAIN_API_URL: yarl.URL = yarl.URL("https://apiv5.paraswap.io/")

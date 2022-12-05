@@ -31,7 +31,7 @@ class Providers:
 
 logger = get_logger(__name__)
 
-
+# TODO: check if async Web 3 can work for us @Safrankov have exp
 @async_from_sync
 def get_token_allowance(
         token_address: str,
@@ -48,7 +48,7 @@ def get_token_allowance(
     allowance = erc20_contract.functions.allowance(owner_address, spender_address).call({'to': token_address})
     return allowance
 
-
+# TODO: check if async Web 3 can work for us @Safrankov have exp
 @async_from_sync
 def get_approve_cost(
         owner_address: str,
@@ -69,6 +69,7 @@ async def get_approve_costs_per_provider(
         providers: list,
         taker_address: Optional[str] = None,
 ) -> dict:
+    # TODO: descriprtion of approval problem
     approve_costs_per_provider = {}
     for provider in providers:
         if not taker_address:
@@ -91,8 +92,9 @@ async def get_approve_costs_per_provider(
             approve_costs_per_provider[provider['name']] = 0
     return approve_costs_per_provider
 
-
+# TODO: cache? saving nodes requests
 async def get_base_gas_price(chain_id: Optional[int], web3_url: Optional[str] = None) -> int:
+    # TODO: why we are not using pydantic decorator for validation?
     logger.debug('Getting gas prices for network %s', chain_id)
     if not web3_url and not chain_id:
         raise ValueError('Either chain_id or web3_url must be provided')
@@ -106,6 +108,7 @@ async def get_base_gas_price(chain_id: Optional[int], web3_url: Optional[str] = 
     return gas_price
 
 
+# TODO: cache?, partially at least
 async def get_swap_meta_price(
         buy_token: str,
         sell_token: str,
@@ -118,6 +121,7 @@ async def get_swap_meta_price(
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
 ) -> List[MetaPriceModel]:
+    # TODO: Add description, app.config?
     spender_addresses = config.providers[str(chain_id)]['market_order']
     # web3_url = await find_most_synced_node_in_pool(logger, get_chain_id_by_network(network))
     # TODO get web3 url from public api
@@ -182,6 +186,7 @@ async def get_swap_meta_price(
 
 
 async def get_decimals_for_native_and_buy_token(chain_id: int, buy_token: str) -> Tuple[int, int]:
+    # TODO: add description
     wrapped_native = chains.get_chain_by_id(chain_id).native_token
     native_decimals = wrapped_native.decimals
     guru_sdk = DexGuru(config.API_KEY)
@@ -200,6 +205,7 @@ def choose_best_provider(
         buy_token_decimals: int,
         buy_token_price: float,
 ) -> Tuple[str, MetaSwapPriceResponse]:
+    # TODO: Formula description
     best_provider = None
     best_quote = None
     best_profit = None
@@ -232,6 +238,7 @@ async def get_meta_swap_quote(
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
 ):
+    # TODO: Add description
     provider_class = Providers.get(provider)
     if not provider_class:
         return

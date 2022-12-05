@@ -83,6 +83,7 @@ def create_app(config: Config):
 
 
 def register_cors(app: FastAPI):
+    # TODO: to config
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -103,6 +104,7 @@ def register_route_logging(app: FastAPI):
 
 
 def register_elastic_apm(app: FastAPI):
+    # TODO: publish dashboard import file into repo as well
     app_config: Config = app.config
     if app_config.APM_ENABLED:
         app.add_middleware(ElasticAPM, client=apm_client.client)
