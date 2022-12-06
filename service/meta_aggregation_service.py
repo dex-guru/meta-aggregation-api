@@ -33,7 +33,7 @@ class Providers:
 
 logger = get_logger(__name__)
 
-
+# TODO: check if async Web 3 can work for us @Safrankov have exp
 @async_from_sync
 def get_token_allowance(
         token_address: str,
@@ -50,7 +50,7 @@ def get_token_allowance(
     allowance = erc20_contract.functions.allowance(owner_address, spender_address).call({'to': token_address})
     return allowance
 
-
+# TODO: check if async Web 3 can work for us @Safrankov have exp
 @async_from_sync
 def get_approve_cost(
         owner_address: str,
@@ -71,6 +71,7 @@ async def get_approve_costs_per_provider(
         providers: list,
         taker_address: Optional[str] = None,
 ) -> dict:
+    # TODO: descriprtion of approval problem
     approve_costs_per_provider = {}
     for provider in providers:
         if not taker_address:
@@ -87,7 +88,7 @@ async def get_approve_costs_per_provider(
             approve_costs_per_provider[provider['name']] = 0
     return approve_costs_per_provider
 
-
+# TODO: cache?, partially at least
 async def get_swap_meta_price(
         buy_token: str,
         sell_token: str,
@@ -100,6 +101,7 @@ async def get_swap_meta_price(
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
 ) -> List[MetaPriceModel]:
+    # TODO: Add description, app.config?
     spender_addresses = providers[str(chain_id)]['market_order']
     web3_url = get_web3_url(chain_id)
     erc20_contract = EVMBase(web3_url).get_erc20_contract(Web3.toChecksumAddress(sell_token))
@@ -157,6 +159,7 @@ async def get_swap_meta_price(
 
 
 async def get_decimals_for_native_and_buy_token(chain_id: int, buy_token: str) -> Tuple[int, int]:
+    # TODO: add description
     wrapped_native = chains.get_chain_by_id(chain_id).native_token
     native_decimals = wrapped_native.decimals
     guru_sdk = DexGuru(config.API_KEY)
@@ -175,6 +178,7 @@ def choose_best_provider(
         buy_token_decimals: int,
         buy_token_price: float,
 ) -> Tuple[str, MetaSwapPriceResponse]:
+    # TODO: Formula description
     best_provider = None
     best_quote = None
     best_profit = None
@@ -207,6 +211,7 @@ async def get_meta_swap_quote(
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
 ):
+    # TODO: Add description
     provider_class = Providers.get(provider)
     if not provider_class:
         return

@@ -1,0 +1,14 @@
+# TODO: include api, elastic, logstash, apm
+version: '3'
+services:
+  trading-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    volumes:
+      - ./:/code
+    environment:
+      PIPELINE: prod
+    restart: on-failure

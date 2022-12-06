@@ -9,6 +9,7 @@ info_route = APIRouter()
 @info_route.get('/')
 @info_route.get('', include_in_schema=False)
 async def get_all_info():
+    # TODO: why not app.config?
     return providers
 
 
@@ -17,6 +18,7 @@ async def get_all_info():
 async def get_info(
         chain_id: int = Path(None, description='Chain ID'),
 ) -> ProvidersConfigModel:
+    # TODO: why not app.config?
     info = providers.get(str(chain_id))
     if not info:
         raise HTTPException(status_code=404, detail='Chain ID not found.')

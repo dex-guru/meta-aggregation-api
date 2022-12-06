@@ -22,6 +22,8 @@ ZERO_X_ERRORS = {
     # TODO add more errors
 }
 
+# TODO: Add description, links to one 0x docs
+
 
 class ZeroXProvider(BaseProvider):
     """ Docs: https://0x.org/docs/api#introduction """
