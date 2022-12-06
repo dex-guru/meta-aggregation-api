@@ -8,6 +8,7 @@ from web3.contract import Contract
 
 from clients.blockchain.evm import EVMBase
 from config import config, chains
+from config.providers import providers
 from models.meta_agg_models import MetaPriceModel, MetaSwapPriceResponse
 from models.provider_response_models import SwapPriceResponse
 from provider_clients.one_inch_provider import OneInchProvider
@@ -99,7 +100,7 @@ async def get_swap_meta_price(
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
 ) -> List[MetaPriceModel]:
-    spender_addresses = config.providers[str(chain_id)]['market_order']
+    spender_addresses = providers[str(chain_id)]['market_order']
     web3_url = get_web3_url(chain_id)
     erc20_contract = EVMBase(web3_url).get_erc20_contract(Web3.toChecksumAddress(sell_token))
     approve_costs = asyncio.create_task(get_approve_costs_per_provider(sell_token, erc20_contract,
@@ -241,7 +242,7 @@ async def get_provider_price(
     provider_class = Providers.get(provider)
     if not provider_class:
         raise ProviderNotFound(provider)
-    spender_address = next((spender['address'] for spender in config.providers[str(chain_id)]['market_order']
+    spender_address = next((spender['address'] for spender in providers[str(chain_id)]['market_order']
                             if spender['name'] == provider), None)
     if not spender_address:
         raise SpenderAddressNotFound(provider)

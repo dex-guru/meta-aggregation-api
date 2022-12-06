@@ -2,10 +2,9 @@ from config.apm import APMConfig
 from config.chains import ChainsConfig
 from config.chains import chains
 from config.logger import LoggerConfig
-from config.providers_config import ProvidersConfig
 
 
-class Config(APMConfig, LoggerConfig, ProvidersConfig):
+class Config(APMConfig, LoggerConfig):
     SERVER_HOST: str = 'http://localhost:8000'
     IS_DEBUG: bool = True
     PIPELINE: str = 'stage'
