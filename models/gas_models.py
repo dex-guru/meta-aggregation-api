@@ -1,16 +1,12 @@
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class Eip1559Model(BaseModel):
-    max_fee: int = Field(..., alias="maxFee")
-    base_fee: int = Field(..., alias="baseFee")
-    max_priority_fee: int = Field(..., alias="maxPriorityFee")
-
-    class Config:
-        allow_population_by_field_name = True
-        response_by_alias = True
+    max_fee: int
+    base_fee: int
+    max_priority_fee: int
 
 
 class GasPriceEip1559Model(BaseModel):
