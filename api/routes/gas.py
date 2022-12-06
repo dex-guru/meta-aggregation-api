@@ -7,7 +7,7 @@ from service.gas_service import get_gas_prices
 gas_routes = APIRouter()
 
 
-@gas_routes.get('/{chain_id}')
+@gas_routes.get('/{chain_id}', response_model=GasResponse)
 async def get_prices(chain_id: int = Path(None, description='Network')) -> GasResponse:
     try:
         res: GasResponse = await get_gas_prices(chain_id)
