@@ -111,7 +111,7 @@ def register_elastic_apm(app: FastAPI):
 
 
 def register_route(app: FastAPI):
-    app.include_router(v1_rpc, prefix="", tags=["RPC Requests"])
-    app.include_router(gas_routes, prefix="/gas", tags=["Gas"])
-    app.include_router(info_route, prefix="/info", tags=["Info"])
-    app.include_router(swap_route, prefix="/market", tags=["Swap"])
+    app.include_router(v1_rpc, prefix="/v1", tags=["RPC Requests"])
+    app.include_router(gas_routes, prefix="/v1/gas", tags=["Gas"])
+    app.include_router(info_route, prefix="/v1/info", tags=["Info"])
+    app.include_router(swap_route, prefix="/v1/market", tags=["Swap"])
