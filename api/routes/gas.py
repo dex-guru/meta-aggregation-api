@@ -1,16 +1,17 @@
 from fastapi import Path, HTTPException
 from fastapi.routing import APIRouter
 
+from models.gas_models import GasResponse
 from service.gas_service import get_gas_prices
 
 gas_routes = APIRouter()
 
 
 @gas_routes.get('/{chain_id}')
-async def get_prices(chain_id: int = Path(None, description='Network')) -> dict:
+async def get_prices(chain_id: int = Path(None, description='Network')) -> GasResponse:
     try:
-        res: dict = await get_gas_prices(chain_id)
+        res: GasResponse = await get_gas_prices(chain_id)
     except Exception as e:
-        raise HTTPException(status_code=e.status, detail=e.message)
+        raise HTTPException(detail=str(e), status_code=500)
     else:
         return res

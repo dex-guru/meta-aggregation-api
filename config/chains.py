@@ -1,7 +1,7 @@
 from dexguru_sdk import DexGuru
 
 from models.chain import ChainModel
-from utils.common import Singleton
+from utils import Singleton
 
 
 class ChainsConfig(metaclass=Singleton):
@@ -31,7 +31,7 @@ class ChainsConfig(metaclass=Singleton):
         for chain in self.__dict__.values():
             if chain.chain_id == chain_id:
                 return chain
-        raise ValueError(f'Chain with id {chain_id} not found')
+        raise ValueError(f'Chain id {chain_id} not found')
 
 
 chains = ChainsConfig()

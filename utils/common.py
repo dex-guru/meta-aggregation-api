@@ -11,12 +11,3 @@ def _camel_to_snake(field: str) -> str:
 
 def get_web3_url(chain_id: int):
     return urljoin(config.WEB3_URL, f'{chain_id}/{config.PUBLIC_KEY}')
-
-
-class Singleton(type):
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]

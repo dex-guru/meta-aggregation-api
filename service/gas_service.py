@@ -2,10 +2,13 @@ from statistics import mean
 from time import time
 from typing import Optional
 
+from requests import ReadTimeout
+from tenacity import retry, retry_if_exception_type
 from web3 import Web3
 
 from clients.blockchain.custom_http_provider import CustomHTTPProvider
 from config import chains
+from models.gas_models import GasResponse
 from utils.async_utils import async_from_sync
 from utils.common import get_web3_url
 from utils.logger import get_logger
@@ -13,7 +16,7 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-async def get_gas_prices(chain_id: int) -> dict:
+async def get_gas_prices(chain_id: int) -> GasResponse:
     logger.debug('Getting gas prices for network %s', chain_id)
     web3_url = get_web3_url(chain_id)
     w3 = Web3(CustomHTTPProvider(endpoint_uri=web3_url))
@@ -23,10 +26,12 @@ async def get_gas_prices(chain_id: int) -> dict:
 
 
 @async_from_sync
-def get_gas_prices_eip1559(w3: Web3) -> Optional[dict]:
+@retry(retry=retry_if_exception_type(ReadTimeout), stop=3)
+def get_gas_prices_eip1559(w3: Web3) -> Optional[GasResponse]:
     try:
         gas_history = w3.eth.fee_history(4, 'latest', [60, 75, 90])
-    except (ValueError) as e:
+    # TODO: find more specific exception
+    except (ValueError, Exception) as e:
         return None
     reward = gas_history['reward']
     # baseFee for next block
@@ -39,36 +44,39 @@ def get_gas_prices_eip1559(w3: Web3) -> Optional[dict]:
     fast_priority = int(mean(reward_fast))
     instant_priority = int(mean(reward_instant))
     overkill_priority = int(mean(reward_overkill))
-    return {
+    return GasResponse.parse_obj({
         'source': 'DEXGURU',
         'timestamp': int(time()),
-        'eip-1559': {
+        'eip1559': {
             'fast': {
-                'maxFee': base_fee + fast_priority,
-                'baseFee': base_fee,
-                'maxPriorityFee': fast_priority,
+                'max_fee': base_fee + fast_priority,
+                'base_fee': base_fee,
+                'max_priority_fee': fast_priority,
             },
             'instant': {
-                'maxFee': base_fee + instant_priority,
-                'baseFee': base_fee,
-                'maxPriorityFee': instant_priority,
+                'max_fee': base_fee + instant_priority,
+                'base_fee': base_fee,
+                'max_priority_fee': instant_priority,
             },
             'overkill': {
-                'maxFee': base_fee + overkill_priority,
-                'baseFee': base_fee,
-                'maxPriorityFee': overkill_priority,
+                'max_fee': base_fee + overkill_priority,
+                'base_fee': base_fee,
+                'max_priority_fee': overkill_priority,
             }
         }
-    }
+    })
 
 
 @async_from_sync
-def get_gas_prices_legacy(w3: Web3) -> dict:
+@retry(retry=retry_if_exception_type(ReadTimeout), stop=3)
+def get_gas_prices_legacy(w3: Web3) -> GasResponse:
     gas_price = w3.eth.gas_price
-    return {
+    return GasResponse.parse_obj({
         'source': 'DEXGURU',
         'timestamp': int(time()),
-        'fast': gas_price,
-        'instant': gas_price,
-        'overkill': gas_price
-    }
+        'legacy': {
+            'fast': gas_price,
+            'instant': gas_price,
+            'overkill': gas_price,
+        }
+    })
