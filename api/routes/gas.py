@@ -1,4 +1,4 @@
-from fastapi import Path, HTTPException
+from fastapi import Path
 from fastapi.routing import APIRouter
 
 from models.gas_models import GasResponse
@@ -8,10 +8,9 @@ gas_routes = APIRouter()
 
 
 @gas_routes.get('/{chain_id}', response_model=GasResponse)
-async def get_prices(chain_id: int = Path(None, description='Network')) -> GasResponse:
-    try:
-        res: GasResponse = await get_gas_prices(chain_id)
-    except Exception as e:
-        raise HTTPException(detail=str(e), status_code=500)
-    else:
-        return res
+async def get_prices(chain_id: int = Path(..., description='Chain ID')) -> GasResponse:
+    """
+    Returns the gas prices for a given chain.
+    Returned object has not null eip1559 field for chains that support it.
+    """
+    return await get_gas_prices(chain_id)

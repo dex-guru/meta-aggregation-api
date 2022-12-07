@@ -1,19 +1,9 @@
 from abc import abstractmethod
 
 from fastapi import HTTPException
+from pydantic import BaseModel
 
 from utils.logger import LogArgs
-
-
-class RequestException(Exception):
-    def __init__(self, e):
-        try:
-            self.msg = f"Check field {e['detail'][0]['loc'][1]}: {e['detail'][0]['msg']}"
-        except (IndexError, TypeError, KeyError):
-            self.msg = e.get('detail', e.get('message', e))
-
-    def __str__(self):
-        return self.msg
 
 
 class UserMistakes:
@@ -29,6 +19,11 @@ class OurMistakes:
 class ProviderMistakes:
     code = 409
     error_owner = 'provider'
+
+class HttpErrorModel(BaseModel):
+    error: str
+    reason: str
+    provider: str
 
 
 class BaseAggregationProviderError(Exception):
@@ -75,11 +70,11 @@ class BaseAggregationProviderError(Exception):
         )
 
     def to_http_exception(self) -> HTTPException:
-        return HTTPException(status_code=self.code, detail={
+        return HTTPException(status_code=self.code, detail=HttpErrorModel.parse_obj({
             'error': str(self),
             'reason': self.message,
             'provider': self.provider,
-        })
+        }))
 
 
 class AggregationProviderError(ProviderMistakes, BaseAggregationProviderError):
@@ -140,3 +135,19 @@ class ProviderNotFound(OurMistakes, BaseAggregationProviderError):
 class SpenderAddressNotFound(OurMistakes, BaseAggregationProviderError):
     """Provider's spender address not found"""
     msg_to_log = 'Spender address not found'
+
+
+responses = {
+    AggregationProviderError.code: {'description': AggregationProviderError.msg_to_log, 'model': HttpErrorModel},
+    EstimationError.code: {'description': EstimationError.msg_to_log, 'model': HttpErrorModel},
+    InsufficientLiquidityError.code: {'description': InsufficientLiquidityError.msg_to_log, 'model': HttpErrorModel},
+    UserBalanceError.code: {'description': UserBalanceError.msg_to_log, 'model': HttpErrorModel},
+    AllowanceError.code: {'description': AllowanceError.msg_to_log, 'model': HttpErrorModel},
+    ValidationFailedError.code: {'description': ValidationFailedError.msg_to_log, 'model': HttpErrorModel},
+    ParseResponseError.code: {'description': ParseResponseError.msg_to_log, 'model': HttpErrorModel},
+    TokensError.code: {'description': TokensError.msg_to_log, 'model': HttpErrorModel},
+    PriceError.code: {'description': PriceError.msg_to_log, 'model': HttpErrorModel},
+    ProviderTimeoutError.code: {'description': ProviderTimeoutError.msg_to_log, 'model': HttpErrorModel},
+    ProviderNotFound.code: {'description': ProviderNotFound.msg_to_log, 'model': HttpErrorModel},
+    SpenderAddressNotFound.code: {'description': SpenderAddressNotFound.msg_to_log, 'model': HttpErrorModel},
+}

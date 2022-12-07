@@ -314,7 +314,7 @@ class OneInchProvider(BaseProvider):
 
     @staticmethod
     def convert_sources_for_meta_aggregation(
-            sources: Optional[dict, list[dict]],
+            sources: Optional[dict | list[dict]],
     ) -> Optional[list[SwapSources]]:
         if not sources:
             return

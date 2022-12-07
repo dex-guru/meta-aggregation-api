@@ -4,7 +4,7 @@ from fastapi.security import HTTPBearer
 from pydantic import constr
 from starlette.requests import Request
 
-from config import chains, config
+from config import config
 from utils.logger import get_logger
 
 v1_rpc = APIRouter()
@@ -12,17 +12,21 @@ address_to_lower = constr(strip_whitespace=True, min_length=42, max_length=42, t
 logger = get_logger(__name__)
 
 
-@v1_rpc.post('/rpc/{network}', dependencies=[Depends(HTTPBearer())])
+@v1_rpc.post('/rpc/{chain_id}', dependencies=[Depends(HTTPBearer())])
 async def send_rpc(
         request: Request,
-        network: str = Path(None, description="Network name"),
+        chain_id: int = Path(..., description="Chain ID"),
 ):
+    """
+    The send_rpc function is an endpoint that makes an HTTP request to the node
+    that is currently synced with the most other nodes. It takes in a JSON-RPC 2.0 compliant
+    request and returns a JSON-RPC 2.0 compliant response.
+
+    """
     # TODO: Add rpc endpoint description
+    # TODO: Rework this to use the SDK
     from utils.httputils import CLIENT_SESSION
-    # TODO: don't forget to remove
-    chain_id = chains[network].chain_id
     #
-    # node = await find_most_synced_node_in_pool(logger=logger, chain_id=chain_id)
     # TODO: app.config?
     node = config.WEB3_URL
     if node is None:

@@ -28,11 +28,7 @@ async def get_gas_prices(chain_id: int) -> GasResponse:
 @async_from_sync
 @retry(retry=retry_if_exception_type(ReadTimeout), stop=3)
 def get_gas_prices_eip1559(w3: Web3) -> Optional[GasResponse]:
-    try:
-        gas_history = w3.eth.fee_history(4, 'latest', [60, 75, 90])
-    # TODO: find more specific exception
-    except (ValueError, Exception) as e:
-        return None
+    gas_history = w3.eth.fee_history(4, 'latest', [60, 75, 90])
     reward = gas_history['reward']
     # baseFee for next block
     base_fee = gas_history['baseFeePerGas'][-1]
