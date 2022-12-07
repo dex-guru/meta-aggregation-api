@@ -1,7 +1,7 @@
 from config.apm import APMConfig
-from config.chains import ChainsConfig
-from config.chains import chains
+from config.chains import ChainsConfig, chains
 from config.logger import LoggerConfig
+from config.providers import providers
 
 
 class Config(APMConfig, LoggerConfig):
@@ -15,7 +15,11 @@ class Config(APMConfig, LoggerConfig):
     PUBLIC_API_DOMAIN = 'http://localhost:8001'
     PUBLIC_API_VERSION = 1
     WEB3_TIMEOUT: int = 10
-    X_SYS_KEY = 'default'
+    X_SYS_KEY = 'vd399tVUdU4y'
+    CORS_ORIGINS = ['*']
+    CORS_CREDENTIALS = True
+    CORS_METHODS = ['*']
+    CORS_HEADERS = ['*']
 
 
 config = Config()

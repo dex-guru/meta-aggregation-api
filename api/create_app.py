@@ -11,7 +11,7 @@ from api.routes.info import info_route
 from api.routes.rpc import v1_rpc
 from api.routes.swap import swap_route
 from clients.apm_client import apm_client
-from config import Config, ChainsConfig
+from config import Config, chains, providers
 from utils.httputils import setup_client_session, teardown_client_session
 from utils.logger import get_logger
 
@@ -62,7 +62,9 @@ def create_app(config: Config):
     @app.on_event("startup")
     async def startup_event():
         await setup_client_session()
-        await ChainsConfig().set_chains(app.config.PUBLIC_KEY, app.config.PUBLIC_API_DOMAIN)
+        await chains.set_chains(app.config.PUBLIC_KEY, app.config.PUBLIC_API_DOMAIN)
+        app.chains = chains
+        app.providers = providers.providers
 
     @app.on_event("shutdown")
     async def shutdown_event():
@@ -85,13 +87,13 @@ def create_app(config: Config):
 
 
 def register_cors(app: FastAPI):
-    # TODO: to config
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"])
+        allow_origins=app.config.CORS_ORIGINS,
+        allow_credentials=app.config.CORS_CREDENTIALS,
+        allow_methods=app.config.CORS_METHODS,
+        allow_headers=app.config.CORS_HEADERS,
+    )
 
 
 def register_gzip(app: FastAPI):
