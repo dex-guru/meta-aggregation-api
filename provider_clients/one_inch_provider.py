@@ -31,17 +31,17 @@ ONE_INCH_ERRORS = {
 }
 
 MAX_RESULT_PRESET = {
-    "complexityLevel": 2,
-    "mainRouteParts": 10,
-    "parts": 50,
-    "virtualParts": 50,
+    'complexityLevel': 2,
+    'mainRouteParts': 10,
+    'parts': 50,
+    'virtualParts': 50,
 }
 
 LOWEST_GAS_PRESET = {
-    "complexityLevel": 1,
-    "mainRouteParts": 1,
-    "parts": 1,
-    "virtualParts": 1,
+    'complexityLevel': 1,
+    'mainRouteParts': 1,
+    'parts': 1,
+    'virtualParts': 1,
 }
 
 AMM_MAPPING = {
@@ -55,19 +55,16 @@ logger = get_logger(__name__)
 
 class OneInchProvider(BaseProvider):
     """
-    Trading and limit orders proxy for 1Inch.
+    Trading and limit orders proxy for 1Inch. Docs: https://docs.1inch.io/docs/1inch-network-overview
+
     URL structures:
         Trading:      https://{trading_api_domain}/v{version}/{chain_id}/{operation}?queryParams
         Limit orders: https://{limit_orders_domain}/v{version}/{chain_id}/limit_order/{operation}?queryParams
     """
 
-    limit_orders_domain = 'limit-orders.1inch.io'
-    trading_api_domain = 'api.1inch.io'
-    limit_order = 'limit-order'
-    _provider_name = 'one_inch'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    LIMIT_ORDERS_DOMAIN = 'limit-orders.1inch.io'
+    TRADING_API_DOMAIN = 'api.1inch.io'
+    PROVIDER_NAME = 'one_inch'
 
     @classmethod
     def _limit_order_path_builder(
@@ -77,7 +74,7 @@ class OneInchProvider(BaseProvider):
             endpoint: str,
             chain_id: int,
     ) -> str:
-        return f'https://{cls.limit_orders_domain}/v{version}/{chain_id}/{cls.limit_order}/{path}/{endpoint}'
+        return f'https://{cls.LIMIT_ORDERS_DOMAIN}/v{version}/{chain_id}/limit-order/{path}/{endpoint}'
 
     @classmethod
     def _trading_api_path_builder(
@@ -86,7 +83,7 @@ class OneInchProvider(BaseProvider):
             path: str,
             chain_id: int,
     ) -> str:
-        return f'https://{cls.trading_api_domain}/v{version}/{chain_id}/{path}'
+        return f'https://{cls.TRADING_API_DOMAIN}/v{version}/{chain_id}/{path}'
 
     @retry(retry=(retry_if_exception_type(asyncio.TimeoutError) | retry_if_exception_type(ServerDisconnectedError)),
            stop=stop_after_attempt(3), reraise=True, before=before_log(logger, LOG_DEBUG))
@@ -209,7 +206,7 @@ class OneInchProvider(BaseProvider):
         try:
             sources = self.convert_sources_for_meta_aggregation(response['protocols'])
             res = MetaSwapPriceResponse(
-                provider=self._provider_name,
+                provider=self.PROVIDER_NAME,
                 sources=sources,
                 buy_amount=response['toTokenAmount'],
                 gas=response['estimatedGas'],
@@ -347,7 +344,7 @@ class OneInchProvider(BaseProvider):
         else:
             error_class = AggregationProviderError
         exc = error_class(
-            self._provider_name,
+            self.PROVIDER_NAME,
             msg,
             url=str(exception.request_info.url),
             **kwargs,

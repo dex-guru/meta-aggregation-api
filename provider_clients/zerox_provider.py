@@ -26,14 +26,13 @@ ZERO_X_ERRORS = {
 
 class ZeroXProvider(BaseProvider):
     """ Docs: https://0x.org/docs/api#introduction """
-    api_domain = 'api.0x.org'
-    _provider_name = 'zero_x'
-    supported_chains = (1, 56)
+    API_DOMAIN = 'api.0x.org'
+    PROVIDER_NAME = 'zero_x'
 
     @classmethod
     def _api_domain_builder(cls, chain_id: int = None) -> str:
         network = '' if not chain_id or chain_id == chains.eth.chain_id else f'{chains.get_chain_by_id(chain_id).name}.'
-        return f'{network}{cls.api_domain}'
+        return f'{network}{cls.API_DOMAIN}'
 
     @classmethod
     def _api_path_builder(
@@ -115,7 +114,7 @@ class ZeroXProvider(BaseProvider):
         try:
             sources = self.convert_sources_for_meta_aggregation(response['sources'])
             prepared_response = MetaSwapPriceResponse(
-                provider=self._provider_name,
+                provider=self.PROVIDER_NAME,
                 sources=sources,
                 buy_amount=response['buyAmount'],
                 gas=response['gas'],
@@ -312,7 +311,7 @@ class ZeroXProvider(BaseProvider):
         else:
             error_class = AggregationProviderError
         exc = error_class(
-            self._provider_name,
+            self.PROVIDER_NAME,
             msg,
             url=str(exception.request_info.url),
             **kwargs,

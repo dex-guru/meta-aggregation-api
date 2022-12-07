@@ -1,13 +1,11 @@
-from pydantic import BaseModel
-
-# TODO: NO VALIDATION ON MODELS?
+from pydantic import BaseModel, constr, conint
 
 
 class TokenModel(BaseModel):
-    address: str
+    address: constr(min_length=42, max_length=42, to_lower=True)
     name: str
     symbol: str
-    decimals: int
+    decimals: conint(gt=0)
 
 
 class ChainModel(BaseModel):
@@ -20,7 +18,7 @@ class ChainModel(BaseModel):
 
 class ProviderInfoModel(BaseModel):
     display_name: str
-    address: str
+    address: constr(min_length=42, max_length=42, to_lower=True)
     name: str
 
 

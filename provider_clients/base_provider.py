@@ -11,7 +11,7 @@ from utils.logger import capture_exception
 
 class BaseProvider:
     aiohttp_session: ClientSession
-    _provider_name = 'base_provider'
+    PROVIDER_NAME = 'base_provider'
 
     def __init__(self, aiohttp_session: Optional[ClientSession] = None):
         if not aiohttp_session:
@@ -73,10 +73,10 @@ class BaseProvider:
     def handle_exception(self, exception: Exception, logger, **kwargs) -> BaseAggregationProviderError:
         capture_exception()
         if isinstance(exception, KeyError) or isinstance(exception, ValidationError):
-            exc = ParseResponseError(self._provider_name, str(exception), **kwargs)
+            exc = ParseResponseError(self.PROVIDER_NAME, str(exception), **kwargs)
             logger.error(*exc.to_log_args(), extra=exc.to_dict())
             return exc
         if isinstance(exception, ServerDisconnectedError) or isinstance(exception, asyncio.TimeoutError):
-            exc = ProviderTimeoutError(self._provider_name, str(exception), **kwargs)
+            exc = ProviderTimeoutError(self.PROVIDER_NAME, str(exception), **kwargs)
             logger.error(*exc.to_log_args(), extra=exc.to_dict())
             return exc

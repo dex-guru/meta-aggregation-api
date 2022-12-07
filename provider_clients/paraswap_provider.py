@@ -55,9 +55,12 @@ PARASWAP_ERRORS = {
 
 
 class ParaSwapProvider(BaseProvider):
-    MAIN_API_URL: yarl.URL = yarl.URL("https://apiv5.paraswap.io/")
-    PARTNER: str = "DexGuru"
-    _provider_name = 'paraswap'
+    """
+    Docs: https://developers.paraswap.network/api/master
+    """
+    MAIN_API_URL: yarl.URL = yarl.URL('https://apiv5.paraswap.io/')
+    PARTNER: str = 'dex.guru'
+    PROVIDER_NAME = 'paraswap'
 
     @retry(retry=(retry_if_exception_type(asyncio.TimeoutError) | retry_if_exception_type(ServerDisconnectedError)),
            stop=stop_after_attempt(3), reraise=True, before=before_log(logger, logging.DEBUG))
@@ -96,17 +99,17 @@ class ParaSwapProvider(BaseProvider):
     ):
         path = 'prices'
         params = {
-            "srcToken": sell_token,
-            "destToken": buy_token,
-            "amount": sell_amount,
-            "side": "SELL",
-            "network": chain_id,
-            "otherExchangePrices": 'false',
+            'srcToken': sell_token,
+            'destToken': buy_token,
+            'amount': sell_amount,
+            'side': 'SELL',
+            'network': chain_id,
+            'otherExchangePrices': 'false',
             'partner': self.PARTNER,
         }
 
         try:
-            quotes = await self.request(method="get", path=path, params=params)
+            quotes = await self.request(method='get', path=path, params=params)
         except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError, Exception) as e:
             e = self.handle_exception(e, method='get_swap_price', params=params, chain_id=chain_id)
             raise e
@@ -131,36 +134,36 @@ class ParaSwapProvider(BaseProvider):
             ignore_checks: bool = False,
     ) -> Optional[SwapQuoteResponse]:
         params = {
-            "srcToken": sell_token,
-            "destToken": buy_token,
-            "amount": sell_amount,
-            "side": "SELL",
-            "network": chain_id,
-            "otherExchangePrices": 'false',
+            'srcToken': sell_token,
+            'destToken': buy_token,
+            'amount': sell_amount,
+            'side': 'SELL',
+            'network': chain_id,
+            'otherExchangePrices': 'false',
             'partner': self.PARTNER,
         }
         if taker_address:
-            params["userAddress"] = taker_address
+            params['userAddress'] = taker_address
         try:
-            response = await self.request(method="get", path="prices", params=params)
+            response = await self.request(method='get', path='prices', params=params)
         except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
             e = self.handle_exception(e, method='get_swap_quote', params=params, chain_id=chain_id)
             raise e
 
-        price_route = response["priceRoute"]
+        price_route = response['priceRoute']
         ignore_checks = str(ignore_checks).lower()
-        params = {"network": price_route["network"], 'ignoreChecks': ignore_checks}
+        params = {'network': price_route['network'], 'ignoreChecks': ignore_checks}
         if gas_price is not None:
-            params["gasPrice"] = gas_price
+            params['gasPrice'] = gas_price
         data = {
-            "srcToken": sell_token,
-            "destToken": buy_token,
-            "srcAmount": str(sell_amount),
-            "priceRoute": price_route,
-            "userAddress": taker_address,
-            "partner": self.PARTNER,
-            "srcDecimals": price_route["srcDecimals"],
-            "destDecimals": price_route["destDecimals"],
+            'srcToken': sell_token,
+            'destToken': buy_token,
+            'srcAmount': str(sell_amount),
+            'priceRoute': price_route,
+            'userAddress': taker_address,
+            'partner': self.PARTNER,
+            'srcDecimals': price_route['srcDecimals'],
+            'destDecimals': price_route['destDecimals'],
         }
 
         if buy_token_percentage_fee:
@@ -168,15 +171,15 @@ class ParaSwapProvider(BaseProvider):
         if slippage_percentage:
             data['slippage'] = int(slippage_percentage * 10000)  # 100% -> 10000
         else:
-            data["destAmount"] = str(price_route["destAmount"]),
+            data['destAmount'] = str(price_route['destAmount']),
 
         if affiliate_address or fee_recipient:
             data['partnerAddress'] = affiliate_address or fee_recipient
 
         try:
             response = await self.request(
-                method="post",
-                path=f"transactions/{price_route['network']}",
+                method='post',
+                path=f'transactions/{price_route["network"]}',
                 params=params,
                 json=data,
             )
@@ -196,9 +199,9 @@ class ParaSwapProvider(BaseProvider):
         try:
             prepared_response = SwapQuoteResponse(
                 sources=sources,
-                buy_amount=str(price_response["destAmount"]),
-                gas=quote_response.get("gas", '0'),
-                sell_amount=price_response["srcAmount"],
+                buy_amount=str(price_response['destAmount']),
+                gas=quote_response.get('gas', '0'),
+                sell_amount=price_response['srcAmount'],
                 to=quote_response['to'],
                 data=quote_response['data'],
                 gas_price=quote_response['gasPrice'],
@@ -219,11 +222,11 @@ class ParaSwapProvider(BaseProvider):
         sources = self.convert_sources_for_meta_aggregation(price_response['bestRoute'])
         try:
             prepared_response = MetaSwapPriceResponse(
-                provider=self._provider_name,
+                provider=self.PROVIDER_NAME,
                 sources=sources,
-                buy_amount=str(price_response["destAmount"]),
+                buy_amount=str(price_response['destAmount']),
                 gas=price_response['gasCost'],
-                sell_amount=price_response["srcAmount"],
+                sell_amount=price_response['srcAmount'],
                 gas_price='0',
                 value='0',
                 price=str(price),
@@ -251,7 +254,7 @@ class ParaSwapProvider(BaseProvider):
     def handle_exception(self, exception: Union[ClientResponseError, KeyError, ValidationError],
                          **kwargs) -> BaseAggregationProviderError:
         """
-        exception.message: "{"error": "Not enough liquidity for this trade"}"
+        exception.message: '{'error': 'Not enough liquidity for this trade'}'
         """
         exc = super().handle_exception(exception, logger, **kwargs)
         if exc:
@@ -263,7 +266,7 @@ class ParaSwapProvider(BaseProvider):
         else:
             error_class = AggregationProviderError
         exc = error_class(
-            self._provider_name,
+            self.PROVIDER_NAME,
             msg,
             url=str(exception.request_info.url),
             **kwargs,
@@ -271,7 +274,7 @@ class ParaSwapProvider(BaseProvider):
         if isinstance(exc, EstimationError):
             logger.warning(
                 f'potentially blacklist. %({LogArgs.token_idx})',
-                {LogArgs.token_idx: f'{kwargs.get("token_address")}-{kwargs.get("chain_id")}'},
+                {LogArgs.token_idx: f"{kwargs.get('token_address')}-{kwargs.get('chain_id')}"},
                 extra={'token_address': kwargs.get('token_address'), 'chain_id': kwargs.get('chain_id')},
             )
         logger.warning(*exc.to_log_args(), extra=exc.to_dict())
