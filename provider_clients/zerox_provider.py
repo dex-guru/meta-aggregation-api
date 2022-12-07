@@ -9,8 +9,7 @@ from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
 
 from config.chains import chains
-from models.meta_agg_models import SwapQuoteResponse, SwapSources
-from models.provider_response_models import SwapPriceResponse
+from models.meta_agg_models import SwapQuoteResponse, SwapSources, MetaSwapPriceResponse
 from provider_clients.base_provider import BaseProvider
 from utils.errors import AggregationProviderError, UserBalanceError, BaseAggregationProviderError
 from utils.logger import get_logger
@@ -72,15 +71,16 @@ class ZeroXProvider(BaseProvider):
         return data
 
     def _convert_response_from_swap_quote(self, response: dict) -> Optional[SwapQuoteResponse]:
+        sources = self.convert_sources_for_meta_aggregation(response['sources'])
         try:
             prepared_response = SwapQuoteResponse(
-                sources=response['sources'],
-                buyAmount=response['buyAmount'],
+                sources=sources,
+                buy_amount=response['buyAmount'],
                 gas=response['gas'],
-                sellAmount=response['sellAmount'],
+                sell_amount=response['sellAmount'],
                 to=response['to'],
                 data=response['data'],
-                gasPrice=response['gasPrice'],
+                gas_price=response['gasPrice'],
                 value=response['value'],
                 price=response['price'],
             )
@@ -88,39 +88,39 @@ class ZeroXProvider(BaseProvider):
             e = self.handle_exception(e, response=response)
             raise e
         else:
-            return self.convert_sources_for_meta_aggregation(prepared_response)
+            return prepared_response
 
     @staticmethod
     def convert_sources_for_meta_aggregation(
-            quote: Optional[Union[SwapPriceResponse, SwapQuoteResponse]],
-    ) -> Optional[Union[SwapPriceResponse, SwapQuoteResponse]]:
-        if not quote:
+            sources: Optional[Union[dict, list[dict]]],
+    ) -> Optional[list[SwapSources]]:
+        if not sources:
             return
-        sources = []
-        for source in quote.sources:
+        converted_sources = []
+        for source in sources:
             if not float(source['proportion']):
                 continue
             if source.get('hops'):
                 source['hops'] = [hop['name'] for hop in source['hops']]
-            sources.append(
+            converted_sources.append(
                 SwapSources(
                     name=source['name'],
                     proportion=float(source['proportion']) * 100,  # Convert to percentage.
                     hops=source['hops'] if source.get('hops') else [],
                 )
             )
-        quote.sources = sources
-        return quote
+        return converted_sources
 
-    def _convert_response_from_swap_price(self, response: dict) -> Optional[SwapPriceResponse]:
+    def _convert_response_from_swap_price(self, response: dict) -> Optional[MetaSwapPriceResponse]:
         try:
-            prepared_response = SwapPriceResponse(
+            sources = self.convert_sources_for_meta_aggregation(response['sources'])
+            prepared_response = MetaSwapPriceResponse(
                 provider=self._provider_name,
-                sources=response['sources'],
-                buyAmount=response['buyAmount'],
+                sources=sources,
+                buy_amount=response['buyAmount'],
                 gas=response['gas'],
-                sellAmount=response['sellAmount'],
-                gasPrice=response['gasPrice'],
+                sell_amount=response['sellAmount'],
+                gas_price=response['gasPrice'],
                 value=response['value'],
                 price=response['price']
             )
@@ -128,7 +128,7 @@ class ZeroXProvider(BaseProvider):
             e = self.handle_exception(e, response=response)
             raise e
         else:
-            return self.convert_sources_for_meta_aggregation(prepared_response)
+            return prepared_response
 
     async def get_swap_quote(
             self,
@@ -227,7 +227,7 @@ class ZeroXProvider(BaseProvider):
             taker_address: Optional[str] = None,
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None
-    ) -> Optional[SwapPriceResponse]:
+    ) -> Optional[MetaSwapPriceResponse]:
         """
         Docs: https://0x.org/docs/api#get-swapv1price
         """

@@ -10,8 +10,7 @@ from pydantic import ValidationError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, before_log
 
 from config import config
-from models.meta_agg_models import SwapQuoteResponse
-from models.provider_response_models import SwapPriceResponse
+from models.meta_agg_models import SwapQuoteResponse, MetaSwapPriceResponse
 from models.provider_response_models import SwapSources
 from provider_clients.base_provider import BaseProvider
 from utils.errors import EstimationError, AggregationProviderError, InsufficientLiquidityError, UserBalanceError, \
@@ -208,13 +207,14 @@ class OneInchProvider(BaseProvider):
         if sell_token.lower() == config.NATIVE_TOKEN_ADDRESS:
             value = str(sell_amount)
         try:
-            res = SwapPriceResponse(
+            sources = self.convert_sources_for_meta_aggregation(response['protocols'])
+            res = MetaSwapPriceResponse(
                 provider=self._provider_name,
-                sources=response['protocols'],
-                buyAmount=response['toTokenAmount'],
+                sources=sources,
+                buy_amount=response['toTokenAmount'],
                 gas=response['estimatedGas'],
-                sellAmount=response['fromTokenAmount'],
-                gasPrice=gas_price if gas_price else '0',
+                sell_amount=response['fromTokenAmount'],
+                gas_price=gas_price if gas_price else '0',
                 value=value,
                 price=price,
             )
@@ -222,7 +222,7 @@ class OneInchProvider(BaseProvider):
             e = self.handle_exception(e, response=response, method='_convert_response_from_swap_quote',
                                       price=price, url=url, params=query, chain_id=chain_id)
             raise e
-        return self.convert_sources_for_meta_aggregation(res)
+        return res
 
     async def get_swap_quote(
             self,
@@ -292,15 +292,16 @@ class OneInchProvider(BaseProvider):
             price: float,
             **kwargs,
     ) -> Optional[SwapQuoteResponse]:
+        sources = self.convert_sources_for_meta_aggregation(response['protocols'])
         try:
             prepared_response = SwapQuoteResponse(
-                sources=response['protocols'],
-                buyAmount=response['toTokenAmount'],
+                sources=sources,
+                buy_amount=response['toTokenAmount'],
                 gas=response['tx']['gas'],
-                sellAmount=response['fromTokenAmount'],
+                sell_amount=response['fromTokenAmount'],
                 to=response['tx']['to'],
                 data=response['tx']['data'],
-                gasPrice=response['tx']['gasPrice'],
+                gas_price=response['tx']['gasPrice'],
                 value=response['tx']['value'],
                 price=str(price),
             )
@@ -309,21 +310,20 @@ class OneInchProvider(BaseProvider):
                                       price=price, **kwargs)
             raise e
         else:
-            return self.convert_sources_for_meta_aggregation(prepared_response)
+            return prepared_response
 
     @staticmethod
     def convert_sources_for_meta_aggregation(
-            quote: Optional[Union[SwapPriceResponse, SwapQuoteResponse]],
-    ) -> Optional[Union[SwapPriceResponse, SwapQuoteResponse]]:
-        if not quote:
+            sources: Optional[dict, list[dict]],
+    ) -> Optional[list[SwapSources]]:
+        if not sources:
             return
-        sources_list = list(chain.from_iterable(chain.from_iterable(quote.sources)))
-        sources = []
+        sources_list = list(chain.from_iterable(chain.from_iterable(sources)))
+        converted_sources = []
         for source in sources_list:
             source['name'] = AMM_MAPPING.get(source['name'], source['name'])
-            sources.append(SwapSources(name=source['name'], proportion=source['part']))
-        quote.sources = sources
-        return quote
+            converted_sources.append(SwapSources(name=source['name'], proportion=source['part']))
+        return converted_sources
 
     def handle_exception(
             self,

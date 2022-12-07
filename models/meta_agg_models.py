@@ -6,17 +6,14 @@ from models.provider_response_models import SwapSources
 
 
 class MetaSwapPriceResponse(BaseModel):
+    provider: str
     sources: List[SwapSources]
-    buy_amount: str = Field(alias='buyAmount')
+    buy_amount: str
     gas: str
-    sell_amount: str = Field(alias='sellAmount')
-    gas_price: str = Field(alias='gasPrice')
+    sell_amount: str
+    gas_price: str
     value: str
     price: str
-
-    class Config:
-        allow_population_by_field_name = False
-        response_by_alias = False
 
 
 class MetaPriceModel(BaseModel):
@@ -29,15 +26,11 @@ class MetaPriceModel(BaseModel):
 
 class SwapQuoteResponse(BaseModel):
     sources: list
-    buy_amount: str = Field(alias='buyAmount')
+    buy_amount: str
     gas: str
-    sell_amount: str = Field(alias='sellAmount')
+    sell_amount: str
     to: str
     data: str
-    gas_price: str = Field(alias='gasPrice')
+    gas_price: str
     value: str
     price: str
-
-    class Config:
-        allow_population_by_field_name = False
-        response_by_alias = False

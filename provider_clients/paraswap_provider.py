@@ -13,8 +13,8 @@ from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
 
 from config import config
-from models.meta_agg_models import SwapQuoteResponse
-from models.provider_response_models import SwapPriceResponse, SwapSources
+from models.meta_agg_models import SwapQuoteResponse, MetaSwapPriceResponse
+from models.provider_response_models import SwapSources
 from provider_clients.base_provider import BaseProvider
 from utils.errors import AggregationProviderError, EstimationError, UserBalanceError, TokensError, PriceError, \
     AllowanceError, ValidationFailedError, BaseAggregationProviderError
@@ -49,6 +49,7 @@ PARASWAP_ERRORS = {
     'Unable to process the transaction': EstimationError,
     'ERROR_BUILDING_TRANSACTION': EstimationError,
 }
+
 
 # TODO: Add description, links to one paraswap docs
 
@@ -191,15 +192,16 @@ class ParaSwapProvider(BaseProvider):
             **kwargs,
     ) -> Optional[SwapQuoteResponse]:
         price = Decimal(price_response['destAmount']) / Decimal(price_response['srcAmount'])
+        sources = self.convert_sources_for_meta_aggregation(price_response['bestRoute'])
         try:
             prepared_response = SwapQuoteResponse(
-                sources=price_response['bestRoute'],
-                buyAmount=str(price_response["destAmount"]),
+                sources=sources,
+                buy_amount=str(price_response["destAmount"]),
                 gas=quote_response.get("gas", '0'),
-                sellAmount=price_response["srcAmount"],
+                sell_amount=price_response["srcAmount"],
                 to=quote_response['to'],
                 data=quote_response['data'],
-                gasPrice=quote_response['gasPrice'],
+                gas_price=quote_response['gasPrice'],
                 value=quote_response['value'],
                 price=str(price),
             )
@@ -207,21 +209,22 @@ class ParaSwapProvider(BaseProvider):
             e = self.handle_exception(e, response=quote_response, method='_convert_response_from_swap_quote',
                                       price_response=price, **kwargs)
             raise e
-        return self.convert_sources_for_meta_aggregation(prepared_response)
+        return prepared_response
 
-    def _convert_response_from_swap_price(self, price_response: dict) -> Optional[SwapPriceResponse]:
+    def _convert_response_from_swap_price(self, price_response: dict) -> Optional[MetaSwapPriceResponse]:
         price_response = price_response['priceRoute']
         dst_amount = (Decimal(price_response['destAmount']) / 10 ** price_response['destDecimals'])
         src_amount = (Decimal(price_response['srcAmount']) / 10 ** price_response['srcDecimals'])
         price = dst_amount / src_amount
+        sources = self.convert_sources_for_meta_aggregation(price_response['bestRoute'])
         try:
-            prepared_response = SwapPriceResponse(
+            prepared_response = MetaSwapPriceResponse(
                 provider=self._provider_name,
-                sources=price_response['bestRoute'],
-                buyAmount=str(price_response["destAmount"]),
+                sources=sources,
+                buy_amount=str(price_response["destAmount"]),
                 gas=price_response['gasCost'],
-                sellAmount=price_response["srcAmount"],
-                gasPrice='0',
+                sell_amount=price_response["srcAmount"],
+                gas_price='0',
                 value='0',
                 price=str(price),
             )
@@ -229,22 +232,21 @@ class ParaSwapProvider(BaseProvider):
             e = self.handle_exception(e, response=price_response, method='_convert_response_from_swap_price')
             raise e
         else:
-            return self.convert_sources_for_meta_aggregation(prepared_response)
+            return prepared_response
 
     @staticmethod
     def convert_sources_for_meta_aggregation(
-            quote: Optional[Union[SwapPriceResponse, SwapQuoteResponse]],
-    ) -> Optional[Union[SwapPriceResponse, SwapQuoteResponse]]:
-        if not quote:
+            sources: Optional[Union[dict, list[dict]]],
+    ) -> Optional[list[SwapSources]]:
+        if not sources:
             return
-        swaps = list(chain.from_iterable([i['swaps'] for i in quote.sources]))
+        swaps = list(chain.from_iterable([i['swaps'] for i in sources]))
         swap_exchanges = [i['swapExchanges'] for i in swaps]
         sources_list = list(chain.from_iterable(i for i in swap_exchanges))
-        sources = []
+        converted_sources = []
         for source in sources_list:
-            sources.append(SwapSources(name=source['exchange'], proportion=source['percent']))
-        quote.sources = sources
-        return quote
+            converted_sources.append(SwapSources(name=source['exchange'], proportion=source['percent']))
+        return converted_sources
 
     def handle_exception(self, exception: Union[ClientResponseError, KeyError, ValidationError],
                          **kwargs) -> BaseAggregationProviderError:

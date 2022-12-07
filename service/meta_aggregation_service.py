@@ -10,7 +10,6 @@ from clients.blockchain.evm import EVMBase
 from config import config, chains
 from config.providers import providers
 from models.meta_agg_models import MetaPriceModel, MetaSwapPriceResponse
-from models.provider_response_models import SwapPriceResponse
 from provider_clients.one_inch_provider import OneInchProvider
 from provider_clients.paraswap_provider import ParaSwapProvider
 from provider_clients.zerox_provider import ZeroXProvider
@@ -33,6 +32,7 @@ class Providers:
 
 logger = get_logger(__name__)
 
+
 # TODO: check if async Web 3 can work for us @Safrankov have exp
 @async_from_sync
 def get_token_allowance(
@@ -49,6 +49,7 @@ def get_token_allowance(
     token_address = Web3.toChecksumAddress(token_address)
     allowance = erc20_contract.functions.allowance(owner_address, spender_address).call({'to': token_address})
     return allowance
+
 
 # TODO: check if async Web 3 can work for us @Safrankov have exp
 @async_from_sync
@@ -87,6 +88,7 @@ async def get_approve_costs_per_provider(
         else:
             approve_costs_per_provider[provider['name']] = 0
     return approve_costs_per_provider
+
 
 # TODO: cache?, partially at least
 async def get_swap_meta_price(
@@ -128,7 +130,7 @@ async def get_swap_meta_price(
         )))
     quotes_list = await asyncio.gather(*quotes_tasks, return_exceptions=True)
     quotes = {quote.provider: quote for quote in quotes_list if
-              isinstance(quote, SwapPriceResponse)}  # {provider: quote}
+              isinstance(quote, MetaSwapPriceResponse)}  # {provider: quote}
     if not any(quotes):
         logger.error(
             'No prices found',
@@ -205,7 +207,6 @@ async def get_meta_swap_quote(
         taker_address: str,
         provider: str,
         chain_id: int,
-        affiliate_address: Optional[str],
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         fee_recipient: Optional[str] = None,
@@ -221,7 +222,6 @@ async def get_meta_swap_quote(
         sell_token=sell_token,
         sell_amount=sell_amount,
         chain_id=chain_id,
-        affiliate_address=affiliate_address,
         gas_price=gas_price,
         slippage_percentage=slippage_percentage,
         taker_address=taker_address,
