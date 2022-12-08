@@ -5,6 +5,7 @@ from typing import Optional, Tuple, List
 from dexguru_sdk import DexGuru
 from web3 import Web3
 from web3.contract import AsyncContract
+from aiocache import cached
 
 from clients.blockchain.web3_client import Web3Client
 from config import config, chains
@@ -32,7 +33,7 @@ class Providers:
 logger = get_logger(__name__)
 
 
-# TODO: check if async Web 3 can work for us @Safrankov have exp
+@cached(ttl=5)
 async def get_token_allowance(
         token_address: str,
         spender_address: str,
@@ -49,7 +50,7 @@ async def get_token_allowance(
     return allowance
 
 
-# TODO: check if async Web 3 can work for us @Safrankov have exp
+@cached(ttl=5)
 async def get_approve_cost(
         owner_address: str,
         spender_address: str,
@@ -67,12 +68,12 @@ async def get_approve_costs_per_provider(
         sell_token: str,
         erc20_contract: AsyncContract,
         sell_amount: int,
-        providers: list,
+        providers_: list[dict],
         taker_address: Optional[str] = None,
 ) -> dict:
     # TODO: descriprtion of approval problem
     approve_costs_per_provider = {}
-    for provider in providers:
+    for provider in providers_:
         if not taker_address:
             approve_costs_per_provider[provider['name']] = 0
             continue
@@ -104,7 +105,7 @@ async def get_swap_meta_price(
     # TODO: Add description, app.config?
     spender_addresses = providers.get(chain_id)['market_order']
     web3_url = get_web3_url(chain_id)
-    erc20_contract = Web3Client(web3_url).get_erc20_contract(Web3.toChecksumAddress(sell_token))
+    erc20_contract = Web3Client(web3_url).get_erc20_contract(sell_token)
     approve_costs = asyncio.create_task(get_approve_costs_per_provider(sell_token, erc20_contract,
                                                                        sell_amount, spender_addresses, taker_address))
     get_decimals_task = asyncio.create_task(get_decimals_for_native_and_buy_token(chain_id, buy_token))
@@ -158,6 +159,7 @@ async def get_swap_meta_price(
     ]
 
 
+@cached(ttl=60 * 60 * 24)
 async def get_decimals_for_native_and_buy_token(chain_id: int, buy_token: str) -> Tuple[int, int]:
     # TODO: add description
     wrapped_native = chains.get_chain_by_id(chain_id).native_token

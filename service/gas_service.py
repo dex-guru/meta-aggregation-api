@@ -2,6 +2,7 @@ from statistics import mean
 from time import time
 from typing import Optional
 
+from aiocache import cached
 from requests import ReadTimeout
 from tenacity import retry, retry_if_exception_type
 
@@ -16,6 +17,7 @@ GAS_SOURCE = 'DEXGURU'
 logger = get_logger(__name__)
 
 
+@cached(ttl=5)
 async def get_gas_prices(chain_id: int) -> GasResponse:
     logger.debug('Getting gas prices for network %s', chain_id)
     web3_client = Web3Client(get_web3_url(chain_id))
@@ -24,6 +26,7 @@ async def get_gas_prices(chain_id: int) -> GasResponse:
     return await get_gas_prices_legacy(web3_client)
 
 
+@cached(ttl=5)
 @retry(retry=retry_if_exception_type(ReadTimeout), stop=3)
 async def get_base_gas_price(chain_id: int) -> int:
     logger.debug('Getting base gas price for network %s', chain_id)
