@@ -4,6 +4,7 @@ import re
 import ssl
 from typing import Union, Optional, List
 
+from aiocache import cached
 from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
 from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
@@ -214,6 +215,7 @@ class ZeroXProvider(BaseProvider):
         logger.debug(f'Proxing url {url} with params {query}')
         return await self._get_response(url, params=query)
 
+    @cached(ttl=30)
     async def get_swap_price(
             self,
             buy_token: str,

@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, Dict, List
+from typing import Optional
 
 from aiohttp import ClientSession, ServerDisconnectedError
 from pydantic import ValidationError
@@ -48,26 +48,6 @@ class BaseProvider:
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None,
     ) -> ProviderPriceResponse:
-        raise NotImplementedError
-
-    async def get_gas_prices(self, chain_id: Optional[int] = None) -> dict:
-        raise NotImplementedError
-
-    async def get_orders_by_trader(
-            self,
-            trader: str,
-            maker_token: str,
-            taker_token: str,
-            chain_id: Optional[int] = None,
-            statuses: Optional[List[str]] = None,
-    ) -> List[Dict]:
-        raise NotImplementedError
-
-    async def get_order_by_hash(
-            self,
-            chain_id: int,
-            order_hash: str,
-    ) -> Dict:
         raise NotImplementedError
 
     def handle_exception(self, exception: Exception, logger, **kwargs) -> BaseAggregationProviderError:

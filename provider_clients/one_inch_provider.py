@@ -5,6 +5,7 @@ from itertools import chain
 from logging import DEBUG as LOG_DEBUG
 from typing import Optional, Union, List, Dict
 
+from aiocache import cached
 from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
 from pydantic import ValidationError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, before_log
@@ -170,6 +171,7 @@ class OneInchProvider(BaseProvider):
             raise e
         return response
 
+    @cached(ttl=30)
     async def get_swap_price(self, buy_token: str, sell_token: str, sell_amount: int,
                              chain_id: Optional[int] = None, affiliate_address: Optional[str] = None,
                              gas_price: Optional[int] = None, slippage_percentage: Optional[float] = 1,

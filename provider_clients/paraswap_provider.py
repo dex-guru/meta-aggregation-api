@@ -8,6 +8,7 @@ from typing import Optional, Union
 
 import ujson
 import yarl
+from aiocache import cached
 from aiohttp import ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
@@ -84,6 +85,7 @@ class ParaSwapProvider(BaseProvider):
                 )
         return ujson.loads(data)
 
+    @cached(ttl=30)
     async def get_swap_price(
             self,
             buy_token: str,
