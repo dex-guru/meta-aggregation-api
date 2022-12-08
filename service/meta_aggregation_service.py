@@ -70,8 +70,23 @@ async def get_approve_costs_per_provider(
         sell_amount: int,
         providers_: list[dict],
         taker_address: Optional[str] = None,
-) -> dict:
-    # TODO: descriprtion of approval problem
+) -> dict[str, int]:
+    """
+    To make swap, user should approve spending of sell token by spender contract.
+    This function checks allowance for each provider on sell_token, compares it with sell_amount
+    and returns approve costs. If allowance is enough, approve cost will be 0.
+
+    Args:
+        sell_token:str: Specify the token address that is sold in the swap
+        erc20_contract: AsyncContract: Specify the erc20 contract of sell_token
+        sell_amount:int: Specify the amount of tokens to sell in base units (e.g. 1 ETH = 10 ** 18)
+        providers_:list[dict]: Specify the list of providers
+        taker_address:Optional[str]=None: Specify the address of the user who will be using this swap.
+            To make it possible to check only price, taker_address could be None and in this case approve cost will be 0.
+
+    Returns:
+        dict: Returns a dictionary with provider names as keys and approve costs as values
+    """
     approve_costs_per_provider = {}
     for provider in providers_:
         if not taker_address:
