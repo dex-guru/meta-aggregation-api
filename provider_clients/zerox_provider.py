@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
 
 from config.chains import chains
-from models.meta_agg_models import SwapQuoteResponse, SwapSources, MetaSwapPriceResponse
+from models.meta_agg_models import SwapQuoteResponse, SwapSources, ProviderPriceResponse
 from provider_clients.base_provider import BaseProvider
 from utils.errors import AggregationProviderError, UserBalanceError, BaseAggregationProviderError
 from utils.logger import get_logger
@@ -110,10 +110,10 @@ class ZeroXProvider(BaseProvider):
             )
         return converted_sources
 
-    def _convert_response_from_swap_price(self, response: dict) -> Optional[MetaSwapPriceResponse]:
+    def _convert_response_from_swap_price(self, response: dict) -> Optional[ProviderPriceResponse]:
         try:
             sources = self.convert_sources_for_meta_aggregation(response['sources'])
-            prepared_response = MetaSwapPriceResponse(
+            prepared_response = ProviderPriceResponse(
                 provider=self.PROVIDER_NAME,
                 sources=sources,
                 buy_amount=response['buyAmount'],
@@ -151,7 +151,7 @@ class ZeroXProvider(BaseProvider):
             - https://api.0x.org/swap/v1/quote?buyToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&sellAmount=1000000000000000000&sellToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
             - https://api.0x.org/swap/v1/quote?affiliateAddress=0x720c9244473Dfc596547c1f7B6261c7112A3dad4&buyToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&gasPrice=26000000000&sellAmount=1000000000000000000&sellToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&slippagePercentage=0.0100&takerAddress=0xA0942D8352FFaBCc0f6dEE32b2b081C703e726A5
         """
-        url = self._api_path_builder('swap', 1, 'quote', chain_id)
+        url = self._api_path_builder('swap', 1, 'price_response', chain_id)
         ignore_checks = str(ignore_checks).lower()
         query = {
             'buyToken': buy_token,
@@ -182,7 +182,7 @@ class ZeroXProvider(BaseProvider):
         except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
             e = self.handle_exception(e, query=query, method='get_swap_quote', chain_id=chain_id)
             raise e
-        logger.info(f'Got quote from 0x.org: {response}')
+        logger.info(f'Got price_response from 0x.org: {response}')
         return self._convert_response_from_swap_quote(response)
 
     async def get_orders_by_trader(
@@ -226,7 +226,7 @@ class ZeroXProvider(BaseProvider):
             taker_address: Optional[str] = None,
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None
-    ) -> Optional[MetaSwapPriceResponse]:
+    ) -> Optional[ProviderPriceResponse]:
         """
         Docs: https://0x.org/docs/api#get-swapv1price
         """

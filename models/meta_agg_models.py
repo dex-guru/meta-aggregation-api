@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from models.provider_response_models import SwapSources
 
 
-class MetaSwapPriceResponse(BaseModel):
+class ProviderPriceResponse(BaseModel):
     provider: str
     sources: List[SwapSources]
     buy_amount: str
@@ -18,7 +18,7 @@ class MetaSwapPriceResponse(BaseModel):
 
 class MetaPriceModel(BaseModel):
     provider: str
-    quote: MetaSwapPriceResponse
+    price_response: ProviderPriceResponse
     is_allowed: bool
     is_best: Optional[bool] = None  # none for request with one provider
     approve_cost: int = 0

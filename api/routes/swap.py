@@ -29,7 +29,7 @@ async def get_swap_price(
 ) -> MetaPriceModel:
     """
     Price endpoints are used to get the best price for a swap. It does not return data for swap and therefore
-    require any approvals. If you want to get data for swap, use /quote endpoint.
+    require any approvals. If you want to get data for swap, use /price_response endpoint.
 
     - **buy_token**: Address of the token to buy
     - **sell_token**: Address of the token to sell

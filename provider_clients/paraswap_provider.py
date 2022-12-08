@@ -13,7 +13,7 @@ from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
 
 from config import config
-from models.meta_agg_models import SwapQuoteResponse, MetaSwapPriceResponse
+from models.meta_agg_models import SwapQuoteResponse, ProviderPriceResponse
 from models.provider_response_models import SwapSources
 from provider_clients.base_provider import BaseProvider
 from utils.errors import AggregationProviderError, EstimationError, UserBalanceError, TokensError, PriceError, \
@@ -30,7 +30,7 @@ PARASWAP_ERRORS = {
     'computePrice Error': PriceError,
     'Bad USD price': PriceError,
     'ERROR_GETTING_PRICES': PriceError,
-    # ---- quote errors
+    # ---- price_response errors
     'Unable to check price impact': PriceError,
     'not enough \w+ balance': UserBalanceError,
     'not enough \w+ allowance': AllowanceError,
@@ -214,14 +214,14 @@ class ParaSwapProvider(BaseProvider):
             raise e
         return prepared_response
 
-    def _convert_response_from_swap_price(self, price_response: dict) -> Optional[MetaSwapPriceResponse]:
+    def _convert_response_from_swap_price(self, price_response: dict) -> Optional[ProviderPriceResponse]:
         price_response = price_response['priceRoute']
         dst_amount = (Decimal(price_response['destAmount']) / 10 ** price_response['destDecimals'])
         src_amount = (Decimal(price_response['srcAmount']) / 10 ** price_response['srcDecimals'])
         price = dst_amount / src_amount
         sources = self.convert_sources_for_meta_aggregation(price_response['bestRoute'])
         try:
-            prepared_response = MetaSwapPriceResponse(
+            prepared_response = ProviderPriceResponse(
                 provider=self.PROVIDER_NAME,
                 sources=sources,
                 buy_amount=str(price_response['destAmount']),

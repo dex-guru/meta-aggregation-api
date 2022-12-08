@@ -4,7 +4,7 @@ from typing import Optional, Dict, List
 from aiohttp import ClientSession, ServerDisconnectedError
 from pydantic import ValidationError
 
-from models.meta_agg_models import SwapQuoteResponse, MetaSwapPriceResponse
+from models.meta_agg_models import SwapQuoteResponse, ProviderPriceResponse
 from utils.errors import ParseResponseError, BaseAggregationProviderError, ProviderTimeoutError
 from utils.logger import capture_exception
 
@@ -47,7 +47,7 @@ class BaseProvider:
             taker_address: Optional[str] = None,
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None,
-    ) -> MetaSwapPriceResponse:
+    ) -> ProviderPriceResponse:
         raise NotImplementedError
 
     async def get_gas_prices(self, chain_id: Optional[int] = None) -> dict:

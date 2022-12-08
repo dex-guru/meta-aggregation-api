@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, before_log
 
 from config import config
-from models.meta_agg_models import SwapQuoteResponse, MetaSwapPriceResponse
+from models.meta_agg_models import SwapQuoteResponse, ProviderPriceResponse
 from models.provider_response_models import SwapSources
 from provider_clients.base_provider import BaseProvider
 from utils.errors import EstimationError, AggregationProviderError, InsufficientLiquidityError, UserBalanceError, \
@@ -175,7 +175,7 @@ class OneInchProvider(BaseProvider):
                              gas_price: Optional[int] = None, slippage_percentage: Optional[float] = 1,
                              taker_address: Optional[str] = None, fee_recipient: Optional[str] = None,
                              buy_token_percentage_fee: Optional[float] = None):
-        path = 'quote'
+        path = 'price_response'
         url = self._trading_api_path_builder(
             version=TRADING_API_VERSION,
             path=path,
@@ -205,7 +205,7 @@ class OneInchProvider(BaseProvider):
             value = str(sell_amount)
         try:
             sources = self.convert_sources_for_meta_aggregation(response['protocols'])
-            res = MetaSwapPriceResponse(
+            res = ProviderPriceResponse(
                 provider=self.PROVIDER_NAME,
                 sources=sources,
                 buy_amount=response['toTokenAmount'],
