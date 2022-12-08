@@ -107,6 +107,7 @@ class LogArgs:
     ex = "ex"  # human readable exception description
     ex_trace = "ex_trace"  # exception trace
     model_name = "model_name"
+    cache_size = "cache_size"
     aggregation_provider = "aggregation_provider"  # meta aggregation provider
 
 

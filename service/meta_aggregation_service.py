@@ -6,7 +6,7 @@ from dexguru_sdk import DexGuru
 from web3 import Web3
 from web3.contract import Contract
 
-from clients.blockchain.evm import EVMBase
+from clients.blockchain.web3_client import Web3Client
 from config import config, chains
 from config.providers import providers
 from models.meta_agg_models import MetaPriceModel, MetaSwapPriceResponse
@@ -106,7 +106,7 @@ async def get_swap_meta_price(
     # TODO: Add description, app.config?
     spender_addresses = providers[str(chain_id)]['market_order']
     web3_url = get_web3_url(chain_id)
-    erc20_contract = EVMBase(web3_url).get_erc20_contract(Web3.toChecksumAddress(sell_token))
+    erc20_contract = Web3Client(web3_url).get_erc20_contract(Web3.toChecksumAddress(sell_token))
     approve_costs = asyncio.create_task(get_approve_costs_per_provider(sell_token, erc20_contract,
                                                                        sell_amount, spender_addresses, taker_address))
     get_decimals_task = asyncio.create_task(get_decimals_for_native_and_buy_token(chain_id, buy_token))
@@ -254,7 +254,7 @@ async def get_provider_price(
     provider_instance = provider_class()
 
     web3_url = get_web3_url(chain_id)
-    erc20_contract = EVMBase(web3_url).get_erc20_contract(Web3.toChecksumAddress(sell_token))
+    erc20_contract = Web3Client(web3_url).get_erc20_contract(Web3.toChecksumAddress(sell_token))
     if not gas_price:
         gas_price = asyncio.create_task(get_gas_prices(chain_id))
     allowance = await get_token_allowance(sell_token, spender_address, erc20_contract, taker_address)

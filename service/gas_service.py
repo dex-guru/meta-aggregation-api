@@ -7,9 +7,9 @@ from tenacity import retry, retry_if_exception_type
 from web3 import Web3
 
 from clients.blockchain.custom_http_provider import CustomHTTPProvider
+from clients.blockchain.web3_client import Web3Client
 from config import chains
 from models.gas_models import GasResponse
-from utils.async_utils import async_from_sync
 from utils.common import get_web3_url
 from utils.logger import get_logger
 
@@ -18,17 +18,15 @@ logger = get_logger(__name__)
 
 async def get_gas_prices(chain_id: int) -> GasResponse:
     logger.debug('Getting gas prices for network %s', chain_id)
-    web3_url = get_web3_url(chain_id)
-    w3 = Web3(CustomHTTPProvider(endpoint_uri=web3_url))
+    w3 = Web3Client(get_web3_url(chain_id))
     if chains.get_chain_by_id(chain_id).eip1559:
         return await get_gas_prices_eip1559(w3)
     return await get_gas_prices_legacy(w3)
 
 
-@async_from_sync
 @retry(retry=retry_if_exception_type(ReadTimeout), stop=3)
-def get_gas_prices_eip1559(w3: Web3) -> Optional[GasResponse]:
-    gas_history = w3.eth.fee_history(4, 'latest', [60, 75, 90])
+async def get_gas_prices_eip1559(w3: Web3Client) -> Optional[GasResponse]:
+    gas_history = await w3.get_fee_history(4, 'latest', [60, 75, 90])
     reward = gas_history['reward']
     # baseFee for next block
     base_fee = gas_history['baseFeePerGas'][-1]
@@ -63,10 +61,9 @@ def get_gas_prices_eip1559(w3: Web3) -> Optional[GasResponse]:
     })
 
 
-@async_from_sync
 @retry(retry=retry_if_exception_type(ReadTimeout), stop=3)
-def get_gas_prices_legacy(w3: Web3) -> GasResponse:
-    gas_price = w3.eth.gas_price
+async def get_gas_prices_legacy(w3: Web3Client) -> GasResponse:
+    gas_price = await w3.w3.eth.gas_price
     return GasResponse.parse_obj({
         'source': 'DEXGURU',
         'timestamp': int(time()),
