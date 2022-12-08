@@ -64,7 +64,7 @@ def create_app(config: Config):
         await setup_client_session()
         await chains.set_chains(app.config.PUBLIC_KEY, app.config.PUBLIC_API_DOMAIN)
         app.chains = chains
-        app.providers = providers.providers
+        app.providers = providers
 
     @app.on_event("shutdown")
     async def shutdown_event():

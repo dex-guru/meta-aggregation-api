@@ -114,7 +114,7 @@ class ParaSwapProvider(BaseProvider):
             e = self.handle_exception(e, method='get_swap_price', params=params, chain_id=chain_id)
             raise e
         response = self._convert_response_from_swap_price(quotes)
-        response.gasPrice = gas_price or 0
+        response.gas_price = gas_price or 0
         if sell_token.lower() == config.NATIVE_TOKEN_ADDRESS:
             response.value = str(sell_amount)
         return response
