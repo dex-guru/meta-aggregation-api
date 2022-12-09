@@ -8,7 +8,6 @@ from utils.common import _camel_to_snake
 class SwapSources(BaseModel):
     name: str
     proportion: float  # Percentage.
-    hops: List[str] = []  # TODO remove hops, split MultiHop for 0x
 
     def __init__(self, **data):
         data['name'] = _camel_to_snake(data['name'])

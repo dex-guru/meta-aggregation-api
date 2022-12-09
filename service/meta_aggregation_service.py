@@ -6,6 +6,7 @@ from aiocache import cached
 from dexguru_sdk import DexGuru
 from web3 import Web3
 from web3.contract import AsyncContract
+from web3.exceptions import BadFunctionCallOutput
 
 from clients.blockchain.web3_client import Web3Client
 from config import config, chains
@@ -424,9 +425,9 @@ async def get_provider_price(
         )
     gas_price = await gas_price if isinstance(gas_price, asyncio.Task) else gas_price
     price = await provider_instance.get_swap_price(
-        buy_token, sell_token, sell_amount, chain_id,
-        gas_price, slippage_percentage, taker_address,
-        fee_recipient, buy_token_percentage_fee,
+        buy_token=buy_token, sell_token=sell_token, sell_amount=sell_amount, chain_id=chain_id,
+        gas_price=gas_price, slippage_percentage=slippage_percentage, taker_address=taker_address,
+        fee_recipient=fee_recipient, buy_token_percentage_fee=buy_token_percentage_fee,
     )
     return MetaPriceModel(provider=provider, price_response=price,
                           is_allowed=bool(allowance), approve_cost=approve_cost)

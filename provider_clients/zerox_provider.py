@@ -101,12 +101,14 @@ class ZeroXProvider(BaseProvider):
             if not float(source['proportion']):
                 continue
             if source.get('hops'):
-                source['hops'] = [hop['name'] for hop in source['hops']]
+                converted_sources.extend([SwapSources(
+                    name=hop, proportion=float(source['proportion']) * 100
+                ) for hop in source['hops']])
+                continue
             converted_sources.append(
                 SwapSources(
                     name=source['name'],
                     proportion=float(source['proportion']) * 100,  # Convert to percentage.
-                    hops=source['hops'] if source.get('hops') else [],
                 )
             )
         return converted_sources
@@ -136,7 +138,6 @@ class ZeroXProvider(BaseProvider):
             sell_token: str,
             sell_amount: int,
             chain_id: Optional[int] = None,
-            affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
             taker_address: Optional[str] = None,
@@ -161,9 +162,6 @@ class ZeroXProvider(BaseProvider):
             'skipValidation': ignore_checks,
         }
 
-        if affiliate_address:
-            query['affiliateAddress'] = affiliate_address
-
         if gas_price:
             query['gasPrice'] = gas_price
 
@@ -175,6 +173,7 @@ class ZeroXProvider(BaseProvider):
 
         if fee_recipient and buy_token_percentage_fee:
             query['feeRecipient'] = fee_recipient
+            query['affiliateAddress'] = fee_recipient
             query['buyTokenPercentageFee'] = buy_token_percentage_fee
 
         logger.debug(f'Proxing url {url} with params {query}')
@@ -222,7 +221,6 @@ class ZeroXProvider(BaseProvider):
             sell_token: str,
             sell_amount: int,
             chain_id: Optional[int] = None,
-            affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
             taker_address: Optional[str] = None,
@@ -239,9 +237,6 @@ class ZeroXProvider(BaseProvider):
             'sellAmount': sell_amount
         }
 
-        if affiliate_address:
-            query['affiliateAddress'] = affiliate_address
-
         if gas_price:
             query['gasPrice'] = gas_price
 
@@ -253,6 +248,7 @@ class ZeroXProvider(BaseProvider):
 
         if fee_recipient and buy_token_percentage_fee:
             query['feeRecipient'] = fee_recipient
+            query['affiliateAddress'] = fee_recipient
             query['buyTokenPercentageFee'] = buy_token_percentage_fee
 
         logger.debug(f'Proxing url {url} with params {query}')
@@ -262,12 +258,6 @@ class ZeroXProvider(BaseProvider):
             e = self.handle_exception(e, query=query, method='get_swap_price', chain_id=chain_id)
             raise e
         return self._convert_response_from_swap_price(response) if response else None
-
-    async def get_gas_prices(self, chain_id: Optional[int] = None) -> dict:
-        domain = self._api_domain_builder(chain_id)
-        url = f'https://gas.{domain}'
-
-        return await self._get_response(url)
 
     def handle_exception(self, exception: Union[ClientResponseError, KeyError, ValidationError],
                          **kwargs) -> BaseAggregationProviderError:

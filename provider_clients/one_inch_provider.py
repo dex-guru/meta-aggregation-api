@@ -172,12 +172,19 @@ class OneInchProvider(BaseProvider):
         return response
 
     @cached(ttl=30)
-    async def get_swap_price(self, buy_token: str, sell_token: str, sell_amount: int,
-                             chain_id: Optional[int] = None, affiliate_address: Optional[str] = None,
-                             gas_price: Optional[int] = None, slippage_percentage: Optional[float] = 1,
-                             taker_address: Optional[str] = None, fee_recipient: Optional[str] = None,
-                             buy_token_percentage_fee: Optional[float] = None):
-        path = 'price_response'
+    async def get_swap_price(
+            self,
+            buy_token: str,
+            sell_token: str,
+            sell_amount: int,
+            chain_id: Optional[int] = None,
+            gas_price: Optional[int] = None,
+            slippage_percentage: Optional[float] = 1,
+            taker_address: Optional[str] = None,
+            fee_recipient: Optional[str] = None,
+            buy_token_percentage_fee: Optional[float] = None,
+    ):
+        path = 'quote'
         url = self._trading_api_path_builder(
             version=TRADING_API_VERSION,
             path=path,
@@ -189,7 +196,7 @@ class OneInchProvider(BaseProvider):
             'amount': sell_amount,
         }
         if gas_price:
-            query['gasPrice'] = gas_price
+            query['gasPrice'] = str(gas_price)
 
         if buy_token_percentage_fee:
             query['fee'] = buy_token_percentage_fee
@@ -229,7 +236,6 @@ class OneInchProvider(BaseProvider):
             sell_token: str,
             sell_amount: int,
             chain_id: Optional[int] = None,
-            affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
             taker_address: Optional[str] = None,
@@ -266,10 +272,7 @@ class OneInchProvider(BaseProvider):
         if gas_price:
             query['gasPrice'] = gas_price
 
-        if affiliate_address:
-            query['referrerAddress'] = affiliate_address
-
-        if fee_recipient and not affiliate_address:
+        if fee_recipient:
             query['referrerAddress'] = fee_recipient
 
         if buy_token_percentage_fee:
@@ -339,7 +342,7 @@ class OneInchProvider(BaseProvider):
             return exc
         msg = exception.message
         if isinstance(exception.message, list) and isinstance(exception.message[0], dict):
-            msg = exception.message[0].get('description')
+            msg = exception.message[0].get('description', exception.message[0].get('error', ''))
         for error, error_class in ONE_INCH_ERRORS.items():
             if re.search(error.lower(), msg.lower()):
                 break

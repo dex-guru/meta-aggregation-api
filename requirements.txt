@@ -5,6 +5,7 @@ fastapi==0.88.0
 uvicorn==0.20.0
 ujson~=5.5.0
 yarl
+msgpack-python==0.5.6
 
 web3==6.0.0b7
 tenacity==8.1.0

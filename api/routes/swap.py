@@ -68,7 +68,7 @@ async def get_swap_price(
     return next((quote for quote in res if quote.is_best), None)
 
 
-@swap_route.get('/{chain_id}/price/all', response_model=List[MetaPriceModel])
+@swap_route.get('/{chain_id}/price/all', response_model=List[MetaPriceModel], responses=responses)
 @swap_route.get('/{chain_id}/price/all/', include_in_schema=False, response_model=List[MetaPriceModel])
 async def get_all_swap_prices(
         buy_token: address_to_lower = Query(..., alias='buyToken'),
@@ -117,7 +117,7 @@ async def get_all_swap_prices(
     return res
 
 
-@swap_route.get('/{chain_id}/quote', response_model=SwapQuoteResponse)
+@swap_route.get('/{chain_id}/quote', response_model=SwapQuoteResponse, responses=responses)
 @swap_route.get('/{chain_id}/quote/', response_model=SwapQuoteResponse, include_in_schema=False)
 async def get_swap_quote(
         buy_token: address_to_lower = Query(..., alias='buyToken'),
