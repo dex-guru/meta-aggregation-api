@@ -14,7 +14,7 @@ from models.meta_agg_models import MetaPriceModel, ProviderPriceResponse, SwapQu
 from provider_clients.one_inch_provider import OneInchProvider
 from provider_clients.paraswap_provider import ParaSwapProvider
 from provider_clients.zerox_provider import ZeroXProvider
-from service.gas_service import get_base_gas_price
+from services.gas_service import get_base_gas_price
 from utils.common import get_web3_url
 from utils.errors import ProviderNotFound
 from utils.logger import get_logger

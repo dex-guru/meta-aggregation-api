@@ -1,5 +1,5 @@
 from config.apm import APMConfig
-from config.chains import ChainsConfig, chains
+from config.chains import ChainsConfig
 from config.logger import LoggerConfig
 from config.providers import providers
 
@@ -12,7 +12,7 @@ class Config(APMConfig, LoggerConfig):
     WEB3_URL = 'https://api-proxy-stage-lax.dexguru.biz'
     PUBLIC_KEY = 'default'
     PUBLIC_API_DOMAIN = 'http://localhost:8001'
-    PUBLIC_API_VERSION = 1
+    API_VERSION = 1
     WEB3_TIMEOUT: int = 10
     X_SYS_KEY = 'vd399tVUdU4y'
     CORS_ORIGINS = ['*']
@@ -22,3 +22,4 @@ class Config(APMConfig, LoggerConfig):
 
 
 config = Config()
+chains = ChainsConfig(config.PUBLIC_KEY, config.PUBLIC_API_DOMAIN)

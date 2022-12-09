@@ -6,7 +6,7 @@ from pydantic import constr, conint
 
 from models.meta_agg_models import MetaPriceModel
 from models.meta_agg_models import SwapQuoteResponse
-from service.meta_aggregation_service import get_swap_meta_price, get_meta_swap_quote, get_provider_price
+from services.meta_aggregation_service import get_swap_meta_price, get_meta_swap_quote, get_provider_price
 from utils.errors import BaseAggregationProviderError, responses
 
 swap_route = APIRouter()

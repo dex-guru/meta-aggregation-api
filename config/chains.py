@@ -1,3 +1,5 @@
+import asyncio
+
 from dexguru_sdk import DexGuru
 
 from models.chain import ChainModel
@@ -19,6 +21,10 @@ class ChainsConfig(metaclass=Singleton):
         # 1
     """
 
+    def __init__(self, api_key: str, domain: str):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.set_chains(api_key, domain))
+
     async def set_chains(self, api_key: str, domain: str):
         chains_ = await DexGuru(api_key=api_key, domain=domain).get_chains()
         for chain in chains_.data:
@@ -32,6 +38,3 @@ class ChainsConfig(metaclass=Singleton):
             if chain.chain_id == chain_id:
                 return chain
         raise ValueError(f'Chain id {chain_id} not found')
-
-
-chains = ChainsConfig()

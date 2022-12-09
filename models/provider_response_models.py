@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel
 
 from utils.common import _camel_to_snake

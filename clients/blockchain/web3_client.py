@@ -1,13 +1,12 @@
 from pathlib import Path
-from typing import Optional, Type, Union, List
+from typing import Optional, Type, Union
 
 import ujson
 from web3 import Web3
-from web3.contract import Contract, AsyncContract
+from web3.contract import AsyncContract
 from web3.eth import AsyncEth
-from web3.middleware import geth_poa_middleware, async_geth_poa_middleware
+from web3.middleware import async_geth_poa_middleware
 from web3.net import AsyncNet
-from web3.types import FeeHistory
 
 from clients.blockchain.custom_http_provider import AsyncCustomHTTPProvider
 from utils.logger import get_logger

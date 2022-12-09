@@ -2,7 +2,7 @@ from fastapi import Path
 from fastapi.routing import APIRouter
 
 from models.gas_models import GasResponse
-from service.gas_service import get_gas_prices
+from services.gas_service import get_gas_prices
 
 gas_routes = APIRouter()
 
