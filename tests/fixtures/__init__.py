@@ -1,0 +1,1 @@
+from tests.fixtures.aiohttp_session import aiohttp_session

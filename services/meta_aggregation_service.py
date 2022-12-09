@@ -224,8 +224,9 @@ async def get_decimals_for_native_and_buy_token(chain_id: int, buy_token: str) -
     """
     wrapped_native = chains.get_chain_by_id(chain_id).native_token
     native_decimals = wrapped_native.decimals
+    buy_token = buy_token.lower()
     guru_sdk = DexGuru(config.PUBLIC_KEY, domain=config.PUBLIC_API_DOMAIN)
-    if buy_token == config.NATIVE_TOKEN_ADDRESS or buy_token == wrapped_native:
+    if buy_token == config.NATIVE_TOKEN_ADDRESS or buy_token == wrapped_native.address:
         buy_token_decimals = native_decimals
     else:
         buy_token_inventory = await guru_sdk.get_token_inventory_by_address(chain_id, buy_token)
