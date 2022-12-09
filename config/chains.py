@@ -1,7 +1,7 @@
 from dexguru_sdk import DexGuru
 
 from models.chain import ChainModel
-from utils import Singleton
+from utils.singleton import Singleton
 
 
 class ChainsConfig(metaclass=Singleton):

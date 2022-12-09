@@ -2,7 +2,7 @@ from pathlib import Path
 
 import ujson
 
-from utils import Singleton
+from utils.singleton import Singleton
 
 
 class ProvidersConfig(metaclass=Singleton):

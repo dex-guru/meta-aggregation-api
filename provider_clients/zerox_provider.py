@@ -26,7 +26,7 @@ ZERO_X_ERRORS = {
 
 
 class ZeroXProvider(BaseProvider):
-    """ Docs: https://0x.org/docs/api#introduction """
+    """Docs: https://0x.org/docs/api#introduction"""
     API_DOMAIN = 'api.0x.org'
     PROVIDER_NAME = 'zero_x'
 
@@ -49,7 +49,9 @@ class ZeroXProvider(BaseProvider):
     @retry(retry=(retry_if_exception_type(asyncio.TimeoutError) | retry_if_exception_type(ServerDisconnectedError)),
            stop=stop_after_attempt(3), reraise=True, before=before_log(logger, logging.DEBUG))
     async def _get_response(self, url: str, params: Optional[dict] = None) -> dict:
-        async with self.aiohttp_session.get(url, params=params, timeout=5, ssl=ssl.SSLContext()) as response:
+        async with self.aiohttp_session.get(
+                url, params=params, timeout=self.REQUEST_TIMEOUT, ssl=ssl.SSLContext()
+        ) as response:
             response: ClientResponse
             logger.debug(f'Request GET {response.url}')
             data = await response.json()

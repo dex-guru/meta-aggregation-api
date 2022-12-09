@@ -7,7 +7,6 @@ from config.providers import providers
 class Config(APMConfig, LoggerConfig):
     SERVER_HOST: str = 'http://localhost:8000'
     IS_DEBUG: bool = True
-    PIPELINE: str = 'stage'
     NATIVE_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     VERSION = '0.0.1'
     WEB3_URL = 'https://api-proxy-stage-lax.dexguru.biz'

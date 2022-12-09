@@ -6,7 +6,6 @@ from aiocache import cached
 from dexguru_sdk import DexGuru
 from web3 import Web3
 from web3.contract import AsyncContract
-from web3.exceptions import BadFunctionCallOutput
 
 from clients.blockchain.web3_client import Web3Client
 from config import config, chains

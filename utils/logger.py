@@ -116,9 +116,6 @@ def get_logger(name: str, extra: Optional[dict] = None, corr_id: Optional[str] =
 
     extra = extra or {}
 
-    if config.PIPELINE and PIPELINE not in extra:
-        extra[PIPELINE] = config.PIPELINE
-
     if corr_id:
         correlation_id.set(corr_id)
 
