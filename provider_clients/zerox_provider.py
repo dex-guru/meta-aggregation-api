@@ -30,6 +30,7 @@ class ZeroXProvider(BaseProvider):
     """Docs: https://0x.org/docs/api#introduction"""
     API_DOMAIN = 'api.0x.org'
     PROVIDER_NAME = 'zero_x'
+    TRADING_API_VERSION = 1
 
     @classmethod
     def _api_domain_builder(cls, chain_id: int = None) -> str:
@@ -40,12 +41,11 @@ class ZeroXProvider(BaseProvider):
     def _api_path_builder(
             cls,
             path: str,
-            version: Union[int, float],
             endpoint: str,
             chain_id: Optional[str] = None
     ) -> str:
         domain = cls._api_domain_builder(chain_id)
-        return f'https://{domain}/{path}/v{version}/{endpoint}'
+        return f'https://{domain}/{path}/v{cls.TRADING_API_VERSION}/{endpoint}'
 
     @retry(retry=(retry_if_exception_type(asyncio.TimeoutError) | retry_if_exception_type(ServerDisconnectedError)),
            stop=stop_after_attempt(3), reraise=True, before=before_log(logger, logging.DEBUG))
@@ -140,10 +140,10 @@ class ZeroXProvider(BaseProvider):
             buy_token: str,
             sell_token: str,
             sell_amount: int,
+            taker_address: str,
             chain_id: Optional[int] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
-            taker_address: Optional[str] = None,
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None,
             ignore_checks: bool = False,
@@ -156,7 +156,7 @@ class ZeroXProvider(BaseProvider):
             - https://api.0x.org/swap/v1/quote?buyToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&sellAmount=1000000000000000000&sellToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
             - https://api.0x.org/swap/v1/quote?affiliateAddress=0x720c9244473Dfc596547c1f7B6261c7112A3dad4&buyToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&gasPrice=26000000000&sellAmount=1000000000000000000&sellToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&slippagePercentage=0.0100&takerAddress=0xA0942D8352FFaBCc0f6dEE32b2b081C703e726A5
         """
-        url = self._api_path_builder('swap', 1, 'price_response', chain_id)
+        url = self._api_path_builder('swap', 'price_response', chain_id)
         ignore_checks = str(ignore_checks).lower()
         query = {
             'buyToken': buy_token,
@@ -202,7 +202,7 @@ class ZeroXProvider(BaseProvider):
         Examples:
             https://docs.0x.org/0x-api-orderbook/api-references
         """
-        url = self._api_path_builder('orderbook', 1, 'orders', chain_id)
+        url = self._api_path_builder('orderbook', 'orders', chain_id)
         query = {}
 
         if taker_token:
@@ -233,7 +233,7 @@ class ZeroXProvider(BaseProvider):
         """
         Docs: https://0x.org/docs/api#get-swapv1price
         """
-        url = self._api_path_builder('swap', 1, 'price', chain_id)
+        url = self._api_path_builder('swap', 'price', chain_id)
         query = {
             'buyToken': buy_token,
             'sellToken': sell_token,

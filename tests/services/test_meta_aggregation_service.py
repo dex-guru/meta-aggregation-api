@@ -5,6 +5,7 @@ import pytest
 from web3 import Web3
 
 from config import config, providers, chains
+from models.chain import TokenModel
 from models.meta_agg_models import ProviderPriceResponse
 from services.meta_aggregation_service import get_token_allowance, get_approve_cost, get_approve_costs_per_provider, \
     get_swap_meta_price, get_decimals_for_native_and_buy_token, choose_best_provider
@@ -97,7 +98,7 @@ async def test_get_swap_meta_price_no_quote(
 
 
 @pytest.mark.asyncio()
-@patch('dexguru_sdk.sdk.dg_sdk.DexGuru.get_token_inventory_by_address', new_callable=AsyncMock)
+@patch('services.meta_aggregation_service.DexGuru.get_token_inventory_by_address', new_callable=AsyncMock)
 @pytest.mark.parametrize(
     'token_address, call_count',
     (

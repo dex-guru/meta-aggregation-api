@@ -26,10 +26,10 @@ class BaseProvider:
             buy_token: str,
             sell_token: str,
             sell_amount: int,
-            chain_id: Optional[int] = None,
+            chain_id: int,
+            taker_address: str,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
-            taker_address: Optional[str] = None,
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None
     ) -> SwapQuoteResponse:
