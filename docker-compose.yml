@@ -1,5 +1,5 @@
 # TODO: include api, elastic, logstash, apm
-version: '3'
+version: '3.7'
 services:
   trading-api:
     build:
@@ -12,3 +12,10 @@ services:
     environment:
       PIPELINE: prod
     restart: on-failure
+    
+  elk:
+    image: sebp/elk
+    ports:
+      - "5601:5601"
+      - "9200:9200"
+      - "5044:5044"

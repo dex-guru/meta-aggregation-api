@@ -1,4 +1,5 @@
 from dexguru_sdk import DexGuru
+from pydantic import HttpUrl
 
 from models.chain import ChainModel
 from utils import Singleton
@@ -19,7 +20,7 @@ class ChainsConfig(metaclass=Singleton):
         # 1
     """
 
-    async def set_chains(self, api_key: str, domain: str):
+    async def set_chains(self, api_key: str, domain: HttpUrl):
         chains_ = await DexGuru(api_key=api_key, domain=domain).get_chains()
         for chain in chains_.data:
             self.__dict__[chain.name.lower()] = ChainModel.parse_obj(chain.dict())
