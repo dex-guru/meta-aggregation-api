@@ -1,5 +1,4 @@
 from config.apm import APMConfig
-from config.chains import ChainsConfig
 from config.logger import LoggerConfig
 from config.providers import providers
 
@@ -22,4 +21,3 @@ class Config(APMConfig, LoggerConfig):
 
 
 config = Config()
-chains = ChainsConfig(config.PUBLIC_KEY, config.PUBLIC_API_DOMAIN)

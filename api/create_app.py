@@ -11,7 +11,8 @@ from api.routes.info import info_route
 from api.routes.rpc import v1_rpc
 from api.routes.swap import swap_route
 from clients.apm_client import apm_client
-from config import Config, chains, providers
+from config import Config, providers
+from services.chains import chains
 from utils.httputils import setup_client_session, teardown_client_session
 from utils.logger import get_logger
 

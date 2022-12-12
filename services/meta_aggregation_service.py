@@ -8,7 +8,8 @@ from web3 import Web3
 from web3.contract import AsyncContract
 
 from clients.blockchain.web3_client import Web3Client
-from config import config, chains
+from config import config
+from services.chains import chains
 from config.providers import providers
 from models.meta_agg_models import MetaPriceModel, ProviderPriceResponse, SwapQuoteResponse
 from provider_clients.one_inch_provider import OneInchProvider

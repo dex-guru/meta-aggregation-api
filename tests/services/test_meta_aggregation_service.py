@@ -4,8 +4,8 @@ from unittest.mock import Mock, patch, AsyncMock
 import pytest
 from web3 import Web3
 
-from config import config, providers, chains
-from models.chain import TokenModel
+from config import config, providers
+from services.chains import chains
 from models.meta_agg_models import ProviderPriceResponse
 from services.meta_aggregation_service import get_token_allowance, get_approve_cost, get_approve_costs_per_provider, \
     get_swap_meta_price, get_decimals_for_native_and_buy_token, choose_best_provider, get_meta_swap_quote

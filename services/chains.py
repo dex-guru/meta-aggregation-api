@@ -2,6 +2,7 @@ import asyncio
 
 from dexguru_sdk import DexGuru
 
+from config import config
 from models.chain import ChainModel
 from utils.singleton import Singleton
 
@@ -38,3 +39,6 @@ class ChainsConfig(metaclass=Singleton):
             if chain.chain_id == chain_id:
                 return chain
         raise ValueError(f'Chain id {chain_id} not found')
+
+
+chains = ChainsConfig(api_key=config.PUBLIC_KEY, domain=config.PUBLIC_API_DOMAIN)
