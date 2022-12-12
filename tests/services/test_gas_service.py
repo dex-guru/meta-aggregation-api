@@ -17,7 +17,7 @@ async def test_get_gas_priceeip_chain(get_legacy_gas_mock: AsyncMock, get_eip_ga
 
 
 @pytest.mark.asyncio()
-@patch('clients.blockchain.web3_client.Web3Client', new_callable=Mock)
+@patch('services.gas_service.Web3Client', new_callable=Mock)
 @patch('services.gas_service.get_gas_prices_eip1559', new_callable=AsyncMock)
 @patch('services.gas_service.get_gas_prices_legacy', new_callable=AsyncMock)
 async def test_get_gas_price_legacy_chain(get_legacy_gas_mock: AsyncMock, get_eip_gas_mock: AsyncMock, web3_mock: Mock):
@@ -27,14 +27,15 @@ async def test_get_gas_price_legacy_chain(get_legacy_gas_mock: AsyncMock, get_ei
 
 
 @pytest.mark.asyncio()
-@patch('clients.blockchain.web3_client.Web3Client', new_callable=AsyncMock)
+@patch('services.gas_service.Web3Client', new_callable=Mock)
 async def test_get_gas_price_legacy(web3_mock: AsyncMock):
+    web3_mock.w3.eth.gas_price = AsyncMock(return_value=123)
     await get_gas_prices_legacy(web3_mock)
-    web3_mock.w3.eth.gas_price.assert_awaited_once()
+    web3_mock.w3.eth.gas_price.assert_called_once()
 
 
 @pytest.mark.asyncio()
-@patch('clients.blockchain.web3_client.Web3Client', new_callable=AsyncMock)
+@patch('services.gas_service.Web3Client', new_callable=Mock)
 async def test_get_gas_price_eip1559(web3_mock: AsyncMock):
     web3_mock.w3.eth.fee_history.return_value = AttributeDict(
         {

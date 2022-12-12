@@ -16,8 +16,11 @@ class ProvidersConfig(metaclass=Singleton):
     def __iter__(self):
         return iter(self.__dict__.keys())
 
-    def get(self, chain: int) -> dict:
-        return self.__dict__[str(chain)]
+    def get(self, chain_id: int) -> dict:
+        chain = self.__dict__.get(str(chain_id))
+        if not chain:
+            raise ValueError(f'Chain ID {chain_id} not found')
+        return chain
 
 
 providers = ProvidersConfig()

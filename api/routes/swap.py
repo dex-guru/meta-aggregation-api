@@ -53,18 +53,11 @@ async def get_swap_price(
         "fee_recipient": fee_recipient,
         "buy_token_percentage_fee": buy_token_percentage_fee,
     }
-    try:
-        if provider:
-            res = await get_provider_price(provider=provider, **params)
-            return res
-        else:
-            res = await get_swap_meta_price(**params)
-    except ClientResponseError as e:
-        raise HTTPException(status_code=e.status, detail=e.message)
-    except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
-    except BaseAggregationProviderError as e:
-        raise e.to_http_exception()
+    if provider:
+        res = await get_provider_price(provider=provider, **params)
+        return res
+    else:
+        res = await get_swap_meta_price(**params)
     return next((quote for quote in res if quote.is_best), None)
 
 
@@ -106,14 +99,7 @@ async def get_all_swap_prices(
         "buy_token_percentage_fee": buy_token_percentage_fee,
     }
 
-    try:
-        res = await get_swap_meta_price(**params)
-    except ClientResponseError as e:
-        raise HTTPException(status_code=e.status, detail=e.message)
-    except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
-    except BaseAggregationProviderError as e:
-        raise e.to_http_exception()
+    res = await get_swap_meta_price(**params)
     return res
 
 
@@ -145,21 +131,16 @@ async def get_swap_quote(
     - **fee_recipient**: Address of the fee recipient (optional)
     - **buy_token_percentage_fee**: Percentage of the buy token fee (optional) (0.01 = 1%)
     """
-    try:
-        quote = await get_meta_swap_quote(
-            buy_token=buy_token,
-            sell_token=sell_token,
-            sell_amount=sell_amount,
-            chain_id=chain_id,
-            provider=provider,
-            gas_price=gas_price,
-            slippage_percentage=slippage_percentage,
-            taker_address=taker_address,
-            fee_recipient=fee_recipient,
-            buy_token_percentage_fee=buy_token_percentage_fee,
-        )
-    except ClientResponseError as e:
-        raise HTTPException(status_code=e.status, detail=e.message)
-    except BaseAggregationProviderError as e:
-        raise e.to_http_exception()
+    quote = await get_meta_swap_quote(
+        buy_token=buy_token,
+        sell_token=sell_token,
+        sell_amount=sell_amount,
+        chain_id=chain_id,
+        provider=provider,
+        gas_price=gas_price,
+        slippage_percentage=slippage_percentage,
+        taker_address=taker_address,
+        fee_recipient=fee_recipient,
+        buy_token_percentage_fee=buy_token_percentage_fee,
+    )
     return quote

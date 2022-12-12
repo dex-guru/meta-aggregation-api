@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from fastapi import HTTPException
+from starlette.responses import JSONResponse
 
 from utils.logger import LogArgs
 
@@ -63,12 +63,12 @@ class BaseAggregationProviderError(Exception):
             {LogArgs.aggregation_provider: self.provider}
         )
 
-    def to_http_exception(self) -> HTTPException:
-        return HTTPException(status_code=self.code, detail={
+    def to_http_exception(self) -> JSONResponse:
+        return JSONResponse({
             'error': str(self),
             'reason': self.message,
             'provider': self.provider,
-        })
+        }, status_code=self.code)
 
 
 class AggregationProviderError(ProviderMistakes, BaseAggregationProviderError):

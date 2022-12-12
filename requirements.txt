@@ -2,8 +2,9 @@
 dexguru-sdk==0.2.6
 
 fastapi==0.88.0
+httpx==0.23.1
 uvicorn==0.20.0
-ujson~=5.5.0
+ujson
 yarl
 msgpack-python==0.5.6
 
@@ -11,7 +12,7 @@ web3==6.0.0b7
 tenacity==8.1.0
 requests==2.28.1
 urllib3
-aiohttp~=3.8.3
+aiohttp
 aiocache[memcached]==0.11.1
 
 
