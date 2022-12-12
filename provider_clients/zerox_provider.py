@@ -9,9 +9,9 @@ from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
 from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
 
-from config.chains import chains
 from models.meta_agg_models import SwapQuoteResponse, SwapSources, ProviderPriceResponse
 from provider_clients.base_provider import BaseProvider
+from services.chains import chains
 from utils.errors import AggregationProviderError, UserBalanceError, BaseAggregationProviderError
 from utils.logger import get_logger
 
@@ -22,13 +22,15 @@ ZERO_X_ERRORS = {
     # TODO add more errors
 }
 
+
 # TODO: Add description, links to one 0x docs
 
 
 class ZeroXProvider(BaseProvider):
-    """ Docs: https://0x.org/docs/api#introduction """
+    """Docs: https://0x.org/docs/api#introduction"""
     API_DOMAIN = 'api.0x.org'
     PROVIDER_NAME = 'zero_x'
+    TRADING_API_VERSION = 1
 
     @classmethod
     def _api_domain_builder(cls, chain_id: int = None) -> str:
@@ -39,17 +41,18 @@ class ZeroXProvider(BaseProvider):
     def _api_path_builder(
             cls,
             path: str,
-            version: Union[int, float],
             endpoint: str,
             chain_id: Optional[str] = None
     ) -> str:
         domain = cls._api_domain_builder(chain_id)
-        return f'https://{domain}/{path}/v{version}/{endpoint}'
+        return f'https://{domain}/{path}/v{cls.TRADING_API_VERSION}/{endpoint}'
 
     @retry(retry=(retry_if_exception_type(asyncio.TimeoutError) | retry_if_exception_type(ServerDisconnectedError)),
            stop=stop_after_attempt(3), reraise=True, before=before_log(logger, logging.DEBUG))
     async def _get_response(self, url: str, params: Optional[dict] = None) -> dict:
-        async with self.aiohttp_session.get(url, params=params, timeout=5, ssl=ssl.SSLContext()) as response:
+        async with self.aiohttp_session.get(
+                url, params=params, timeout=self.REQUEST_TIMEOUT, ssl=ssl.SSLContext()
+        ) as response:
             response: ClientResponse
             logger.debug(f'Request GET {response.url}')
             data = await response.json()
@@ -101,12 +104,14 @@ class ZeroXProvider(BaseProvider):
             if not float(source['proportion']):
                 continue
             if source.get('hops'):
-                source['hops'] = [hop['name'] for hop in source['hops']]
+                converted_sources.extend([SwapSources(
+                    name=hop, proportion=float(source['proportion']) * 100
+                ) for hop in source['hops']])
+                continue
             converted_sources.append(
                 SwapSources(
                     name=source['name'],
                     proportion=float(source['proportion']) * 100,  # Convert to percentage.
-                    hops=source['hops'] if source.get('hops') else [],
                 )
             )
         return converted_sources
@@ -135,11 +140,10 @@ class ZeroXProvider(BaseProvider):
             buy_token: str,
             sell_token: str,
             sell_amount: int,
+            taker_address: str,
             chain_id: Optional[int] = None,
-            affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
-            taker_address: Optional[str] = None,
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None,
             ignore_checks: bool = False,
@@ -152,7 +156,7 @@ class ZeroXProvider(BaseProvider):
             - https://api.0x.org/swap/v1/quote?buyToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&sellAmount=1000000000000000000&sellToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
             - https://api.0x.org/swap/v1/quote?affiliateAddress=0x720c9244473Dfc596547c1f7B6261c7112A3dad4&buyToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&gasPrice=26000000000&sellAmount=1000000000000000000&sellToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&slippagePercentage=0.0100&takerAddress=0xA0942D8352FFaBCc0f6dEE32b2b081C703e726A5
         """
-        url = self._api_path_builder('swap', 1, 'price_response', chain_id)
+        url = self._api_path_builder('swap', 'price_response', chain_id)
         ignore_checks = str(ignore_checks).lower()
         query = {
             'buyToken': buy_token,
@@ -160,9 +164,6 @@ class ZeroXProvider(BaseProvider):
             'sellAmount': sell_amount,
             'skipValidation': ignore_checks,
         }
-
-        if affiliate_address:
-            query['affiliateAddress'] = affiliate_address
 
         if gas_price:
             query['gasPrice'] = gas_price
@@ -175,6 +176,7 @@ class ZeroXProvider(BaseProvider):
 
         if fee_recipient and buy_token_percentage_fee:
             query['feeRecipient'] = fee_recipient
+            query['affiliateAddress'] = fee_recipient
             query['buyTokenPercentageFee'] = buy_token_percentage_fee
 
         logger.debug(f'Proxing url {url} with params {query}')
@@ -200,7 +202,7 @@ class ZeroXProvider(BaseProvider):
         Examples:
             https://docs.0x.org/0x-api-orderbook/api-references
         """
-        url = self._api_path_builder('orderbook', 1, 'orders', chain_id)
+        url = self._api_path_builder('orderbook', 'orders', chain_id)
         query = {}
 
         if taker_token:
@@ -222,7 +224,6 @@ class ZeroXProvider(BaseProvider):
             sell_token: str,
             sell_amount: int,
             chain_id: Optional[int] = None,
-            affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
             taker_address: Optional[str] = None,
@@ -232,15 +233,12 @@ class ZeroXProvider(BaseProvider):
         """
         Docs: https://0x.org/docs/api#get-swapv1price
         """
-        url = self._api_path_builder('swap', 1, 'price', chain_id)
+        url = self._api_path_builder('swap', 'price', chain_id)
         query = {
             'buyToken': buy_token,
             'sellToken': sell_token,
             'sellAmount': sell_amount
         }
-
-        if affiliate_address:
-            query['affiliateAddress'] = affiliate_address
 
         if gas_price:
             query['gasPrice'] = gas_price
@@ -253,6 +251,7 @@ class ZeroXProvider(BaseProvider):
 
         if fee_recipient and buy_token_percentage_fee:
             query['feeRecipient'] = fee_recipient
+            query['affiliateAddress'] = fee_recipient
             query['buyTokenPercentageFee'] = buy_token_percentage_fee
 
         logger.debug(f'Proxing url {url} with params {query}')
@@ -262,12 +261,6 @@ class ZeroXProvider(BaseProvider):
             e = self.handle_exception(e, query=query, method='get_swap_price', chain_id=chain_id)
             raise e
         return self._convert_response_from_swap_price(response) if response else None
-
-    async def get_gas_prices(self, chain_id: Optional[int] = None) -> dict:
-        domain = self._api_domain_builder(chain_id)
-        url = f'https://gas.{domain}'
-
-        return await self._get_response(url)
 
     def handle_exception(self, exception: Union[ClientResponseError, KeyError, ValidationError],
                          **kwargs) -> BaseAggregationProviderError:

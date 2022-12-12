@@ -1,7 +1,6 @@
 from abc import abstractmethod
 
-from fastapi import HTTPException
-from pydantic import BaseModel
+from starlette.responses import JSONResponse
 
 from utils.logger import LogArgs
 
@@ -19,11 +18,6 @@ class OurMistakes:
 class ProviderMistakes:
     code = 409
     error_owner = 'provider'
-
-class HttpErrorModel(BaseModel):
-    error: str
-    reason: str
-    provider: str
 
 
 class BaseAggregationProviderError(Exception):
@@ -69,12 +63,12 @@ class BaseAggregationProviderError(Exception):
             {LogArgs.aggregation_provider: self.provider}
         )
 
-    def to_http_exception(self) -> HTTPException:
-        return HTTPException(status_code=self.code, detail=HttpErrorModel.parse_obj({
+    def to_http_exception(self) -> JSONResponse:
+        return JSONResponse({
             'error': str(self),
             'reason': self.message,
             'provider': self.provider,
-        }))
+        }, status_code=self.code)
 
 
 class AggregationProviderError(ProviderMistakes, BaseAggregationProviderError):
@@ -138,16 +132,20 @@ class SpenderAddressNotFound(OurMistakes, BaseAggregationProviderError):
 
 
 responses = {
-    AggregationProviderError.code: {'description': AggregationProviderError.msg_to_log, 'model': HttpErrorModel},
-    EstimationError.code: {'description': EstimationError.msg_to_log, 'model': HttpErrorModel},
-    InsufficientLiquidityError.code: {'description': InsufficientLiquidityError.msg_to_log, 'model': HttpErrorModel},
-    UserBalanceError.code: {'description': UserBalanceError.msg_to_log, 'model': HttpErrorModel},
-    AllowanceError.code: {'description': AllowanceError.msg_to_log, 'model': HttpErrorModel},
-    ValidationFailedError.code: {'description': ValidationFailedError.msg_to_log, 'model': HttpErrorModel},
-    ParseResponseError.code: {'description': ParseResponseError.msg_to_log, 'model': HttpErrorModel},
-    TokensError.code: {'description': TokensError.msg_to_log, 'model': HttpErrorModel},
-    PriceError.code: {'description': PriceError.msg_to_log, 'model': HttpErrorModel},
-    ProviderTimeoutError.code: {'description': ProviderTimeoutError.msg_to_log, 'model': HttpErrorModel},
-    ProviderNotFound.code: {'description': ProviderNotFound.msg_to_log, 'model': HttpErrorModel},
-    SpenderAddressNotFound.code: {'description': SpenderAddressNotFound.msg_to_log, 'model': HttpErrorModel},
+    UserMistakes.code: {
+        'description': 'One of the following errors:<br><br>%s<br>%s<br>%s<br>%s<br>' % (
+            UserBalanceError.msg_to_log, TokensError.msg_to_log,
+            EstimationError.msg_to_log, AllowanceError.msg_to_log
+        )},
+    ProviderMistakes.code: {
+        'description': 'One of the following errors:<br><br>%s<br>%s<br>%s<br>%s' % (
+            ProviderTimeoutError.msg_to_log, InsufficientLiquidityError.msg_to_log,
+            PriceError.msg_to_log, AggregationProviderError.msg_to_log,
+        )},
+    OurMistakes.code: {
+        'description': 'One of the following errors:<br><br>%s<br>%s<br>%s<br>%s' % (
+            ProviderNotFound.msg_to_log, SpenderAddressNotFound.msg_to_log,
+            ParseResponseError.msg_to_log, ValidationFailedError.msg_to_log,
+        )
+    }
 }

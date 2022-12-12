@@ -1,8 +1,8 @@
-from pydantic import BaseSettings, HttpUrl
+from pydantic import BaseSettings
 
 
 class APMConfig(BaseSettings):
-    APM_SERVER_URL: HttpUrl = ''
+    APM_SERVER_URL: str = 'http://localhost:8200'
     SERVICE_NAME: str = 'api-trading'
     APM_ENABLED: bool = False
     APM_RECORDING: bool = False

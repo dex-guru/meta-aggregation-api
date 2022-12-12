@@ -1,8 +1,10 @@
-from dexguru_sdk import DexGuru
-from pydantic import HttpUrl
+import asyncio
 
+from dexguru_sdk import DexGuru
+
+from config import config
 from models.chain import ChainModel
-from utils import Singleton
+from utils.singleton import Singleton
 
 
 class ChainsConfig(metaclass=Singleton):
@@ -11,16 +13,18 @@ class ChainsConfig(metaclass=Singleton):
     Chain object contains name, chain_id, description and native_token.
     Native token is an object with address, name, symbol and decimals.
     Models defined in models/chain.py
-
     Usage:
         from config import chains
-
         chain = chains.eth
         chain.chain_id
         # 1
     """
 
-    async def set_chains(self, api_key: str, domain: HttpUrl):
+    def __init__(self, api_key: str, domain: str):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.set_chains(api_key, domain))
+
+    async def set_chains(self, api_key: str, domain: str):
         chains_ = await DexGuru(api_key=api_key, domain=domain).get_chains()
         for chain in chains_.data:
             self.__dict__[chain.name.lower()] = ChainModel.parse_obj(chain.dict())
@@ -35,4 +39,4 @@ class ChainsConfig(metaclass=Singleton):
         raise ValueError(f'Chain id {chain_id} not found')
 
 
-chains = ChainsConfig()
+chains = ChainsConfig(api_key=config.PUBLIC_KEY, domain=config.PUBLIC_API_DOMAIN)

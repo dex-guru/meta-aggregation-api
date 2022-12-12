@@ -19,7 +19,6 @@ from utils.errors import EstimationError, AggregationProviderError, Insufficient
 from utils.logger import get_logger, LogArgs
 
 LIMIT_ORDER_VERSION = 2.0
-TRADING_API_VERSION = 5.0
 DEFAULT_SLIPPAGE_PERCENTAGE = 0.5
 
 ONE_INCH_ERRORS = {
@@ -66,6 +65,7 @@ class OneInchProvider(BaseProvider):
     LIMIT_ORDERS_DOMAIN = 'limit-orders.1inch.io'
     TRADING_API_DOMAIN = 'api.1inch.io'
     PROVIDER_NAME = 'one_inch'
+    TRADING_API_VERSION = 5.0
 
     @classmethod
     def _limit_order_path_builder(
@@ -80,11 +80,10 @@ class OneInchProvider(BaseProvider):
     @classmethod
     def _trading_api_path_builder(
             cls,
-            version: Union[int, float],
             path: str,
             chain_id: int,
     ) -> str:
-        return f'https://{cls.TRADING_API_DOMAIN}/v{version}/{chain_id}/{path}'
+        return f'https://{cls.TRADING_API_DOMAIN}/v{cls.TRADING_API_VERSION}/{chain_id}/{path}'
 
     @retry(retry=(retry_if_exception_type(asyncio.TimeoutError) | retry_if_exception_type(ServerDisconnectedError)),
            stop=stop_after_attempt(3), reraise=True, before=before_log(logger, LOG_DEBUG))
@@ -172,14 +171,20 @@ class OneInchProvider(BaseProvider):
         return response
 
     @cached(ttl=30)
-    async def get_swap_price(self, buy_token: str, sell_token: str, sell_amount: int,
-                             chain_id: Optional[int] = None, affiliate_address: Optional[str] = None,
-                             gas_price: Optional[int] = None, slippage_percentage: Optional[float] = 1,
-                             taker_address: Optional[str] = None, fee_recipient: Optional[str] = None,
-                             buy_token_percentage_fee: Optional[float] = None):
-        path = 'price_response'
+    async def get_swap_price(
+            self,
+            buy_token: str,
+            sell_token: str,
+            sell_amount: int,
+            chain_id: Optional[int] = None,
+            gas_price: Optional[int] = None,
+            slippage_percentage: Optional[float] = 1,
+            taker_address: Optional[str] = None,
+            fee_recipient: Optional[str] = None,
+            buy_token_percentage_fee: Optional[float] = None,
+    ):
+        path = 'quote'
         url = self._trading_api_path_builder(
-            version=TRADING_API_VERSION,
             path=path,
             chain_id=chain_id,
         )
@@ -189,7 +194,7 @@ class OneInchProvider(BaseProvider):
             'amount': sell_amount,
         }
         if gas_price:
-            query['gasPrice'] = gas_price
+            query['gasPrice'] = str(gas_price)
 
         if buy_token_percentage_fee:
             query['fee'] = buy_token_percentage_fee
@@ -228,8 +233,7 @@ class OneInchProvider(BaseProvider):
             buy_token: str,
             sell_token: str,
             sell_amount: int,
-            chain_id: Optional[int] = None,
-            affiliate_address: Optional[str] = None,
+            chain_id: int,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
             taker_address: Optional[str] = None,
@@ -250,7 +254,6 @@ class OneInchProvider(BaseProvider):
 
         path = 'swap'
         url = self._trading_api_path_builder(
-            version=TRADING_API_VERSION,
             path=path,
             chain_id=chain_id,
         )
@@ -266,10 +269,7 @@ class OneInchProvider(BaseProvider):
         if gas_price:
             query['gasPrice'] = gas_price
 
-        if affiliate_address:
-            query['referrerAddress'] = affiliate_address
-
-        if fee_recipient and not affiliate_address:
+        if fee_recipient:
             query['referrerAddress'] = fee_recipient
 
         if buy_token_percentage_fee:
@@ -314,9 +314,9 @@ class OneInchProvider(BaseProvider):
     @staticmethod
     def convert_sources_for_meta_aggregation(
             sources: Optional[dict | list[dict]],
-    ) -> Optional[list[SwapSources]]:
+    ) -> list[SwapSources]:
         if not sources:
-            return
+            return []
         sources_list = list(chain.from_iterable(chain.from_iterable(sources)))
         converted_sources = []
         for source in sources_list:
@@ -339,7 +339,7 @@ class OneInchProvider(BaseProvider):
             return exc
         msg = exception.message
         if isinstance(exception.message, list) and isinstance(exception.message[0], dict):
-            msg = exception.message[0].get('description')
+            msg = exception.message[0].get('description', exception.message[0].get('error', ''))
         for error, error_class in ONE_INCH_ERRORS.items():
             if re.search(error.lower(), msg.lower()):
                 break

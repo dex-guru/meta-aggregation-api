@@ -4,7 +4,7 @@ from fastapi.security import HTTPBearer
 from pydantic import constr
 from starlette.requests import Request
 
-from config import config
+from utils.common import get_web3_url
 from utils.logger import get_logger
 
 v1_rpc = APIRouter()
@@ -21,16 +21,9 @@ async def send_rpc(
     The send_rpc function is an endpoint that makes an HTTP request to the node
     that is currently synced with the most other nodes. It takes in a JSON-RPC 2.0 compliant
     request and returns a JSON-RPC 2.0 compliant response.
-
     """
-    # TODO: Add rpc endpoint description
-    # TODO: Rework this to use the SDK
     from utils.httputils import CLIENT_SESSION
-    #
-    # TODO: app.config?
-    node = config.WEB3_URL
-    if node is None:
-        return {}
+    node = get_web3_url(chain_id)
     try:
         async with CLIENT_SESSION.post(node, json=await request.json()) as response:
             return await response.json()

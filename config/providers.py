@@ -2,7 +2,7 @@ from pathlib import Path
 
 import ujson
 
-from utils import Singleton
+from utils.singleton import Singleton
 
 
 class ProvidersConfig(metaclass=Singleton):
@@ -13,8 +13,14 @@ class ProvidersConfig(metaclass=Singleton):
             for chain, info in providers.items():
                 self.__dict__[str(chain)] = info
 
-    def get(self, chain: int) -> dict:
-        return self.__dict__[str(chain)]
+    def __iter__(self):
+        return iter(self.__dict__.keys())
+
+    def get(self, chain_id: int) -> dict:
+        chain = self.__dict__.get(str(chain_id))
+        if not chain:
+            raise ValueError(f'Chain ID {chain_id} not found')
+        return chain
 
 
 providers = ProvidersConfig()
