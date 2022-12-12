@@ -8,7 +8,8 @@ from config import config, providers, chains
 from models.chain import TokenModel
 from models.meta_agg_models import ProviderPriceResponse
 from services.meta_aggregation_service import get_token_allowance, get_approve_cost, get_approve_costs_per_provider, \
-    get_swap_meta_price, get_decimals_for_native_and_buy_token, choose_best_provider
+    get_swap_meta_price, get_decimals_for_native_and_buy_token, choose_best_provider, get_meta_swap_quote
+from utils.errors import ProviderNotFound
 
 
 @pytest.mark.asyncio()
@@ -34,6 +35,25 @@ async def test_get_token_allowance():
     )
     call_mock.assert_awaited_once_with({'to': Web3.toChecksumAddress(token_address)})
 
+
+@pytest.mark.asyncio()
+async def test_get_token_allowance_for_native_token():
+    contract_mock = Mock()
+    allowance_mock: Mock = contract_mock.functions.allowance
+    allowance_mock.return_value.call = AsyncMock()
+
+    token_address = config.NATIVE_TOKEN_ADDRESS
+    owner_address = '0x61e1A8041186CeB8a561F6F264e8B2BB2E20e06D'
+    spender_address = '0xdef1c0ded9bec7f1a1670819833240f027b25eff'
+
+    allowance = await get_token_allowance(
+        token_address=token_address,
+        owner_address=owner_address,
+        spender_address=spender_address,
+        erc20_contract=contract_mock,
+    )
+    allowance_mock.assert_not_called()
+    assert allowance == 2 ** 256 - 1
 
 @pytest.mark.asyncio()
 async def test_get_approve_cost():
@@ -77,9 +97,22 @@ async def test_get_approve_costs_per_provider(sell_amount: int, approve_called: 
 
 
 @pytest.mark.asyncio()
+async def test_get_approve_cost_per_provider_no_taker():
+    sell_token = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
+    erc20_contract = Mock()
+    taker_address = None
+    sell_amount = 10000
+    providers_ = providers.get(1)['market_order']
+    approves = await get_approve_costs_per_provider(sell_token, erc20_contract, sell_amount, providers_, taker_address)
+    assert erc20_contract.functions.approve.call_count == 0
+    for approve in approves.values():
+        assert approve == 0
+
+
+@pytest.mark.asyncio()
 @patch('provider_clients.zerox_provider.ZeroXProvider.get_swap_price', new_callable=AsyncMock)
 @patch('provider_clients.one_inch_provider.OneInchProvider.get_swap_price', new_callable=AsyncMock)
-async def test_get_swap_meta_price_no_quote(
+async def test_get_swap_meta_price_no_price(
         one_inch_mock: AsyncMock,
         zerox_mock: AsyncMock,
         aiohttp_session,
@@ -162,3 +195,17 @@ def test_choose_best_provider(
     res = choose_best_provider(quotes, approve_costs, native_decimals=1,
                                buy_token_decimals=1, buy_token_price=token_price_native)
     assert res == (expected_provider, quotes[expected_provider])
+
+
+@pytest.mark.asyncio()
+async def test_get_meta_swap_quote():
+    provider = 'invalid_provider'
+    with pytest.raises(ProviderNotFound):
+        await get_meta_swap_quote(
+            provider=provider,
+            sell_token='test',
+            buy_token='test',
+            sell_amount=1,
+            chain_id=1,
+            taker_address='test',
+        )

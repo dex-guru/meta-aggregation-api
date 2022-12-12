@@ -31,7 +31,7 @@ async def get_gas_prices(chain_id: int) -> GasResponse:
 async def get_base_gas_price(chain_id: int) -> int:
     logger.debug('Getting base gas price for network %s', chain_id)
     web3_client = Web3Client(get_web3_url(chain_id))
-    return await web3_client.w3.eth.gas_price
+    return await web3_client.w3.eth.gas_price()
 
 
 @retry(retry=retry_if_exception_type(ReadTimeout), stop=3)
@@ -73,7 +73,7 @@ async def get_gas_prices_eip1559(w3: Web3Client) -> Optional[GasResponse]:
 
 @retry(retry=retry_if_exception_type(ReadTimeout), stop=3)
 async def get_gas_prices_legacy(w3: Web3Client) -> GasResponse:
-    gas_price = await w3.w3.eth.gas_price
+    gas_price = await w3.w3.eth.gas_price()
     return GasResponse.parse_obj({
         'source': GAS_SOURCE,
         'timestamp': int(time()),
