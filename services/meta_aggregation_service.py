@@ -9,12 +9,12 @@ from web3.contract import AsyncContract
 
 from clients.blockchain.web3_client import Web3Client
 from config import config
-from services.chains import chains
 from config.providers import providers
 from models.meta_agg_models import MetaPriceModel, ProviderPriceResponse, SwapQuoteResponse
 from provider_clients.one_inch_provider import OneInchProvider
 from provider_clients.paraswap_provider import ParaSwapProvider
 from provider_clients.zerox_provider import ZeroXProvider
+from services.chains import chains
 from services.gas_service import get_base_gas_price
 from utils.common import get_web3_url
 from utils.errors import ProviderNotFound

@@ -7,8 +7,8 @@ from requests import ReadTimeout
 from tenacity import retry, retry_if_exception_type
 
 from clients.blockchain.web3_client import Web3Client
-from services.chains import chains
 from models.gas_models import GasResponse
+from services.chains import chains
 from utils.common import get_web3_url
 from utils.logger import get_logger
 

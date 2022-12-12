@@ -5,8 +5,8 @@ import pytest
 from web3 import Web3
 
 from config import config, providers
-from services.chains import chains
 from models.meta_agg_models import ProviderPriceResponse
+from services.chains import chains
 from services.meta_aggregation_service import get_token_allowance, get_approve_cost, get_approve_costs_per_provider, \
     get_swap_meta_price, get_decimals_for_native_and_buy_token, choose_best_provider, get_meta_swap_quote
 from utils.errors import ProviderNotFound
@@ -54,6 +54,7 @@ async def test_get_token_allowance_for_native_token():
     )
     allowance_mock.assert_not_called()
     assert allowance == 2 ** 256 - 1
+
 
 @pytest.mark.asyncio()
 async def test_get_approve_cost():

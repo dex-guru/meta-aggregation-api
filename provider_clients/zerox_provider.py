@@ -9,9 +9,9 @@ from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
 from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
 
-from services.chains import chains
 from models.meta_agg_models import SwapQuoteResponse, SwapSources, ProviderPriceResponse
 from provider_clients.base_provider import BaseProvider
+from services.chains import chains
 from utils.errors import AggregationProviderError, UserBalanceError, BaseAggregationProviderError
 from utils.logger import get_logger
 

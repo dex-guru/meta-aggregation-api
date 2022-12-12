@@ -68,7 +68,7 @@ class ParaSwapProvider(BaseProvider):
     async def request(self, method: str, path: str, *args, **kwargs):
         request_function = getattr(self.aiohttp_session, method.lower())
         url = self.MAIN_API_URL / path
-        async with request_function(url, *args, timeout=5, **kwargs, ssl=ssl.SSLContext(protocol=1)) as response:
+        async with request_function(url, *args, timeout=5, **kwargs, ssl=ssl.SSLContext()) as response:
             logger.debug("Request '%s' to '%s'", method, url)
             data = await response.text()
             try:
