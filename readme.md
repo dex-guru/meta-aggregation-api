@@ -52,6 +52,9 @@ on Existing issues.
 
 ### Adding New Providers
 
+To add new provider you need to create a new module in providers_clients folder module,
+create a class that inherits from BaseProvider and implement all abstract methods. 
+
 ### Fixing bugs
 
 ### Handling Errors

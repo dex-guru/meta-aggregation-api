@@ -1,4 +1,5 @@
 import asyncio
+from abc import abstractmethod
 from typing import Optional
 
 from aiohttp import ClientSession, ServerDisconnectedError
@@ -21,6 +22,7 @@ class BaseProvider:
         else:
             self.aiohttp_session = aiohttp_session
 
+    @abstractmethod
     async def get_swap_quote(
             self,
             buy_token: str,
@@ -33,8 +35,25 @@ class BaseProvider:
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None
     ) -> SwapQuoteResponse:
-        raise NotImplementedError
+        """
+        The get_swap_quote function is used to get the data for a swap from the provider.
+        Args:
+            self: Access the class attributes
+            buy_token:str: Token is being buy
+            sell_token:str: Token is being sold
+            sell_amount:int: Amount of sell_token to sell
+            chain_id:int: Specify the chain on which the transaction will be executed
+            taker_address:str: Address who makes the transaction and will receive tokens
+            gas_price:Optional[int]=None: Specify the gas price for the transaction
+            slippage_percentage:Optional[float]=None: Specify the percentage of slippage to apply to the quote
+            fee_recipient:Optional[str]=None: Address who will receive the fee
+            buy_token_percentage_fee:Optional[float]=None: Percentage of the buy_token fee that will be paid to the fee_recipient
 
+        Returns:
+            A SwapQuoteResponse object with the data for the swap.
+        """
+
+    @abstractmethod
     async def get_swap_price(
             self,
             buy_token: str,
@@ -47,7 +66,7 @@ class BaseProvider:
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None,
     ) -> ProviderPriceResponse:
-        raise NotImplementedError
+        ...
 
     def handle_exception(self, exception: Exception, logger, **kwargs) -> BaseAggregationProviderError:
         capture_exception()

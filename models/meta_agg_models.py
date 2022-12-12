@@ -6,6 +6,7 @@ from models.provider_response_models import SwapSources
 
 
 class ProviderPriceResponse(BaseModel):
+    # TODO: add docstring with description of each field
     provider: str
     sources: List[SwapSources]
     buy_amount: str
@@ -25,6 +26,7 @@ class MetaPriceModel(BaseModel):
 
 
 class SwapQuoteResponse(BaseModel):
+    # TODO: add docstring with description of each field
     sources: list
     buy_amount: str
     gas: str
