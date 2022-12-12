@@ -92,7 +92,6 @@ class ParaSwapProvider(BaseProvider):
             sell_token: str,
             sell_amount: int,
             chain_id: Optional[int] = None,
-            affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
             taker_address: Optional[str] = None,
@@ -126,11 +125,10 @@ class ParaSwapProvider(BaseProvider):
             buy_token: str,
             sell_token: str,
             sell_amount: int,
+            taker_address: str,
             chain_id: Optional[int] = None,
-            affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
-            taker_address: Optional[str] = None,
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None,
             ignore_checks: bool = False,
@@ -175,8 +173,8 @@ class ParaSwapProvider(BaseProvider):
         else:
             data['destAmount'] = str(price_route['destAmount']),
 
-        if affiliate_address or fee_recipient:
-            data['partnerAddress'] = affiliate_address or fee_recipient
+        if fee_recipient:
+            data['partnerAddress'] = fee_recipient
 
         try:
             response = await self.request(

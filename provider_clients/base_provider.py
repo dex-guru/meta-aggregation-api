@@ -12,6 +12,7 @@ from utils.logger import capture_exception
 class BaseProvider:
     aiohttp_session: ClientSession
     PROVIDER_NAME = 'base_provider'
+    REQUEST_TIMEOUT = 5
 
     def __init__(self, aiohttp_session: Optional[ClientSession] = None):
         if not aiohttp_session:
@@ -25,11 +26,10 @@ class BaseProvider:
             buy_token: str,
             sell_token: str,
             sell_amount: int,
-            chain_id: Optional[int] = None,
-            affiliate_address: Optional[str] = None,
+            chain_id: int,
+            taker_address: str,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
-            taker_address: Optional[str] = None,
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None
     ) -> SwapQuoteResponse:
@@ -41,7 +41,6 @@ class BaseProvider:
             sell_token: str,
             sell_amount: int,
             chain_id: Optional[int] = None,
-            affiliate_address: Optional[str] = None,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
             taker_address: Optional[str] = None,

@@ -8,13 +8,14 @@ from web3 import Web3
 from web3.contract import AsyncContract
 
 from clients.blockchain.web3_client import Web3Client
-from config import config, chains
+from config import config
 from config.providers import providers
 from models.meta_agg_models import MetaPriceModel, ProviderPriceResponse, SwapQuoteResponse
 from provider_clients.one_inch_provider import OneInchProvider
 from provider_clients.paraswap_provider import ParaSwapProvider
 from provider_clients.zerox_provider import ZeroXProvider
-from service.gas_service import get_base_gas_price
+from services.chains import chains
+from services.gas_service import get_base_gas_price
 from utils.common import get_web3_url
 from utils.errors import ProviderNotFound
 from utils.logger import get_logger
@@ -224,8 +225,9 @@ async def get_decimals_for_native_and_buy_token(chain_id: int, buy_token: str) -
     """
     wrapped_native = chains.get_chain_by_id(chain_id).native_token
     native_decimals = wrapped_native.decimals
+    buy_token = buy_token.lower()
     guru_sdk = DexGuru(config.PUBLIC_KEY, domain=config.PUBLIC_API_DOMAIN)
-    if buy_token == config.NATIVE_TOKEN_ADDRESS or buy_token == wrapped_native:
+    if buy_token == config.NATIVE_TOKEN_ADDRESS or buy_token == wrapped_native.address:
         buy_token_decimals = native_decimals
     else:
         buy_token_inventory = await guru_sdk.get_token_inventory_by_address(chain_id, buy_token)
@@ -424,9 +426,9 @@ async def get_provider_price(
         )
     gas_price = await gas_price if isinstance(gas_price, asyncio.Task) else gas_price
     price = await provider_instance.get_swap_price(
-        buy_token, sell_token, sell_amount, chain_id,
-        gas_price, slippage_percentage, taker_address,
-        fee_recipient, buy_token_percentage_fee,
+        buy_token=buy_token, sell_token=sell_token, sell_amount=sell_amount, chain_id=chain_id,
+        gas_price=gas_price, slippage_percentage=slippage_percentage, taker_address=taker_address,
+        fee_recipient=fee_recipient, buy_token_percentage_fee=buy_token_percentage_fee,
     )
     return MetaPriceModel(provider=provider, price_response=price,
                           is_allowed=bool(allowance), approve_cost=approve_cost)
