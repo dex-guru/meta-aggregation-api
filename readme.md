@@ -67,6 +67,7 @@ Clients are used to communicate with external providers. Clients are represented
 * **_api.clients.dex_aggregators_client_** module contains logic of communication with DEX Aggregators.
 * **_api.clients.gas_client_** module contains logic of communication with Gas Station API.
 * **_api.clients.etherscan_client_** module contains logic of communication with Etherscan API.
+* **_api.clients.etherscan_client_** module contains logic of communication with Etherscan API.
 
 Clients are imported in **_api.create_app_** and used in Service layer.
 
