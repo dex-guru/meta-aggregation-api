@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, before_log
 
 from config import config
-from models.meta_agg_models import SwapQuoteResponse, ProviderPriceResponse
+from models.meta_agg_models import ProviderQuoteResponse, ProviderPriceResponse
 from models.provider_response_models import SwapSources
 from provider_clients.base_provider import BaseProvider
 from utils.errors import EstimationError, AggregationProviderError, InsufficientLiquidityError, UserBalanceError, \
@@ -240,7 +240,7 @@ class OneInchProvider(BaseProvider):
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None,
             ignore_checks: bool = False,
-    ) -> Optional[SwapQuoteResponse]:
+    ) -> Optional[ProviderQuoteResponse]:
         """https://docs.1inch.io/docs/aggregation-protocol/api/swap-params"""
         if not chain_id:
             raise ValueError('chain_id is required')
@@ -290,10 +290,10 @@ class OneInchProvider(BaseProvider):
             response: dict,
             price: float,
             **kwargs,
-    ) -> Optional[SwapQuoteResponse]:
+    ) -> Optional[ProviderQuoteResponse]:
         sources = self.convert_sources_for_meta_aggregation(response['protocols'])
         try:
-            prepared_response = SwapQuoteResponse(
+            prepared_response = ProviderQuoteResponse(
                 sources=sources,
                 buy_amount=response['toTokenAmount'],
                 gas=response['tx']['gas'],
@@ -334,8 +334,9 @@ class OneInchProvider(BaseProvider):
             {"code": 400, "description": "cannot estimate"}
         ]
         """
-        exc = super().handle_exception(exception, logger, **kwargs)
+        exc = super().handle_exception(exception, **kwargs)
         if exc:
+            logger.error(*exc.to_log_args(), extra=exc.to_dict())
             return exc
         msg = exception.message
         if isinstance(exception.message, list) and isinstance(exception.message[0], dict):

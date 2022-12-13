@@ -5,7 +5,7 @@ from typing import Optional
 from aiohttp import ClientSession, ServerDisconnectedError
 from pydantic import ValidationError
 
-from models.meta_agg_models import SwapQuoteResponse, ProviderPriceResponse
+from models.meta_agg_models import ProviderQuoteResponse, ProviderPriceResponse
 from utils.errors import ParseResponseError, BaseAggregationProviderError, ProviderTimeoutError
 from utils.logger import capture_exception
 
@@ -34,7 +34,7 @@ class BaseProvider:
             slippage_percentage: Optional[float] = None,
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None
-    ) -> SwapQuoteResponse:
+    ) -> ProviderQuoteResponse:
         """
         The get_swap_quote function is used to get the data for a swap from the provider.
         Args:
@@ -50,7 +50,7 @@ class BaseProvider:
             buy_token_percentage_fee:Optional[float]=None: Percentage of the buy_token fee that will be paid to the fee_recipient
 
         Returns:
-            A SwapQuoteResponse object with the data for the swap.
+            A ProviderQuoteResponse object with the data for the swap. Check return type for more info.
         """
 
     @abstractmethod
@@ -59,22 +59,37 @@ class BaseProvider:
             buy_token: str,
             sell_token: str,
             sell_amount: int,
-            chain_id: Optional[int] = None,
+            chain_id: int,
             gas_price: Optional[int] = None,
             slippage_percentage: Optional[float] = None,
             taker_address: Optional[str] = None,
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None,
     ) -> ProviderPriceResponse:
-        ...
+        """
+        The get_swap_price function is used to find the best price for a swap from the provider.
+        It doesn't require the taker_address to be specified.
+        Args:
+            self: Access the class attributes
+            buy_token:str: Token is being buy
+            sell_token:str: Token is being sold
+            sell_amount:int: Amount of sell_token to sell
+            chain_id:int: Specify the chain on which the transaction will be executed
+            gas_price:Optional[int]=None: Specify the gas price for the transaction
+            slippage_percentage:Optional[float]=None: Specify the percentage of slippage to apply to the quote
+            taker_address:Optional[str]=None: Address who makes the transaction and will receive tokens
+            fee_recipient:Optional[str]=None: Address who will receive the fee
+            buy_token_percentage_fee:Optional[float]=None: Percentage of the buy_token fee that will be paid to the fee_recipient
 
-    def handle_exception(self, exception: Exception, logger, **kwargs) -> BaseAggregationProviderError:
+        Returns:
+            A ProviderPriceResponse object with the price for the swap. Check return type for more info.
+        """
+
+    def handle_exception(self, exception: Exception, **kwargs) -> BaseAggregationProviderError:
         capture_exception()
         if isinstance(exception, KeyError) or isinstance(exception, ValidationError):
             exc = ParseResponseError(self.PROVIDER_NAME, str(exception), **kwargs)
-            logger.error(*exc.to_log_args(), extra=exc.to_dict())
             return exc
         if isinstance(exception, ServerDisconnectedError) or isinstance(exception, asyncio.TimeoutError):
             exc = ProviderTimeoutError(self.PROVIDER_NAME, str(exception), **kwargs)
-            logger.error(*exc.to_log_args(), extra=exc.to_dict())
             return exc

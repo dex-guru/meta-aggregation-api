@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
 
 from config import config
-from models.meta_agg_models import SwapQuoteResponse, ProviderPriceResponse
+from models.meta_agg_models import ProviderQuoteResponse, ProviderPriceResponse
 from models.provider_response_models import SwapSources
 from provider_clients.base_provider import BaseProvider
 from utils.errors import AggregationProviderError, EstimationError, UserBalanceError, TokensError, PriceError, \
@@ -130,7 +130,7 @@ class ParaSwapProviderV5(BaseProvider):
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None,
             ignore_checks: bool = False,
-    ) -> Optional[SwapQuoteResponse]:
+    ) -> Optional[ProviderQuoteResponse]:
         params = {
             'srcToken': sell_token,
             'destToken': buy_token,
@@ -191,11 +191,11 @@ class ParaSwapProviderV5(BaseProvider):
             quote_response: dict,
             price_response: dict,
             **kwargs,
-    ) -> Optional[SwapQuoteResponse]:
+    ) -> Optional[ProviderQuoteResponse]:
         price = Decimal(price_response['destAmount']) / Decimal(price_response['srcAmount'])
         sources = self.convert_sources_for_meta_aggregation(price_response['bestRoute'])
         try:
-            prepared_response = SwapQuoteResponse(
+            prepared_response = ProviderQuoteResponse(
                 sources=sources,
                 buy_amount=str(price_response['destAmount']),
                 gas=quote_response.get('gas', '0'),
@@ -254,8 +254,9 @@ class ParaSwapProviderV5(BaseProvider):
         """
         exception.message: '{'error': 'Not enough liquidity for this trade'}'
         """
-        exc = super().handle_exception(exception, logger, **kwargs)
+        exc = super().handle_exception(exception, **kwargs)
         if exc:
+            logger.error(*exc.to_log_args(), extra=exc.to_dict())
             return exc
         msg = ujson.loads(exception.message).get('error', 'Unknown error')
         for error, error_class in PARASWAP_ERRORS.items():

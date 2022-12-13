@@ -9,7 +9,7 @@ from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
 from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
 
-from models.meta_agg_models import SwapQuoteResponse, SwapSources, ProviderPriceResponse
+from models.meta_agg_models import ProviderQuoteResponse, SwapSources, ProviderPriceResponse
 from provider_clients.base_provider import BaseProvider
 from services.chains import chains
 from utils.errors import AggregationProviderError, UserBalanceError, BaseAggregationProviderError
@@ -73,10 +73,10 @@ class ZeroXProvider(BaseProvider):
 
         return data
 
-    def _convert_response_from_swap_quote(self, response: dict) -> Optional[SwapQuoteResponse]:
+    def _convert_response_from_swap_quote(self, response: dict) -> Optional[ProviderQuoteResponse]:
         sources = self.convert_sources_for_meta_aggregation(response['sources'])
         try:
-            prepared_response = SwapQuoteResponse(
+            prepared_response = ProviderQuoteResponse(
                 sources=sources,
                 buy_amount=response['buyAmount'],
                 gas=response['gas'],
@@ -147,7 +147,7 @@ class ZeroXProvider(BaseProvider):
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None,
             ignore_checks: bool = False,
-    ) -> Optional[SwapQuoteResponse]:
+    ) -> Optional[ProviderQuoteResponse]:
         """
         Docs: https://0x.org/docs/api#get-swapv1quote
 
@@ -289,8 +289,9 @@ class ZeroXProvider(BaseProvider):
             }
         ]
         """
-        exc = super().handle_exception(exception, logger, **kwargs)
+        exc = super().handle_exception(exception, **kwargs)
         if exc:
+            logger.error(*exc.to_log_args(), extra=exc.to_dict())
             return exc
         msg = exception.message
         if isinstance(exception.message, list) and isinstance(exception.message[0], dict):
