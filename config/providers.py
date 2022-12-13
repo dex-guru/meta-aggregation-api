@@ -37,16 +37,18 @@ class ProvidersConfig(metaclass=Singleton):
         }
         for provider in self.values():
             if chain_id in provider:
-                providers_by_chain['market_order'].append({
-                    'display_name': provider['display_name'],
-                    'address': provider[chain_id]['market_order'],
-                    'name': provider['name'],
-                })
-                providers_by_chain['limit_order'].append({
-                    'display_name': provider['display_name'],
-                    'address': provider[chain_id]['limit_order'],
-                    'name': provider['name'],
-                })
+                if provider[chain_id]['market_order']:
+                    providers_by_chain['market_order'].append({
+                        'display_name': provider['display_name'],
+                        'address': provider[chain_id]['market_order'],
+                        'name': provider['name'],
+                    })
+                if provider[chain_id]['limit_order']:
+                    providers_by_chain['limit_order'].append({
+                        'display_name': provider['display_name'],
+                        'address': provider[chain_id]['limit_order'],
+                        'name': provider['name'],
+                    })
         if not providers_by_chain['market_order'] and not providers_by_chain['limit_order']:
             raise ValueError(f'Chain ID {chain_id} not found')
         return providers_by_chain
