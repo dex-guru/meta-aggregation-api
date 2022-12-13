@@ -18,7 +18,7 @@ def get_schema():
 def test_validate_config_schema(get_schema):
     for path, subdirs, files in os.walk(CLIENTS_PATH):
         for file in files:
-            if 'config.json' in file:
+            if 'config.json' == file:
                 with open(Path(path, file)) as f:
-                    token_list = json.load(f)
-                    validate(token_list, get_schema)
+                    provider_config = json.load(f)
+                    validate(provider_config, get_schema)

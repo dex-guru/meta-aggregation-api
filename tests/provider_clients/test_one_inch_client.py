@@ -144,7 +144,6 @@ async def test_get_swap_quote(get_response_mock: AsyncMock, one_inch_provider):
 def test_handle_exception_key_error(one_inch_provider, caplog):
     exc = one_inch_provider.handle_exception(KeyError('test'))
     assert caplog.text
-    assert caplog.handler.records[0].module == 'base_provider'
     assert isinstance(exc, ParseResponseError)
 
 

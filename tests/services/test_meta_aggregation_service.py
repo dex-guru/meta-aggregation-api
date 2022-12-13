@@ -88,7 +88,7 @@ async def test_get_approve_costs_per_provider(sell_amount: int, approve_called: 
     allowance_mock = allowance_patcher.start()
     approve_mock = approve_patcher.start()
     allowance_mock.return_value = 10
-    providers_ = providers.get(chain_id)['market_order']
+    providers_ = providers.get_providers_by_chain(chain_id)['market_order']
     await get_approve_costs_per_provider(sell_token, erc20_contract, sell_amount, providers_, taker_address)
     allowance_mock.assert_called()
     if approve_called:
@@ -103,7 +103,7 @@ async def test_get_approve_cost_per_provider_no_taker():
     erc20_contract = Mock()
     taker_address = None
     sell_amount = 10000
-    providers_ = providers.get(1)['market_order']
+    providers_ = providers.get_providers_by_chain(1)['market_order']
     approves = await get_approve_costs_per_provider(sell_token, erc20_contract, sell_amount, providers_, taker_address)
     assert erc20_contract.functions.approve.call_count == 0
     for approve in approves.values():

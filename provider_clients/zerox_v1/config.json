@@ -1,6 +1,6 @@
 {
-  "name": "paraswap",
-  "display_name": "ParaSwap",
+  "name": "zero_x",
+  "display_name": "0x",
   "enabled": true,
   "spenders": [
     {

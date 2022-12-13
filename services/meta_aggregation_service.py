@@ -143,7 +143,7 @@ async def get_swap_meta_price(
     Raises:
         ValueError: If not found any possible swap for the given parameters on all providers
     """
-    spender_addresses = providers.get(chain_id)['market_order']
+    spender_addresses = providers.get_providers_by_chain(chain_id)['market_order']
     web3_url = get_web3_url(chain_id)
     erc20_contract = Web3Client(web3_url).get_erc20_contract(sell_token)
     approve_costs = asyncio.create_task(get_approve_costs_per_provider(sell_token, erc20_contract,
@@ -158,7 +158,7 @@ async def get_swap_meta_price(
         gas_price = await get_base_gas_price(chain_id)
 
     prices_tasks = []
-    for provider in spender_addresses:
+    for provider in providers.values():
         if provider is None:
             continue
         provider_name = provider['name']
@@ -408,7 +408,7 @@ async def get_provider_price(
     provider_class = Providers.get(provider)
     if not provider_class:
         raise ProviderNotFound(provider)
-    spender_address = next((spender['address'] for spender in providers.get(chain_id)['market_order']
+    spender_address = next((spender['address'] for spender in providers.get_providers_by_chain(chain_id)['market_order']
                             if spender['name'] == provider), None)
     provider_instance = provider_class()
 

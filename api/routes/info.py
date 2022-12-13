@@ -27,7 +27,7 @@ async def get_info(
 ) -> ProvidersConfigModel:
     """Returns information about the providers for a given chain ID."""
     try:
-        info = request.app.providers.get(str(chain_id))
+        info = request.app.providers.get_providers_by_chain(str(chain_id))
     except ValueError:
         raise HTTPException(status_code=404, detail='Chain ID not found')
     return info
