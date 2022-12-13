@@ -12,7 +12,7 @@ from config import config
 from config.providers import providers
 from models.meta_agg_models import MetaPriceModel, ProviderPriceResponse, ProviderQuoteResponse
 from provider_clients.one_inch_provider.one_inch_provider import OneInchProvider
-from provider_clients.paraswap_provider_v5.paraswap_provider_v5 import ParaSwapProviderV5
+from provider_clients.paraswap_v5_provider.paraswap_provider_v5 import ParaSwapProviderV5
 from provider_clients.zerox_provider.zerox_provider import ZeroXProvider
 from services.chains import chains
 from services.gas_service import get_base_gas_price
