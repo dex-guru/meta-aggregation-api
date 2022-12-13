@@ -11,9 +11,9 @@ from clients.blockchain.web3_client import Web3Client
 from config import config
 from config.providers import providers
 from models.meta_agg_models import MetaPriceModel, ProviderPriceResponse, SwapQuoteResponse
-from provider_clients.one_inch_provider import OneInchProvider
-from provider_clients.paraswap_provider import ParaSwapProvider
-from provider_clients.zerox_provider import ZeroXProvider
+from provider_clients.one_inch_provider.one_inch_provider import OneInchProvider
+from provider_clients.paraswap_provider_v5.paraswap_provider_v5 import ParaSwapProviderV5
+from provider_clients.zerox_provider.zerox_provider import ZeroXProvider
 from services.chains import chains
 from services.gas_service import get_base_gas_price
 from utils.common import get_web3_url
@@ -24,7 +24,7 @@ from utils.logger import get_logger
 class Providers:
     zero_x = ZeroXProvider
     one_inch = OneInchProvider
-    paraswap = ParaSwapProvider
+    paraswap = ParaSwapProviderV5
 
     @classmethod
     def get(cls, provider_name: str):

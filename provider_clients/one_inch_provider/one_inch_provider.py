@@ -55,7 +55,7 @@ logger = get_logger(__name__)
 
 class OneInchProvider(BaseProvider):
     """
-    Trading and limit orders proxy for 1Inch. Docs: https://docs.1inch.io/docs/1inch-network-overview
+    Trading and limit orders Provider for 1Inch. Docs: https://docs.1inch.io/docs/1inch-network-overview
 
     URL structures:
         Trading:      https://{trading_api_domain}/v{version}/{chain_id}/{operation}?queryParams

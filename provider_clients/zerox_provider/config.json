@@ -1,0 +1,89 @@
+{
+  "1": {
+    "limit_order": [
+    ],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+        "name": "zero_x"
+      }
+    ]
+  },
+  "10": {
+    "limit_order": [
+    ],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef1abe32c034e558cdd535791643c58a13acc10",
+        "name": "zero_x"
+      }
+    ]
+  },
+  "56": {
+    "limit_order": [
+    ],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+        "name": "zero_x"
+      }
+    ]
+  },
+  "137": {
+    "limit_order": [
+    ],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+        "name": "zero_x"
+      },
+    ]
+  },
+  "250": {
+    "limit_order": [
+    ],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef189deaef76e379df891899eb5a00a94cbc250",
+        "name": "zero_x"
+      }
+    ]
+  },
+  "42161": {
+    "limit_order": [
+    ],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+        "name": "zero_x"
+      }
+    ]
+  },
+  "42220": {
+    "limit_order": [],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+        "name": "zero_x"
+      }
+    ]
+  },
+  "43114": {
+    "limit_order": [
+    ],
+    "market_order": [
+      {
+        "display_name": "0x",
+        "address": "0xdef1c0ded9bec7f1a1670819833240f027b25eff",
+        "name": "zero_x"
+      }
+    ]
+  }
+}

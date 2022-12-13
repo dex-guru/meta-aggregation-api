@@ -4,7 +4,7 @@ import pytest
 from aiohttp import ClientResponseError, RequestInfo
 
 from models.meta_agg_models import SwapQuoteResponse
-from provider_clients.one_inch_provider import LIMIT_ORDER_VERSION
+from provider_clients.one_inch_provider.one_inch_provider import LIMIT_ORDER_VERSION
 from utils.errors import ParseResponseError, AllowanceError
 
 

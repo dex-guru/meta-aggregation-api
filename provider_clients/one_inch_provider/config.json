@@ -1,0 +1,138 @@
+{
+  "1": {
+    "enabled": true,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x119c71d3bbac22029622cbaec24854d3d32d2828",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      }
+    ]
+  },
+  "10": {
+    "enabled": true,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x11431a89893025d2a48dca4eddc396f8c8117187",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      }
+    ]
+  },
+  "56": {
+    "enabled": true,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x1e38eff998df9d3669e32f4ff400031385bf6362",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      }
+    ]
+  },
+  "137": {
+    "enabled": true,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x94bc2a1c732bcad7343b25af48385fe76e08734f",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      }
+    ]
+  },
+  "250": {
+    "enabled": true,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x7f069df72b7a39bce9806e3afaf579e54d8cf2b9",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      }
+    ]
+  },
+   "42161": {
+     "enabled": true,
+     "limit_order": [
+       {
+         "display_name": "1inch",
+         "address": "0x7f069df72b7a39bce9806e3afaf579e54d8cf2b9",
+         "name": "one_inch"
+       }
+     ],
+     "market_order": [
+       {
+         "display_name": "1inch",
+         "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+         "name": "one_inch"
+       }
+     ]
+   },
+  "43114": {
+    "enabled": true,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x0f85a912448279111694f4ba4f85dc641c54b594",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      }
+    ]
+  },
+  "100": {
+    "enabled": true,
+    "limit_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x54431918cec22932fcf97e54769f4e00f646690f",
+        "name": "one_inch"
+      }
+    ],
+    "market_order": [
+      {
+        "display_name": "1inch",
+        "address": "0x1111111254eeb25477b68fb85ed929f73a960582",
+        "name": "one_inch"
+      }
+    ]
+  }
+}

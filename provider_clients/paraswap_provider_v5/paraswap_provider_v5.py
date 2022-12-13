@@ -52,11 +52,9 @@ PARASWAP_ERRORS = {
 }
 
 
-# TODO: Add description, links to one paraswap docs
-
-
-class ParaSwapProvider(BaseProvider):
+class ParaSwapProviderV5(BaseProvider):
     """
+    Trading Provider for Paraswap v5 dex aggregator
     Docs: https://developers.paraswap.network/api/master
     """
     MAIN_API_URL: yarl.URL = yarl.URL('https://apiv5.paraswap.io/')
