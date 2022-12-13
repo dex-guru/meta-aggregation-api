@@ -1,7 +1,7 @@
 import pytest
 
 from provider_clients.one_inch_provider.one_inch_provider import OneInchProvider
-from provider_clients.paraswap_provider_v5.paraswap_provider_v5 import ParaSwapProviderV5
+from provider_clients.paraswap_v5_provider.paraswap_provider_v5 import ParaSwapProviderV5
 from provider_clients.zerox_provider.zerox_provider import ZeroXProvider
 
 
