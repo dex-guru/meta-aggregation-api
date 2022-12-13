@@ -1,79 +1,42 @@
 {
-  "1": {
-    "limit_order": [
-    ],
-    "market_order": [
-      {
-        "display_name": "ParaSwap",
-        "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
-        "name": "paraswap"
-      }
-    ]
-  },
-  "10": {
-    "limit_order": [
-    ],
-    "market_order": [
-      {
-        "display_name": "ParaSwap",
-        "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
-        "name": "paraswap"
-      }
-    ]
-  },
-  "56": {
-    "limit_order": [
-    ],
-    "market_order": [
-      {
-        "display_name": "ParaSwap",
-        "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
-        "name": "paraswap"
-      }
-    ]
-  },
-  "137": {
-    "limit_order": [
-    ],
-    "market_order": [
-      {
-        "display_name": "ParaSwap",
-        "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
-        "name": "paraswap"
-      }
-    ]
-  },
-  "250": {
-    "limit_order": [
-    ],
-    "market_order": [
-      {
-        "display_name": "ParaSwap",
-        "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
-        "name": "paraswap"
-      }
-    ]
-  },
-  "42161": {
-    "limit_order": [
-    ],
-    "market_order": [
-      {
-        "display_name": "ParaSwap",
-        "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
-        "name": "paraswap"
-      }
-    ]
-  },
-  "43114": {
-    "limit_order": [
-    ],
-    "market_order": [
-      {
-        "display_name": "ParaSwap",
-        "address": "0x216b4b4ba9f3e719726886d34a177484278bfcae",
-        "name": "paraswap"
-      }
-    ]
-  }
+  "name": "paraswap",
+  "display_name": "ParaSwap",
+  "enabled": true,
+  "spenders": [
+    {
+      "chain_id": 1,
+      "limit_order": null,
+      "market_order": "0x216b4b4ba9f3e719726886d34a177484278bfcae"
+    },
+    {
+      "chain_id": 10,
+      "limit_order": null,
+      "market_order": "0x216b4b4ba9f3e719726886d34a177484278bfcae"
+    },
+    {
+      "chain_id": 56,
+      "limit_order": null,
+      "market_order": "0x216b4b4ba9f3e719726886d34a177484278bfcae"
+    },
+    {
+      "chain_id": 137,
+      "limit_order": null,
+      "market_order": "0x216b4b4ba9f3e719726886d34a177484278bfcae"
+    },
+    {
+      "chain_id": 250,
+      "limit_order": null,
+      "market_order": "0x216b4b4ba9f3e719726886d34a177484278bfcae"
+    },
+    {
+      "chain_id": 42161,
+      "limit_order": null,
+      "market_order": "0x216b4b4ba9f3e719726886d34a177484278bfcae"
+    },
+    {
+      "chain_id": 43114,
+      "limit_order": null,
+      "market_order": "0x216b4b4ba9f3e719726886d34a177484278bfcae"
+    }
+  ]
 }

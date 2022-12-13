@@ -80,6 +80,7 @@ on Existing issues.
 
 ### Adding New Providers
 
+#### 1. Add Provider class  
 To add new provider you need to create a new module in providers_clients folder module,
 create a class that inherits from BaseProvider and implement all abstract methods. 
 
@@ -87,6 +88,14 @@ Providers defining getting price, quote, limit orders, ets interfaces for specif
 (DEX aggregator). All provider specific logic should be implemented there.
 
 Providers classes are expected to handle errors as well.
+
+#### 2. Add Provider's config
+
+Provider's config is a JSON with provider's name, display name and supported chains. 
+Every chain is an object with spender address for market order and limit order. 
+
+If provider doesn't support one of order types, then this spender address for this order type should be null.
+
 
 ### Chains support
 
