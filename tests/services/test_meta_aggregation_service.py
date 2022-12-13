@@ -111,8 +111,8 @@ async def test_get_approve_cost_per_provider_no_taker():
 
 
 @pytest.mark.asyncio()
-@patch('provider_clients.zerox_provider.ZeroXProvider.get_swap_price', new_callable=AsyncMock)
-@patch('provider_clients.one_inch_provider.OneInchProvider.get_swap_price', new_callable=AsyncMock)
+@patch('provider_clients.zerox_v1.ZeroXProviderV1.get_swap_price', new_callable=AsyncMock)
+@patch('provider_clients.one_inch_v5.OneInchProviderV5.get_swap_price', new_callable=AsyncMock)
 async def test_get_swap_meta_price_no_price(
         one_inch_mock: AsyncMock,
         zerox_mock: AsyncMock,

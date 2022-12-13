@@ -4,7 +4,7 @@ import pytest
 from aiohttp import ClientResponseError, RequestInfo
 
 from models.meta_agg_models import ProviderQuoteResponse
-from provider_clients.one_inch_provider.one_inch_provider import LIMIT_ORDER_VERSION
+from provider_clients.one_inch_v5.one_inch_provider import LIMIT_ORDER_VERSION
 from utils.errors import ParseResponseError, AllowanceError
 
 
@@ -23,7 +23,7 @@ def test_build_limit_order_url(one_inch_provider):
 
 
 @pytest.mark.asyncio()
-@patch('provider_clients.one_inch_provider.OneInchProvider.get_response', new_callable=AsyncMock)
+@patch('provider_clients.one_inch_v5.OneInchProviderV5.get_response', new_callable=AsyncMock)
 async def test_get_orders_by_trader(get_response_mock: AsyncMock, one_inch_provider):
     get_response_mock.return_value = []
     trader = 'test_trader'
@@ -49,7 +49,7 @@ async def test_get_orders_by_trader(get_response_mock: AsyncMock, one_inch_provi
 
 
 @pytest.mark.asyncio()
-@patch('provider_clients.one_inch_provider.OneInchProvider.get_response', new_callable=AsyncMock)
+@patch('provider_clients.one_inch_v5.OneInchProviderV5.get_response', new_callable=AsyncMock)
 async def test_get_order_by_hash(get_response_mock: AsyncMock, one_inch_provider):
     get_response_mock.return_value = []
     order_hash = 'test_order_hash'
@@ -87,7 +87,7 @@ async def test_get_swap_quote_raises(one_inch_provider):
 
 
 @pytest.mark.asyncio()
-@patch('provider_clients.one_inch_provider.OneInchProvider.get_response', new_callable=AsyncMock)
+@patch('provider_clients.one_inch_v5.OneInchProviderV5.get_response', new_callable=AsyncMock)
 async def test_get_swap_quote(get_response_mock: AsyncMock, one_inch_provider):
     get_response_mock.return_value = {
         'toTokenAmount': 1,

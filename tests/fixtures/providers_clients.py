@@ -1,20 +1,20 @@
 import pytest
 
-from provider_clients.one_inch_provider.one_inch_provider import OneInchProvider
-from provider_clients.paraswap_v5_provider.paraswap_provider_v5 import ParaSwapProviderV5
-from provider_clients.zerox_provider.zerox_provider import ZeroXProvider
+from provider_clients.one_inch_v5.one_inch_provider import OneInchProviderV5
+from provider_clients.paraswap_v5.paraswap_provider_v5 import ParaSwapProviderV5
+from provider_clients.zerox_v1.zerox_provider import ZeroXProviderV1
 
 
 @pytest.fixture()
 def one_inch_provider(aiohttp_session):
     from utils.httputils import CLIENT_SESSION
-    return OneInchProvider(CLIENT_SESSION)
+    return OneInchProviderV5(CLIENT_SESSION)
 
 
 @pytest.fixture()
 def zerox_provider(aiohttp_session):
     from utils.httputils import CLIENT_SESSION
-    return ZeroXProvider(CLIENT_SESSION)
+    return ZeroXProviderV1(CLIENT_SESSION)
 
 
 @pytest.fixture()

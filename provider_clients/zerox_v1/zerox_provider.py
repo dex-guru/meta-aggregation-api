@@ -26,7 +26,7 @@ ZERO_X_ERRORS = {
 # TODO: Add description, links to one 0x docs
 
 
-class ZeroXProvider(BaseProvider):
+class ZeroXProviderV1(BaseProvider):
     """Docs: https://0x.org/docs/api#introduction"""
     API_DOMAIN = 'api.0x.org'
     PROVIDER_NAME = 'zero_x'

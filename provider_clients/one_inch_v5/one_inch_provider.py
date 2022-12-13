@@ -53,7 +53,7 @@ logger = get_logger(__name__)
 
 # TODO: Add description, links to one inch docs
 
-class OneInchProvider(BaseProvider):
+class OneInchProviderV5(BaseProvider):
     """
     Trading and limit orders Provider for 1Inch. Docs: https://docs.1inch.io/docs/1inch-network-overview
 
