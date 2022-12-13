@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from aiohttp import ClientResponseError, RequestInfo
 
-from models.meta_agg_models import SwapQuoteResponse
+from models.meta_agg_models import ProviderQuoteResponse
 from provider_clients.one_inch_provider.one_inch_provider import LIMIT_ORDER_VERSION
 from utils.errors import ParseResponseError, AllowanceError
 
@@ -138,7 +138,7 @@ async def test_get_swap_quote(get_response_mock: AsyncMock, one_inch_provider):
     )
     get_response_mock.assert_awaited_with(url, query)
     assert res
-    assert isinstance(res, SwapQuoteResponse)
+    assert isinstance(res, ProviderQuoteResponse)
 
 
 def test_handle_exception_key_error(one_inch_provider, caplog):
