@@ -58,16 +58,16 @@ Services are imported in **_api.create_app_** and used in API routes. They're ro
 such as Web3(Blockchain Nodes), DEX Guru Public API, and DEX Aggregators. Calculating the best bargain across 
 aggregators supported and returning results to user via API Layer.
 
+Services also using DEX Guru SDK https://github.com/dex-guru/dg-sdk-python to resolve prices/chains from 
+DEX Guru Public API.
+
 ### Clients Layer
 
 Clients are used to communicate with external providers. Clients are represented by **_api.clients_** module:
 
-* **_api.clients.web3_client_** module contains logic of communication with blockchain nodes via Web3.
-* **_api.clients.dex_guru_client_** module contains logic of communication with DEX Guru Public API.
-* **_api.clients.dex_aggregators_client_** module contains logic of communication with DEX Aggregators.
-* **_api.clients.gas_client_** module contains logic of communication with Gas Station API.
-* **_api.clients.etherscan_client_** module contains logic of communication with Etherscan API.
-* **_api.clients.etherscan_client_** module contains logic of communication with Etherscan API.
+* **_api.clients.blockchain_** module contains logic of communication with blockchain nodes via Web3.
+* **_api.clients.apm_client_** module contains logic of communication with DEX Guru Public API.
+* **_provider_clients_** module contains logic of communication with DEX Aggregators.
 
 Clients are imported in **_api.create_app_** and used in Service layer.
 
