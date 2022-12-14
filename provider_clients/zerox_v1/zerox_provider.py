@@ -14,14 +14,20 @@ from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_
 from models.meta_agg_models import ProviderQuoteResponse, SwapSources, ProviderPriceResponse
 from provider_clients.base_provider import BaseProvider
 from services.chains import chains
-from utils.errors import AggregationProviderError, UserBalanceError, BaseAggregationProviderError
+from utils.errors import AggregationProviderError, UserBalanceError, BaseAggregationProviderError, TokensError, \
+    InsufficientLiquidityError, AllowanceError, EstimationError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 ZERO_X_ERRORS = {
     'Insufficient funds for transaction': UserBalanceError,
-    # TODO add more errors
+    'IncompleteTransformERC20Error': TokensError,
+    'INSUFFICIENT_ASSET_LIQUIDITY': InsufficientLiquidityError,
+    'WalletExecuteDelegateCallFailedError': AggregationProviderError,
+    'SenderNotAuthorizedError': AllowanceError,
+    'Gas estimation failed': EstimationError,
+    'ERC20: insufficient allowance': AllowanceError,
 }
 
 
