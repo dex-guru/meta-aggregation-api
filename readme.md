@@ -85,6 +85,7 @@ Every chain is an object with spender address for market order and limit order.
 
 If provider doesn't support one of order types, then this spender address for this order type should be null.
 
+Config must be named **config.json**.
 
 #### 2. Add Provider class  
 To add new provider you need to create a new module in providers_clients folder module,
@@ -95,7 +96,15 @@ Providers defining getting price, quote, limit orders, ets interfaces for specif
 
 Providers classes are expected to handle errors as well.
 
+To have the same provider name in all places, add this to the body of your class.
+``` python 
+with open(Path(__file__).parent / 'config.json') as f:
+    PROVIDER_NAME = ujson.load(f)['name']
+```
+
 #### 3. Add Provider class to providers_clients/\_\_init__.py dict
+
+We have a storage of all provider classes
 
 
 ### Chains support
