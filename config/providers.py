@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+
 import ujson
 
 from utils.singleton import Singleton

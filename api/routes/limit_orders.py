@@ -2,8 +2,8 @@ from typing import Optional, List
 
 from fastapi import APIRouter, Path, Query
 
-from api.routes.swap import address_to_lower
 from services.limit_orders import get_limit_orders_by_wallet_address, get_limit_order_by_hash
+from utils.common import address_to_lower
 
 limit_orders = APIRouter()
 

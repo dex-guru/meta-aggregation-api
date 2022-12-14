@@ -18,7 +18,6 @@ from utils.common import get_web3_url
 from utils.errors import ProviderNotFound
 from utils.logger import get_logger
 
-
 logger = get_logger(__name__)
 
 

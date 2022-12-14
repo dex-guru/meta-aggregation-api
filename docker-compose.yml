@@ -12,7 +12,7 @@ services:
     environment:
       PIPELINE: prod
     restart: on-failure
-    
+
   elk:
     image: sebp/elk
     ports:
