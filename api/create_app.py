@@ -74,6 +74,8 @@ def create_app(config: Config):
         app.chains = chains
         app.providers = providers
 
+        assert app.providers
+
     @app.on_event("shutdown")
     async def shutdown_event():
         await teardown_client_session()

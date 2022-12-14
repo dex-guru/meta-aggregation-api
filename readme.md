@@ -35,8 +35,6 @@ processing consists of VIEW (API routes) - SERVICE - PROVIDERS route, where one 
 could be serviced by one provider (if selected) or many with response processing and
 collapsing logic developed in Service layer.
 
-TODO: ADD CHART HERE
-
 ### API Layer
 
 Routes representing user's actions (request price, quote, gas) are **_api.routes_** and imported
@@ -104,12 +102,6 @@ Providers classes are expected to handle errors as well.
 
 As there is a dependency on support for chain on DEX Guru Public API it's limited by chains
 returned by (https://api.dev.dex.guru/v1/chain)[https://api.dev.dex.guru/v1/chain] endpoint.
-
-### Fixing bugs
-
-### Handling Errors
-
-### Adding New API Routes
 
 ### Testing 
 
