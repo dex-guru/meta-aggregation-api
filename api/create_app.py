@@ -24,7 +24,12 @@ def create_app(config: Config):
     app = FastAPI(
         title='DexGuru Trading API',
         description=(
-            ''  # TODO: add description
+            """
+            API serves as a DEX aggregators gateway and bargains finder (best quote) between assets and provides 
+            unified interface wrapping up differences between different aggregators.<br><br>
+            User request price, getting sorted list of quotes and bargain calcs,
+            and can request a quote (with tx data included) for selected bargain.
+            """
         ),
         version=config.VERSION,
         docs_url='/',
