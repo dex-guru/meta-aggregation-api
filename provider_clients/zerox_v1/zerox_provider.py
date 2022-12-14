@@ -2,8 +2,10 @@ import asyncio
 import logging
 import re
 import ssl
+from pathlib import Path
 from typing import Union, Optional, List
 
+import ujson
 from aiocache import cached
 from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
 from pydantic import ValidationError
@@ -29,8 +31,9 @@ ZERO_X_ERRORS = {
 class ZeroXProviderV1(BaseProvider):
     """Docs: https://0x.org/docs/api#introduction"""
     API_DOMAIN = 'api.0x.org'
-    PROVIDER_NAME = 'zero_x'
     TRADING_API_VERSION = 1
+    with open(Path(__file__).parent / 'config.json') as f:
+        PROVIDER_NAME = ujson.load(f)['name']
 
     @classmethod
     def _api_domain_builder(cls, chain_id: int = None) -> str:

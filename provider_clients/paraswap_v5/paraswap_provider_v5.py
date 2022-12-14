@@ -4,6 +4,7 @@ import re
 import ssl
 from decimal import Decimal
 from itertools import chain
+from pathlib import Path
 from typing import Optional, Union
 
 import ujson
@@ -59,7 +60,8 @@ class ParaSwapProviderV5(BaseProvider):
     """
     MAIN_API_URL: yarl.URL = yarl.URL('https://apiv5.paraswap.io/')
     PARTNER: str = 'dex.guru'
-    PROVIDER_NAME = 'paraswap'
+    with open(Path(__file__).parent / 'config.json') as f:
+        PROVIDER_NAME = ujson.load(f)['name']
 
     @retry(retry=(retry_if_exception_type(asyncio.TimeoutError) | retry_if_exception_type(ServerDisconnectedError)),
            stop=stop_after_attempt(3), reraise=True, before=before_log(logger, logging.DEBUG))

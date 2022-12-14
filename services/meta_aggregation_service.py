@@ -11,24 +11,12 @@ from clients.blockchain.web3_client import Web3Client
 from config import config
 from config.providers import providers
 from models.meta_agg_models import MetaPriceModel, ProviderPriceResponse, ProviderQuoteResponse
-from provider_clients.one_inch_v5.one_inch_provider import OneInchProviderV5
-from provider_clients.paraswap_v5.paraswap_provider_v5 import ParaSwapProviderV5
-from provider_clients.zerox_v1.zerox_provider import ZeroXProviderV1
+from provider_clients import all_providers
 from services.chains import chains
 from services.gas_service import get_base_gas_price
 from utils.common import get_web3_url
 from utils.errors import ProviderNotFound
 from utils.logger import get_logger
-
-
-class Providers:
-    zero_x = ZeroXProviderV1
-    one_inch = OneInchProviderV5
-    paraswap = ParaSwapProviderV5
-
-    @classmethod
-    def get(cls, provider_name: str):
-        return getattr(cls, provider_name, None)
 
 
 logger = get_logger(__name__)
@@ -162,7 +150,7 @@ async def get_swap_meta_price(
         if provider is None:
             continue
         provider_name = provider['name']
-        provider_class = Providers.get(provider_name)
+        provider_class = all_providers.get(provider_name)
         if not provider_class:
             continue
         provider_instance = provider_class()
@@ -347,7 +335,7 @@ async def get_meta_swap_quote(
         ProviderNotFound: If passed provider is not supported
         Type[BaseAggregationProviderError]: check utils/errors.py to get all possible errors
     """
-    provider_class = Providers.get(provider)
+    provider_class = all_providers.get(provider)
     if not provider_class:
         raise ProviderNotFound(provider)
     provider = provider_class()
@@ -405,7 +393,7 @@ async def get_provider_price(
         ProviderNotFound: If passed provider is not supported
         Type[BaseAggregationProviderError]: check utils/errors.py to get all possible errors
     """
-    provider_class = Providers.get(provider)
+    provider_class = all_providers.get(provider)
     if not provider_class:
         raise ProviderNotFound(provider)
     spender_address = next((spender['address'] for spender in providers.get_providers_by_chain(chain_id)['market_order']

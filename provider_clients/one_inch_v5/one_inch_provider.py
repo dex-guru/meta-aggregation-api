@@ -3,8 +3,10 @@ import re
 import ssl
 from itertools import chain
 from logging import DEBUG as LOG_DEBUG
+from pathlib import Path
 from typing import Optional, Union, List, Dict
 
+import ujson
 from aiocache import cached
 from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
 from pydantic import ValidationError
@@ -51,8 +53,6 @@ AMM_MAPPING = {
 logger = get_logger(__name__)
 
 
-# TODO: Add description, links to one inch docs
-
 class OneInchProviderV5(BaseProvider):
     """
     Trading and limit orders Provider for 1Inch. Docs: https://docs.1inch.io/docs/1inch-network-overview
@@ -64,8 +64,9 @@ class OneInchProviderV5(BaseProvider):
 
     LIMIT_ORDERS_DOMAIN = 'limit-orders.1inch.io'
     TRADING_API_DOMAIN = 'api.1inch.io'
-    PROVIDER_NAME = 'one_inch'
     TRADING_API_VERSION = 5.0
+    with open(Path(__file__).parent / 'config.json') as f:
+        PROVIDER_NAME = ujson.load(f)['name']
 
     @classmethod
     def _limit_order_path_builder(
