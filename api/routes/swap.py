@@ -1,16 +1,15 @@
 from typing import Optional, List
 
-from aiohttp import ClientResponseError
-from fastapi import APIRouter, Query, Path, HTTPException
-from pydantic import constr, conint
+from fastapi import APIRouter, Query, Path
+from pydantic import conint
 
 from models.meta_agg_models import MetaPriceModel
 from models.meta_agg_models import ProviderQuoteResponse
 from services.meta_aggregation_service import get_swap_meta_price, get_meta_swap_quote, get_provider_price
-from utils.errors import BaseAggregationProviderError, responses
+from utils.common import address_to_lower
+from utils.errors import responses
 
 swap_route = APIRouter()
-address_to_lower = constr(strip_whitespace=True, min_length=42, max_length=42, to_lower=True)
 
 
 @swap_route.get('/{chain_id}/price', response_model=MetaPriceModel, responses=responses)
