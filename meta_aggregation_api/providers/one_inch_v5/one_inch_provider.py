@@ -63,7 +63,7 @@ class OneInchProviderV5(BaseProvider):
     """
 
     LIMIT_ORDERS_DOMAIN = 'limit-orders.1inch.io'
-    TRADING_API_DOMAIN = 'rest_api.1inch.io'
+    TRADING_API_DOMAIN = 'api.1inch.io'
     TRADING_API_VERSION = 5.0
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']

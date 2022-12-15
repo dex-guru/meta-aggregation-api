@@ -6,10 +6,10 @@ from pydantic import constr, conint
 from meta_aggregation_api.models.meta_agg_models import MetaPriceModel
 from meta_aggregation_api.models.meta_agg_models import ProviderQuoteResponse
 from meta_aggregation_api.services.meta_aggregation_service import get_swap_meta_price, get_meta_swap_quote, get_provider_price
+from meta_aggregation_api.utils.common import address_to_lower
 from meta_aggregation_api.utils.errors import responses
 
 swap_route = APIRouter()
-address_to_lower = constr(strip_whitespace=True, min_length=42, max_length=42, to_lower=True)
 
 
 @swap_route.get('/{chain_id}/price', response_model=MetaPriceModel, responses=responses)

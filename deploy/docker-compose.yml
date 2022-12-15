@@ -1,17 +1,33 @@
-# TODO: include rest_api, elastic, logstash, apm
-version: '3.7'
+version: '3.9'
 services:
-  trading-api:
+  api:
     build:
-      context: ..
-      dockerfile: Dockerfile
-    ports:
-      - 8000:8000
-    volumes:
-      - ./:/code
+      context: .
+      dockerfile: ./deploy/Dockerfile
+    image: meta_aggregation_api_github:${META_AGGREGATION_API_VERSION:-latest}
+    restart: always
+    env_file:
+    - .env
+    depends_on:
+      elk:
+        condition: service_healthy
     environment:
-      PIPELINE: prod
-    restart: on-failure
+      WEB3_URL: https://api-proxy-stage-lax.dexguru.biz
+      PUBLIC_KEY: default
+      PUBLIC_API_DOMAIN: 'http://localhost:8001'
+      PUBLIC_API_VERSION: 1
+      APM_SERVER_URL: ''
+      SERVICE_NAME: api-trading
+      APM_ENABLED: False
+      APM_RECORDING: False
+      APM_CAPTURE_HEADERS: False
+      LOG_LEVEL: off
+      ENVIRONMENT: dev
+      LOGGING_LEVEL: INFO
+      LOGSTASH_LOGGING_LEVEL: DEBUG
+      LOG_HANDLERS: "['console']"
+      LOGSTASH: logstash-logstash.logging.svc.cluster.local
+      PORT: 5959
 
   elk:
     image: sebp/elk

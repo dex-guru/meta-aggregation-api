@@ -36,7 +36,7 @@ ZERO_X_ERRORS = {
 
 class ZeroXProviderV1(BaseProvider):
     """Docs: https://0x.org/docs/api#introduction"""
-    API_DOMAIN = 'rest_api.0x.org'
+    API_DOMAIN = 'api.0x.org'
     TRADING_API_VERSION = 1
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
