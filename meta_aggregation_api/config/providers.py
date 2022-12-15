@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+
 import ujson
 
 from meta_aggregation_api.utils.singleton import Singleton

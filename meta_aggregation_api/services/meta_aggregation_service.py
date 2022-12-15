@@ -18,7 +18,6 @@ from meta_aggregation_api.utils.common import get_web3_url
 from meta_aggregation_api.utils.errors import ProviderNotFound
 from meta_aggregation_api.utils.logger import get_logger
 
-
 logger = get_logger(__name__)
 
 

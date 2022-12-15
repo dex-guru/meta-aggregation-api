@@ -23,14 +23,11 @@ logger = get_logger(__name__)
 def create_app(config: Config):
     app = FastAPI(
         title='DexGuru Trading API',
-        description=(
-            """
-            API serves as a DEX aggregators gateway and bargains finder (best quote) between assets and provides
+        description=("""API serves as a DEX aggregators gateway and bargains finder (best quote) between assets and provides
             unified interface wrapping up differences between different aggregators.
             User request price, getting sorted list of quotes and bargain calcs,
-            and can request a quote (with tx data included) for selected bargain.
-            """
-        ),
+            and can request a quote (with tx data included) for selected bargain."""
+            ),
         version=config.VERSION,
         docs_url='/',
         redoc_url='/docs',
@@ -123,7 +120,6 @@ def register_route_logging(app: FastAPI):
 
 
 def register_elastic_apm(app: FastAPI):
-    # TODO: publish dashboard import file into repo as well
     app_config: Config = app.config
     if app_config.APM_ENABLED:
         app.add_middleware(ElasticAPM, client=apm_client.client)
@@ -134,3 +130,4 @@ def register_route(app: FastAPI):
     app.include_router(gas_routes, prefix="/v1/gas", tags=["Gas"])
     app.include_router(info_route, prefix="/v1/info", tags=["Info"])
     app.include_router(swap_route, prefix="/v1/market", tags=["Swap"])
+    app.include_router(limit_orders, prefix="/v1/limit", tags=["Limit Orders"])

@@ -1,4 +1,4 @@
-FROM python:3.9.6-slim-buster
+FROM python:3.10-slim-buster
 RUN apt-get update && apt-get install -y \
   git gcc g++ libpq-dev python3-dev \
   && rm -rf /var/lib/apt/lists/*
