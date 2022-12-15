@@ -1,16 +1,15 @@
 from typing import Optional, List
 
-from aiohttp import ClientResponseError
-from fastapi import APIRouter, Query, Path, HTTPException
-from pydantic import constr, conint
+from fastapi import APIRouter, Query, Path
+from pydantic import conint
 
 from models.meta_agg_models import MetaPriceModel
-from models.meta_agg_models import SwapQuoteResponse
+from models.meta_agg_models import ProviderQuoteResponse
 from services.meta_aggregation_service import get_swap_meta_price, get_meta_swap_quote, get_provider_price
-from utils.errors import BaseAggregationProviderError, responses
+from utils.common import address_to_lower
+from utils.errors import responses
 
 swap_route = APIRouter()
-address_to_lower = constr(strip_whitespace=True, min_length=42, max_length=42, to_lower=True)
 
 
 @swap_route.get('/{chain_id}/price', response_model=MetaPriceModel, responses=responses)
@@ -103,8 +102,8 @@ async def get_all_swap_prices(
     return res
 
 
-@swap_route.get('/{chain_id}/quote', response_model=SwapQuoteResponse, responses=responses)
-@swap_route.get('/{chain_id}/quote/', response_model=SwapQuoteResponse, include_in_schema=False)
+@swap_route.get('/{chain_id}/quote', response_model=ProviderQuoteResponse, responses=responses)
+@swap_route.get('/{chain_id}/quote/', response_model=ProviderQuoteResponse, include_in_schema=False)
 async def get_swap_quote(
         buy_token: address_to_lower = Query(..., alias='buyToken'),
         sell_token: address_to_lower = Query(..., alias='sellToken'),
@@ -116,7 +115,7 @@ async def get_swap_quote(
         taker_address: Optional[address_to_lower] = Query(None, alias='takerAddress'),
         fee_recipient: Optional[address_to_lower] = Query(None, alias='feeRecipient'),
         buy_token_percentage_fee: Optional[float] = Query(None, alias='buyTokenPercentageFee'),
-) -> SwapQuoteResponse:
+) -> ProviderQuoteResponse:
     """
     Returns a data for swap from a specific provider.
 

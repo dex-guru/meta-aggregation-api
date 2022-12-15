@@ -13,10 +13,8 @@ class ChainsConfig(metaclass=Singleton):
     Chain object contains name, chain_id, description and native_token.
     Native token is an object with address, name, symbol and decimals.
     Models defined in models/chain.py
-
     Usage:
         from config import chains
-
         chain = chains.eth
         chain.chain_id
         # 1

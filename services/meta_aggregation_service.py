@@ -10,26 +10,13 @@ from web3.contract import AsyncContract
 from clients.blockchain.web3_client import Web3Client
 from config import config
 from config.providers import providers
-from models.meta_agg_models import MetaPriceModel, ProviderPriceResponse, SwapQuoteResponse
-from provider_clients.one_inch_provider import OneInchProvider
-from provider_clients.paraswap_provider import ParaSwapProvider
-from provider_clients.zerox_provider import ZeroXProvider
+from models.meta_agg_models import MetaPriceModel, ProviderPriceResponse, ProviderQuoteResponse
+from provider_clients import all_providers
 from services.chains import chains
 from services.gas_service import get_base_gas_price
 from utils.common import get_web3_url
 from utils.errors import ProviderNotFound
 from utils.logger import get_logger
-
-
-class Providers:
-    zero_x = ZeroXProvider
-    one_inch = OneInchProvider
-    paraswap = ParaSwapProvider
-
-    @classmethod
-    def get(cls, provider_name: str):
-        return getattr(cls, provider_name, None)
-
 
 logger = get_logger(__name__)
 
@@ -143,7 +130,7 @@ async def get_swap_meta_price(
     Raises:
         ValueError: If not found any possible swap for the given parameters on all providers
     """
-    spender_addresses = providers.get(chain_id)['market_order']
+    spender_addresses = providers.get_providers_by_chain(chain_id)['market_order']
     web3_url = get_web3_url(chain_id)
     erc20_contract = Web3Client(web3_url).get_erc20_contract(sell_token)
     approve_costs = asyncio.create_task(get_approve_costs_per_provider(sell_token, erc20_contract,
@@ -158,11 +145,11 @@ async def get_swap_meta_price(
         gas_price = await get_base_gas_price(chain_id)
 
     prices_tasks = []
-    for provider in spender_addresses:
+    for provider in providers.values():
         if provider is None:
             continue
         provider_name = provider['name']
-        provider_class = Providers.get(provider_name)
+        provider_class = all_providers.get(provider_name)
         if not provider_class:
             continue
         provider_instance = provider_class()
@@ -324,7 +311,7 @@ async def get_meta_swap_quote(
         slippage_percentage: Optional[float] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
-) -> SwapQuoteResponse:
+) -> ProviderQuoteResponse:
     """
     Get a data for swap from a specific provider.
 
@@ -341,13 +328,13 @@ async def get_meta_swap_quote(
         buy_token_percentage_fee:Optional[float]=None: Specify a percentage of the buy_amount that will be used to pay fees
 
     Returns:
-        SwapQuoteResponse: The price_response object
+        ProviderQuoteResponse: The price_response object
 
     Raises:
         ProviderNotFound: If passed provider is not supported
         Type[BaseAggregationProviderError]: check utils/errors.py to get all possible errors
     """
-    provider_class = Providers.get(provider)
+    provider_class = all_providers.get(provider)
     if not provider_class:
         raise ProviderNotFound(provider)
     provider = provider_class()
@@ -405,10 +392,10 @@ async def get_provider_price(
         ProviderNotFound: If passed provider is not supported
         Type[BaseAggregationProviderError]: check utils/errors.py to get all possible errors
     """
-    provider_class = Providers.get(provider)
+    provider_class = all_providers.get(provider)
     if not provider_class:
         raise ProviderNotFound(provider)
-    spender_address = next((spender['address'] for spender in providers.get(chain_id)['market_order']
+    spender_address = next((spender['address'] for spender in providers.get_providers_by_chain(chain_id)['market_order']
                             if spender['name'] == provider), None)
     provider_instance = provider_class()
 

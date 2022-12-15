@@ -2,35 +2,44 @@ import asyncio
 import logging
 import re
 import ssl
+from pathlib import Path
 from typing import Union, Optional, List
 
+import ujson
 from aiocache import cached
 from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
 from pydantic import ValidationError
 from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
 
-from models.meta_agg_models import SwapQuoteResponse, SwapSources, ProviderPriceResponse
+from models.meta_agg_models import ProviderQuoteResponse, SwapSources, ProviderPriceResponse
 from provider_clients.base_provider import BaseProvider
 from services.chains import chains
-from utils.errors import AggregationProviderError, UserBalanceError, BaseAggregationProviderError
+from utils.errors import AggregationProviderError, UserBalanceError, BaseAggregationProviderError, TokensError, \
+    InsufficientLiquidityError, AllowanceError, EstimationError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 ZERO_X_ERRORS = {
     'Insufficient funds for transaction': UserBalanceError,
-    # TODO add more errors
+    'IncompleteTransformERC20Error': TokensError,
+    'INSUFFICIENT_ASSET_LIQUIDITY': InsufficientLiquidityError,
+    'WalletExecuteDelegateCallFailedError': AggregationProviderError,
+    'SenderNotAuthorizedError': AllowanceError,
+    'Gas estimation failed': EstimationError,
+    'ERC20: insufficient allowance': AllowanceError,
 }
 
 
 # TODO: Add description, links to one 0x docs
 
 
-class ZeroXProvider(BaseProvider):
+class ZeroXProviderV1(BaseProvider):
     """Docs: https://0x.org/docs/api#introduction"""
     API_DOMAIN = 'api.0x.org'
-    PROVIDER_NAME = 'zero_x'
     TRADING_API_VERSION = 1
+    with open(Path(__file__).parent / 'config.json') as f:
+        PROVIDER_NAME = ujson.load(f)['name']
 
     @classmethod
     def _api_domain_builder(cls, chain_id: int = None) -> str:
@@ -73,10 +82,10 @@ class ZeroXProvider(BaseProvider):
 
         return data
 
-    def _convert_response_from_swap_quote(self, response: dict) -> Optional[SwapQuoteResponse]:
+    def _convert_response_from_swap_quote(self, response: dict) -> Optional[ProviderQuoteResponse]:
         sources = self.convert_sources_for_meta_aggregation(response['sources'])
         try:
-            prepared_response = SwapQuoteResponse(
+            prepared_response = ProviderQuoteResponse(
                 sources=sources,
                 buy_amount=response['buyAmount'],
                 gas=response['gas'],
@@ -147,7 +156,7 @@ class ZeroXProvider(BaseProvider):
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None,
             ignore_checks: bool = False,
-    ) -> Optional[SwapQuoteResponse]:
+    ) -> Optional[ProviderQuoteResponse]:
         """
         Docs: https://0x.org/docs/api#get-swapv1quote
 
@@ -289,8 +298,9 @@ class ZeroXProvider(BaseProvider):
             }
         ]
         """
-        exc = super().handle_exception(exception, logger, **kwargs)
+        exc = super().handle_exception(exception, **kwargs)
         if exc:
+            logger.error(*exc.to_log_args(), extra=exc.to_dict())
             return exc
         msg = exception.message
         if isinstance(exception.message, list) and isinstance(exception.message[0], dict):

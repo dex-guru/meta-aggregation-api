@@ -6,7 +6,6 @@ from utils.errors import ParseResponseError, AggregationProviderError
 def test_handle_exception_key_error(zerox_provider, caplog):
     exc = zerox_provider.handle_exception(KeyError('test'))
     assert caplog.text
-    assert caplog.handler.records[0].module == 'base_provider'
     assert isinstance(exc, ParseResponseError)
 
 

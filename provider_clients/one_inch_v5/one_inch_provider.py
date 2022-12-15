@@ -3,15 +3,17 @@ import re
 import ssl
 from itertools import chain
 from logging import DEBUG as LOG_DEBUG
+from pathlib import Path
 from typing import Optional, Union, List, Dict
 
+import ujson
 from aiocache import cached
 from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
 from pydantic import ValidationError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, before_log
 
 from config import config
-from models.meta_agg_models import SwapQuoteResponse, ProviderPriceResponse
+from models.meta_agg_models import ProviderQuoteResponse, ProviderPriceResponse
 from models.provider_response_models import SwapSources
 from provider_clients.base_provider import BaseProvider
 from utils.errors import EstimationError, AggregationProviderError, InsufficientLiquidityError, UserBalanceError, \
@@ -51,11 +53,9 @@ AMM_MAPPING = {
 logger = get_logger(__name__)
 
 
-# TODO: Add description, links to one inch docs
-
-class OneInchProvider(BaseProvider):
+class OneInchProviderV5(BaseProvider):
     """
-    Trading and limit orders proxy for 1Inch. Docs: https://docs.1inch.io/docs/1inch-network-overview
+    Trading and limit orders Provider for 1Inch. Docs: https://docs.1inch.io/docs/1inch-network-overview
 
     URL structures:
         Trading:      https://{trading_api_domain}/v{version}/{chain_id}/{operation}?queryParams
@@ -64,8 +64,9 @@ class OneInchProvider(BaseProvider):
 
     LIMIT_ORDERS_DOMAIN = 'limit-orders.1inch.io'
     TRADING_API_DOMAIN = 'api.1inch.io'
-    PROVIDER_NAME = 'one_inch'
     TRADING_API_VERSION = 5.0
+    with open(Path(__file__).parent / 'config.json') as f:
+        PROVIDER_NAME = ujson.load(f)['name']
 
     @classmethod
     def _limit_order_path_builder(
@@ -240,7 +241,7 @@ class OneInchProvider(BaseProvider):
             fee_recipient: Optional[str] = None,
             buy_token_percentage_fee: Optional[float] = None,
             ignore_checks: bool = False,
-    ) -> Optional[SwapQuoteResponse]:
+    ) -> Optional[ProviderQuoteResponse]:
         """https://docs.1inch.io/docs/aggregation-protocol/api/swap-params"""
         if not chain_id:
             raise ValueError('chain_id is required')
@@ -290,10 +291,10 @@ class OneInchProvider(BaseProvider):
             response: dict,
             price: float,
             **kwargs,
-    ) -> Optional[SwapQuoteResponse]:
+    ) -> Optional[ProviderQuoteResponse]:
         sources = self.convert_sources_for_meta_aggregation(response['protocols'])
         try:
-            prepared_response = SwapQuoteResponse(
+            prepared_response = ProviderQuoteResponse(
                 sources=sources,
                 buy_amount=response['toTokenAmount'],
                 gas=response['tx']['gas'],
@@ -334,8 +335,9 @@ class OneInchProvider(BaseProvider):
             {"code": 400, "description": "cannot estimate"}
         ]
         """
-        exc = super().handle_exception(exception, logger, **kwargs)
+        exc = super().handle_exception(exception, **kwargs)
         if exc:
+            logger.error(*exc.to_log_args(), extra=exc.to_dict())
             return exc
         msg = exception.message
         if isinstance(exception.message, list) and isinstance(exception.message[0], dict):

@@ -1,0 +1,47 @@
+{
+  "name": "one_inch",
+  "display_name": "1inch",
+  "enabled": true,
+  "spenders": [
+    {
+      "chain_id": 1,
+      "limit_order": "0x119c71d3bbac22029622cbaec24854d3d32d2828",
+      "market_order": "0x1111111254eeb25477b68fb85ed929f73a960582"
+    },
+    {
+      "chain_id": 10,
+      "limit_order": "0x11431a89893025d2a48dca4eddc396f8c8117187",
+      "market_order": "0x1111111254eeb25477b68fb85ed929f73a960582"
+    },
+    {
+      "chain_id": 56,
+      "limit_order": "0x1e38eff998df9d3669e32f4ff400031385bf6362",
+      "market_order": "0x1111111254eeb25477b68fb85ed929f73a960582"
+    },
+    {
+      "chain_id": 137,
+      "limit_order": "0x94bc2a1c732bcad7343b25af48385fe76e08734f",
+      "market_order": "0x1111111254eeb25477b68fb85ed929f73a960582"
+    },
+    {
+      "chain_id": 250,
+      "limit_order": "0x7f069df72b7a39bce9806e3afaf579e54d8cf2b9",
+      "market_order": "0x1111111254eeb25477b68fb85ed929f73a960582"
+    },
+    {
+      "chain_id": 42161,
+      "limit_order": "0x7f069df72b7a39bce9806e3afaf579e54d8cf2b9",
+      "market_order": "0x1111111254eeb25477b68fb85ed929f73a960582"
+    },
+    {
+      "chain_id": 43114,
+      "limit_order": "0x0f85a912448279111694f4ba4f85dc641c54b594",
+      "market_order": "0x1111111254eeb25477b68fb85ed929f73a960582"
+    },
+    {
+      "chain_id": 100,
+      "limit_order": "0x54431918cec22932fcf97e54769f4e00f646690f",
+      "market_order": "0x1111111254eeb25477b68fb85ed929f73a960582"
+    }
+  ]
+}
