@@ -1,7 +1,7 @@
 # DEX Guru Trading Api 
 
-API serves as a DEX aggregators gateway and bargains finder (best quote) between
-assets and provides unified interface wrapping up differences between different
+API serves as a DEX aggregators gateway for (Meta-Aggregation)[https://docs.dex.guru/general/features/trading-tools/meta-aggregation]
+and bargains finder (best quote) between  assets and provides unified interface wrapping up differences between different
 aggregators. 
 
 User request price, getting sorted list of quotes and bargain calcs,
