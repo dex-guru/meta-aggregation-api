@@ -18,7 +18,7 @@ to run:
 
 ```bash
 pip install -r requirements.txt
-python api/run.py
+python rest_api/run.py
 
 ```
 
@@ -34,6 +34,27 @@ API is build using (Fast API)[https://fastapi.tiangolo.com/] framework, the requ
 processing consists of VIEW (API routes) - SERVICE - PROVIDERS route, where one request
 could be serviced by one provider (if selected) or many with response processing and
 collapsing logic developed in Service layer.
+
+## Project structure
+
+```bash
+$ tree "meta_aggregation_api_github"
+meta_aggregation_api_github
+├── conftest.py  # Fixtures for all tests.
+├── db  # module contains db configurations
+│   ├── dao  # Data Access Objects. Contains different classes to interact with database.
+│   └── models  # Package contains different models for ORMs.
+├── __main__.py  # Startup script. Starts uvicorn.
+├── services  # Package for different external services such as rabbit or redis etc.
+├── settings.py  # Main configuration settings for project.
+├── static  # Static content.
+├── tests  # Tests for project.
+└── web  # Package contains web server. Handlers, startup config.
+    ├── api  # Package with all handlers.
+    │   └── router.py  # Main router.
+    ├── application.py  # FastAPI application configuration.
+    └── lifetime.py  # Contains actions to perform on startup and shutdown.
+```
 
 ### API Layer
 
