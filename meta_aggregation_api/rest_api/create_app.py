@@ -26,7 +26,7 @@ def create_app(config: Config):
         description=(
             """
             API serves as a DEX aggregators gateway and bargains finder (best quote) between assets and provides
-            unified interface wrapping up differences between different aggregators.<br><br>
+            unified interface wrapping up differences between different aggregators.
             User request price, getting sorted list of quotes and bargain calcs,
             and can request a quote (with tx data included) for selected bargain.
             """

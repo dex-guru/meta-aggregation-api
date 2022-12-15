@@ -9,14 +9,12 @@ app = create_app(config)
 def main() -> None:
     """Entrypoint of the application."""
     uvicorn.run(
-        "meta_aggregation_api_github.rest_api.create_app:create_app",
+        "meta_aggregation_api.__main__:app",
         workers=config.WORKERS_COUNT,
-        host=config.HOST,
-        port=config.PORT,
+        host=config.SERVER_HOST,
+        port=config.SERVER_PORT,
         reload=config.RELOAD,
-        log_level=config.LOG_LEVEL.value.lower(),
-        factory=True,
-    )
+        log_level=config.LOGGING_LEVEL.lower()    )
 
 
 if __name__ == "__main__":
