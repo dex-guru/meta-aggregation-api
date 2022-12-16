@@ -80,7 +80,6 @@ def _make_post_request(endpoint_uri: URI, data: bytes, *args: Any, **kwargs: Any
 
 async def _async_make_post_request(endpoint_uri: URI, data: bytes, **kwargs: Any) -> bytes:
     kwargs.setdefault("timeout", config.WEB3_TIMEOUT)
-    kwargs['headers'].update({'x-sys-key': config.X_SYS_KEY})
     session = await _get_async_session(endpoint_uri)
     async with session.post(endpoint_uri, data=data, **kwargs) as response:
         response.raise_for_status()

@@ -12,7 +12,14 @@ def _camel_to_snake(field: str) -> str:
 
 
 def get_web3_url(chain_id: int):
-    return urljoin(config.WEB3_URL, f'{chain_id}/{config.PUBLIC_KEY}')
+    """
+    get web3 url for chain_id
+    By default, it uses public api domain from config, assuming that
+    nodes for specific chains are proxied under /{chain_id/{public_key} routes
+    please adjust to return correct web3 url for your setup if needed
+    """
+    return urljoin(config.PUBLIC_API_DOMAIN, f'{chain_id}/{config.PUBLIC_KEY}')
 
 
-address_to_lower = constr(strip_whitespace=True, min_length=42, max_length=42, to_lower=True)
+address_to_lower = constr(strip_whitespace=True, min_length=42, max_length=42,
+                          to_lower=True)

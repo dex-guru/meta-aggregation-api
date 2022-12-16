@@ -1,6 +1,5 @@
-from provider_clients.one_inch_v5 import OneInchProviderV5
-from provider_clients.paraswap_v5 import ParaSwapProviderV5
-from provider_clients.zerox_v1 import ZeroXProviderV1
+from meta_aggregation_api.providers import (ZeroXProviderV1, OneInchProviderV5,
+                                            ParaSwapProviderV5)
 
 all_providers = {
     ZeroXProviderV1.PROVIDER_NAME: ZeroXProviderV1,

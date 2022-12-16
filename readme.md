@@ -30,20 +30,7 @@ You can start the project with docker using this command:
 docker-compose -f deploy/docker-compose.yml --project-directory . up --build
 ```
 
-If you want to develop in docker with autoreload add `-f deploy/docker-compose.dev.yml` to your docker command.
-Like this:
-
-```bash
-docker-compose -f deploy/docker-compose.yml -f deploy/docker-compose.dev.yml --project-directory . up
-```
-
 This command exposes the web application on port 8000, mounts current directory and enables autoreload.
-
-But you have to rebuild image every time you modify `poetry.lock` or `pyproject.toml` with this command:
-
-```bash
-docker-compose -f deploy/docker-compose.yml --project-directory . build
-```
 
 # Architecture
 
@@ -55,22 +42,18 @@ collapsing logic developed in Service layer.
 ## Project structure
 
 ```bash
-$ tree "meta_aggregation_api_github"
-meta_aggregation_api_github
-├── conftest.py  # Fixtures for all tests.
-├── db  # module contains db configurations
-│   ├── dao  # Data Access Objects. Contains different classes to interact with database.
-│   └── models  # Package contains different models for ORMs.
-├── __main__.py  # Startup script. Starts uvicorn.
-├── services  # Package for different external services such as rabbit or redis etc.
-├── settings.py  # Main configuration settings for project.
-├── static  # Static content.
-├── tests  # Tests for project.
-└── web  # Package contains web server. Handlers, startup config.
-    ├── api  # Package with all handlers.
-    │   └── router.py  # Main router.
-    ├── application.py  # FastAPI application configuration.
-    └── lifetime.py  # Contains actions to perform on startup and shutdown.
+$ tree -d meta_aggregation_api
+├── clients
+│   └── blockchain # web3 client
+├── config # app configuration defenitions
+├── models # models used
+├── providers # dex aggregators providers logic
+├── rest_api
+│   ├── middlewares
+│   └── routes # API routes
+├── services
+├── tests # tests
+└── utils
 ```
 
 ### API Layer
@@ -156,3 +139,7 @@ returned by (https://api.dev.dex.guru/v1/chain)[https://api.dev.dex.guru/v1/chai
 ```bash
 pytest .
 ```
+
+### Licensing
+
+This project is licensed under the terms of the MIT license.

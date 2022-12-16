@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from meta_aggregation_api.rest_api.middlewares import RouteLoggerMiddleware
 from meta_aggregation_api.rest_api.routes.gas import gas_routes
 from meta_aggregation_api.rest_api.routes.info import info_route
+from meta_aggregation_api.rest_api.routes.limit_orders import limit_orders
 from meta_aggregation_api.rest_api.routes.rpc import v1_rpc
 from meta_aggregation_api.rest_api.routes.swap import swap_route
 from meta_aggregation_api.clients.apm_client import apm_client
@@ -72,7 +73,7 @@ def create_app(config: Config):
     @app.on_event("startup")
     async def startup_event():
         await setup_client_session()
-        await chains.set_chains(app.config.PUBLIC_KEY, app.config.PUBLIC_API_DOMAIN)
+        await chains.set_chains()
         app.chains = chains
         app.providers = providers
 

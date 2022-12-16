@@ -1,6 +1,7 @@
 import asyncio
 
 from dexguru_sdk import DexGuru
+from pydantic import HttpUrl
 
 from meta_aggregation_api.config import config
 from meta_aggregation_api.models.chain import ChainModel
@@ -20,12 +21,11 @@ class ChainsConfig(metaclass=Singleton):
         # 1
     """
 
-    def __init__(self, api_key: str, domain: str):
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.set_chains(api_key, domain))
+    def __init__(self, api_key: str, domain: HttpUrl):
+        self.dex_guru_sdk = DexGuru(api_key=api_key, domain=domain)
 
-    async def set_chains(self, api_key: str, domain: str):
-        chains_ = await DexGuru(api_key=api_key, domain=domain).get_chains()
+    async def set_chains(self):
+        chains_ = await self.dex_guru_sdk.get_chains()
         for chain in chains_.data:
             self.__dict__[chain.name.lower()] = ChainModel.parse_obj(chain.dict())
 
