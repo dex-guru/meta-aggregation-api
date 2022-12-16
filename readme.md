@@ -140,6 +140,14 @@ returned by (https://api.dev.dex.guru/v1/chain)[https://api.dev.dex.guru/v1/chai
 pytest .
 ```
 
+## Contributors ✨
+
+Thanks goes to these wonderful people ❤:<br><br>
+ <a href = "https://github.com/dex-guru/meta-aggregation-api/graphs/contributors">
+   <img src = "https://contrib.rocks/image?repo=dex-guru/meta-aggregation-api"/>
+ </a>
+
+
 ### Licensing
 
 This project is licensed under the terms of the MIT license.
