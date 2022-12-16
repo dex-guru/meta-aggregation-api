@@ -6,6 +6,7 @@ aggregators.
 
 User request price, getting sorted list of quotes and bargain calcs,
 and can request a quote (with tx data included) for selected bargain.
+![](https://3858771017-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F-MO2nrmwh_DoxKc1v80n%2Fuploads%2FpzxWvRRde5elM1z98Gf0%2FRouter.png?alt=media&token=5c0e38fc-5310-431c-9e8b-c77f3e4903ef)
 
 # Getting started
 
