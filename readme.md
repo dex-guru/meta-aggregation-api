@@ -1,4 +1,4 @@
-# DEX Guru Trading Api
+# Meta Aggregation API
 
 API serves as a DEX aggregators gateway and bargains finder (best quote) between
 assets and provides unified interface wrapping up differences between different
@@ -7,6 +7,11 @@ aggregators.
 User request price, getting sorted list of quotes and bargain calcs,
 and can request a quote (with tx data included) for selected bargain.
 ![](https://3858771017-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F-MO2nrmwh_DoxKc1v80n%2Fuploads%2FpzxWvRRde5elM1z98Gf0%2FRouter.png?alt=media&token=5c0e38fc-5310-431c-9e8b-c77f3e4903ef)
+
+## Routers Currently Supported 
+- 1inch v5 
+- 0x  
+- Paraswap
 
 # Getting started
 
