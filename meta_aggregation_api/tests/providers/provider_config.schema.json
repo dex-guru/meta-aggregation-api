@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "spenders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chain_id": {
+            "type": "integer"
+          },
+          "limit_order": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "market_order": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "chain_id",
+          "limit_order",
+          "market_order"
+        ]
+      }
+    }
+  },
+  "required": [
+    "name",
+    "display_name",
+    "enabled",
+    "spenders"
+  ]
+}

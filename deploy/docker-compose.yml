@@ -1,0 +1,10 @@
+version: '3.9'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile
+    image: meta_aggregation_api:latest
+    restart: always
+    env_file:
+      - .env

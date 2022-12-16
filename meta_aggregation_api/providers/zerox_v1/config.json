@@ -1,0 +1,47 @@
+{
+  "name": "zero_x",
+  "display_name": "0x",
+  "enabled": true,
+  "spenders": [
+    {
+      "chain_id": 1,
+      "limit_order": null,
+      "market_order": "0xdef1c0ded9bec7f1a1670819833240f027b25eff"
+    },
+    {
+      "chain_id": 10,
+      "limit_order": null,
+      "market_order": "0xdef1abe32c034e558cdd535791643c58a13acc10"
+    },
+    {
+      "chain_id": 56,
+      "limit_order": null,
+      "market_order": "0xdef1c0ded9bec7f1a1670819833240f027b25eff"
+    },
+    {
+      "chain_id": 137,
+      "limit_order": null,
+      "market_order": "0xdef1c0ded9bec7f1a1670819833240f027b25eff"
+    },
+    {
+      "chain_id": 250,
+      "limit_order": null,
+      "market_order": "0xdef189deaef76e379df891899eb5a00a94cbc250"
+    },
+    {
+      "chain_id": 42161,
+      "limit_order": null,
+      "market_order": "0xdef1c0ded9bec7f1a1670819833240f027b25eff"
+    },
+    {
+      "chain_id": 43114,
+      "limit_order": null,
+      "market_order": "0xdef1c0ded9bec7f1a1670819833240f027b25eff"
+    },
+    {
+      "chain_id": 42220,
+      "limit_order": null,
+      "market_order": "0xdef1c0ded9bec7f1a1670819833240f027b25eff"
+    }
+  ]
+}
