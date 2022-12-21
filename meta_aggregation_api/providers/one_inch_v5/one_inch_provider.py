@@ -26,7 +26,7 @@ from meta_aggregation_api.utils.errors import (EstimationError,
                                                BaseAggregationProviderError)
 from meta_aggregation_api.utils.logger import get_logger, LogArgs
 
-LIMIT_ORDER_VERSION = 2.0
+LIMIT_ORDER_VERSION = 3.0
 DEFAULT_SLIPPAGE_PERCENTAGE = 0.5
 
 ONE_INCH_ERRORS = {
