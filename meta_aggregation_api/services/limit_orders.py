@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict
 
+from meta_aggregation_api.models.meta_agg_models import LimitOrderPostData
 from meta_aggregation_api.providers import all_providers
 from meta_aggregation_api.utils.errors import ProviderNotFound
 from meta_aggregation_api.utils.logger import get_logger
@@ -57,3 +58,28 @@ async def get_limit_order_by_hash(
         order_hash=order_hash,
     )
     return res
+
+
+async def post_limit_order(
+    chain_id: int,
+    provider: Optional[str],
+    order_hash: str,
+    signature: str,
+    data: LimitOrderPostData,
+):
+    provider_class = all_providers.get(provider)
+    if not provider_class:
+        raise ProviderNotFound(provider)
+    provider_instance = provider_class()
+    logger.info(
+        f'Posting limit order: {order_hash}',
+        extra={'provider': provider.__class__.__name__,
+               'order_hash': order_hash}
+    )
+    response = await provider_instance.post_limit_order(
+        chain_id=chain_id,
+        order_hash=order_hash,
+        signature=signature,
+        data=data.dict(),
+    )
+    return response

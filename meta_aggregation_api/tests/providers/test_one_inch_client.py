@@ -20,7 +20,7 @@ def test_build_limit_order_url(one_inch_provider):
         path=path,
         chain_id=chain_id,
     )
-    assert url == f'https://{one_inch_provider.LIMIT_ORDERS_DOMAIN}/v{version}/{chain_id}/limit-order/{path}/{endpoint}'
+    assert str(url) == f'https://{one_inch_provider.LIMIT_ORDERS_DOMAIN}/v{version}/{chain_id}/limit-order/{path}/{endpoint}'
 
 
 @pytest.mark.asyncio()

@@ -1,9 +1,10 @@
 from typing import Optional, List
 
-from fastapi import APIRouter, Path, Query
+from fastapi import APIRouter, Path, Query, Body
 
+from meta_aggregation_api.models.meta_agg_models import LimitOrderPostData
 from meta_aggregation_api.services.limit_orders import \
-    (get_limit_orders_by_wallet_address, get_limit_order_by_hash)
+    (get_limit_orders_by_wallet_address, get_limit_order_by_hash, post_limit_order)
 from meta_aggregation_api.utils.common import address_to_lower
 
 limit_orders = APIRouter()
@@ -15,7 +16,7 @@ async def get_orders_by_trader(
     chain_id: int = Path(...),
     trader: address_to_lower = Path(...,
                                     description='The address of either the maker or the taker'),
-    provider: Optional[str] = Query(None, description='e.g. 0x, 1inch'),
+    provider: str = Query(..., description='e.g. zero_x, one_inch'),
     maker_token: Optional[address_to_lower] = Query(None,
                                                     description='The address of maker token'),
     taker_token: Optional[address_to_lower] = Query(None,
@@ -38,11 +39,32 @@ async def get_orders_by_trader(
 async def get_limit_order_by_order_hash(
     chain_id: int = Path(...),
     order_hash: Optional[str] = Path(None, description='The hash of the order'),
-    provider: Optional[str] = Query(None, description='e.g. 0x, 1inch'),
+    provider: str = Query(..., description='e.g. zero_x, one_inch'),
 ):
     response = await get_limit_order_by_hash(
         chain_id=chain_id,
         provider=provider,
         order_hash=order_hash,
+    )
+    return response
+
+
+@limit_orders.post('/{chain_id}')
+@limit_orders.post('/{chain_id}/', include_in_schema=False)
+async def make_limit_order(
+    chain_id: int = Path(...),
+    provider: Optional[str] = Query(..., description='e.g. zero_x, one_inch'),
+    order_hash: str = Body(
+        ..., description='The hash of the order', alias='orderHash'
+    ),
+    signature: str = Body(..., description='The signature of the order'),
+    data: LimitOrderPostData = Body(..., description='The data of the order'),
+):
+    response = await post_limit_order(
+        chain_id=chain_id,
+        provider=provider,
+        order_hash=order_hash,
+        signature=signature,
+        data=data,
     )
     return response

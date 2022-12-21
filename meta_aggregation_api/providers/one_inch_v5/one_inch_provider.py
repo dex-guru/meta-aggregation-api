@@ -11,6 +11,7 @@ from aiocache import cached
 from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
 from pydantic import ValidationError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, before_log
+from yarl import URL
 
 from meta_aggregation_api.config import config
 from meta_aggregation_api.models.meta_agg_models import (ProviderQuoteResponse,
@@ -25,7 +26,7 @@ from meta_aggregation_api.utils.errors import (EstimationError,
                                                BaseAggregationProviderError)
 from meta_aggregation_api.utils.logger import get_logger, LogArgs
 
-LIMIT_ORDER_VERSION = 2.0
+LIMIT_ORDER_VERSION = 3.0
 DEFAULT_SLIPPAGE_PERCENTAGE = 0.5
 
 ONE_INCH_ERRORS = {
@@ -80,16 +81,20 @@ class OneInchProviderV5(BaseProvider):
         path: str,
         endpoint: str,
         chain_id: int,
-    ) -> str:
-        return f'https://{cls.LIMIT_ORDERS_DOMAIN}/v{version}/{chain_id}/limit-order/{path}/{endpoint}'
+    ) -> URL:
+        url = URL(f'https://{cls.LIMIT_ORDERS_DOMAIN}') / f'v{version}' / str(chain_id) \
+              / 'limit-order' / path / endpoint
+        return url
 
     @classmethod
     def _trading_api_path_builder(
         cls,
         path: str,
         chain_id: int,
-    ) -> str:
-        return f'https://{cls.TRADING_API_DOMAIN}/v{cls.TRADING_API_VERSION}/{chain_id}/{path}'
+    ) -> URL:
+        url = URL(f'https://{cls.TRADING_API_DOMAIN}') / f'v{cls.TRADING_API_VERSION}' \
+                / str(chain_id) / path
+        return url
 
     @retry(retry=(
         retry_if_exception_type(asyncio.TimeoutError) | retry_if_exception_type(
@@ -98,11 +103,14 @@ class OneInchProviderV5(BaseProvider):
         before=before_log(logger, LOG_DEBUG))
     async def get_response(
         self,
-        url: str,
+        url: URL,
         params: Optional[Dict],
+        method: str = 'GET',
+        body: Optional[Dict] = None,
     ) -> Union[List, Dict]:
-        async with self.aiohttp_session.get(url, params=params, timeout=5,
-                                            ssl=ssl.SSLContext()) as response:
+        request_function = getattr(self.aiohttp_session, method.lower())
+        async with request_function(str(url), params=params, timeout=5,
+                                    ssl=ssl.SSLContext(), json=body) as response:
             response: ClientResponse
             logger.debug(f'Request GET {response.url}')
             data = await response.json()
@@ -157,7 +165,7 @@ class OneInchProviderV5(BaseProvider):
             response = await self.get_response(url, query)
         except (
             ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            e = self.handle_exception(e, url=url, params=query, wallet=trader)
+            e = self.handle_exception(e, params=query, wallet=trader)
             raise e
         return response
 
@@ -178,7 +186,36 @@ class OneInchProviderV5(BaseProvider):
             response = await self.get_response(url, None)
         except (
             ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            e = self.handle_exception(e, url=url)
+            e = self.handle_exception(e)
+            raise e
+        return response
+
+    async def post_limit_order(
+        self,
+        chain_id: Optional[int],
+        order_hash: str,
+        signature: str,
+        data: Dict,
+    ):
+        method = 'POST'
+        path = ''
+        endpoint = ''
+        url = self._limit_order_path_builder(
+            version=LIMIT_ORDER_VERSION,
+            endpoint=endpoint,
+            path=path,
+            chain_id=chain_id,
+        )
+        body = {
+            'orderHash': order_hash,
+            'signature': signature,
+            'data': data,
+        }
+        try:
+            response = await self.get_response(url, None, method, body)
+        except (
+            ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
+            e = self.handle_exception(e)
             raise e
         return response
 
@@ -364,8 +401,11 @@ class OneInchProviderV5(BaseProvider):
         msg = exception.message
         if isinstance(exception.message, list) and isinstance(exception.message[0],
                                                               dict):
-            msg = exception.message[0].get('description',
-                                           exception.message[0].get('error', ''))
+            msg = exception.message[0].get(
+                'description', exception.message[0].get(
+                    'message', exception.message[0].get('error', '')
+                )
+            )
         for error, error_class in ONE_INCH_ERRORS.items():
             if re.search(error.lower(), msg.lower()):
                 break
