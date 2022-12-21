@@ -136,7 +136,7 @@ Config must be named **config.json**.
 #### 2. Add Provider class
 
 To add new provider you need to create a new module in providers_clients folder module,
-create a class that inherits from BaseProvider and implement all abstract methods.
+create a class that inherits from BaseProvider and implement abstract methods.
 
 Providers defining getting price, quote, limit orders, ets interfaces for specific
 Provider
