@@ -54,8 +54,9 @@ class LimitOrderPostData(BaseModel):
     )
     takingAmount: str = Field(
         ..., description='The amount of taker token', alias='taking_amount')
-    salt: str = Field(..., description='The salt of the order')
-    interactions: Optional[str] = Field('0x', description='The interactions of the order')
+    salt: str
+    interactions: Optional[str] = Field('0x', description='The salt of the order')
+    offsets: Optional[str] = Field('0x')
 
     class Config:
         allow_population_by_field_name = True
