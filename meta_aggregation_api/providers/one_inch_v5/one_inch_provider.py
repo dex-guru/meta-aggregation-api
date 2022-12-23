@@ -156,9 +156,9 @@ class OneInchProviderV5(BaseProvider):
             'sortBy': 'createDateTime',
         }
         if maker_token:
-            query['makingAsset'] = maker_token
+            query['makerAsset'] = maker_token
         if taker_token:
-            query['takingAsset'] = taker_token
+            query['takerAsset'] = taker_token
         if statuses:
             query['statuses'] = statuses
         try:
