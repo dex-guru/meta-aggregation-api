@@ -54,9 +54,7 @@ async def get_limit_order_by_order_hash(
 async def make_limit_order(
     chain_id: int = Path(...),
     provider: Optional[str] = Query(..., description='e.g. zero_x, one_inch'),
-    order_hash: str = Body(
-        ..., description='The hash of the order', alias='orderHash'
-    ),
+    order_hash: str = Body(..., description='The hash of the order'),
     signature: str = Body(..., description='The signature of the order'),
     data: LimitOrderPostData = Body(..., description='The data of the order'),
 ):

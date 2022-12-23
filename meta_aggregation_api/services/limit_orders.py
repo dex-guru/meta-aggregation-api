@@ -80,6 +80,6 @@ async def post_limit_order(
         chain_id=chain_id,
         order_hash=order_hash,
         signature=signature,
-        data=data.dict(),
+        data=data.to_camel_case_dict(),
     )
     return response
