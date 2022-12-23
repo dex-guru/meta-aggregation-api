@@ -58,5 +58,6 @@ class LimitOrderPostData(BaseModel):
     interactions: Optional[str] = Field('0x', description='The salt of the order')
     offsets: Optional[str] = Field('0x')
 
+
     class Config:
         allow_population_by_field_name = True
