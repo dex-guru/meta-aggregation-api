@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -38,24 +38,27 @@ class ProviderQuoteResponse(BaseModel):
 
 
 class LimitOrderPostData(BaseModel):
-    makerAsset: str = Field(
-        ..., description='The address of maker token', alias='maker_asset'
-    )
-    takerAsset: str = Field(
-        ..., description='The address of taker token', alias='taker_asset'
-        )
+    maker_asset: str = Field(..., description='The address of maker token')
+    taker_asset: str = Field(..., description='The address of taker token')
     maker: str = Field(..., description='The address of maker')
-    allowedSender: str = Field(
-        ..., description='The address of allowed sender', alias='allowed_sender'
-    )
+    allowed_sender: str = Field(..., description='The address of allowed sender')
     receiver: str = Field(..., description='The address of receiver')
-    makingAmount: str = Field(
-        ..., description='The amount of maker token', alias='making_amount'
-    )
-    takingAmount: str = Field(
-        ..., description='The amount of taker token', alias='taking_amount')
-    salt: str = Field(..., description='The salt of the order')
+    making_amount: str = Field(..., description='The amount of maker token')
+    taking_amount: str = Field(..., description='The amount of taker token')
+    salt: str = Field('0x', description='The salt of the order')
     interactions: Optional[str] = Field('0x', description='The interactions of the order')
+    offsets: Optional[str] = Field('0x', description='The offsets of the order')
 
-    class Config:
-        allow_population_by_field_name = True
+    def to_camel_case_dict(self):
+        return dict(
+            makerAsset=self.maker_asset,
+            takerAsset=self.taker_asset,
+            maker=self.maker,
+            allowedSender=self.allowed_sender,
+            receiver=self.receiver,
+            makingAmount=self.making_amount,
+            takingAmount=self.taking_amount,
+            salt=self.salt,
+            interactions=self.interactions,
+            offsets=self.offsets,
+        )
