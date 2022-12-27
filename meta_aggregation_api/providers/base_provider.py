@@ -16,7 +16,7 @@ from meta_aggregation_api.utils.logger import capture_exception
 class BaseProvider:
     aiohttp_session: ClientSession
     PROVIDER_NAME = 'base_provider'
-    REQUEST_TIMEOUT = 5
+    REQUEST_TIMEOUT = 7
 
     def __init__(self, aiohttp_session: Optional[ClientSession] = None):
         if not aiohttp_session:

@@ -62,11 +62,6 @@ class ZeroXProviderV1(BaseProvider):
         domain = cls._api_domain_builder(chain_id)
         return f'https://{domain}/{path}/v{cls.TRADING_API_VERSION}/{endpoint}'
 
-    @retry(retry=(
-        retry_if_exception_type(asyncio.TimeoutError) | retry_if_exception_type(
-        ServerDisconnectedError)),
-        stop=stop_after_attempt(3), reraise=True,
-        before=before_log(logger, logging.DEBUG))
     async def _get_response(self, url: str, params: Optional[dict] = None) -> dict:
         async with self.aiohttp_session.get(
             url, params=params, timeout=self.REQUEST_TIMEOUT, ssl=ssl.SSLContext()

@@ -96,11 +96,6 @@ class OneInchProviderV5(BaseProvider):
                 / str(chain_id) / path
         return url
 
-    @retry(retry=(
-        retry_if_exception_type(asyncio.TimeoutError) | retry_if_exception_type(
-        ServerDisconnectedError)),
-        stop=stop_after_attempt(3), reraise=True,
-        before=before_log(logger, LOG_DEBUG))
     async def get_response(
         self,
         url: URL,
@@ -109,7 +104,7 @@ class OneInchProviderV5(BaseProvider):
         body: Optional[Dict] = None,
     ) -> Union[List, Dict]:
         request_function = getattr(self.aiohttp_session, method.lower())
-        async with request_function(str(url), params=params, timeout=5,
+        async with request_function(str(url), params=params, timeout=self.REQUEST_TIMEOUT,
                                     ssl=ssl.SSLContext(), json=body) as response:
             response: ClientResponse
             logger.debug(f'Request GET {response.url}')
