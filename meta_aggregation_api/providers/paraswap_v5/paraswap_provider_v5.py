@@ -68,15 +68,10 @@ class ParaSwapProviderV5(BaseProvider):
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
 
-    @retry(retry=(
-        retry_if_exception_type(asyncio.TimeoutError) | retry_if_exception_type(
-        ServerDisconnectedError)),
-        stop=stop_after_attempt(3), reraise=True,
-        before=before_log(logger, logging.DEBUG))
     async def request(self, method: str, path: str, *args, **kwargs):
         request_function = getattr(self.aiohttp_session, method.lower())
         url = self.MAIN_API_URL / path
-        async with request_function(url, *args, timeout=5, **kwargs,
+        async with request_function(url, *args, timeout=self.REQUEST_TIMEOUT, **kwargs,
                                     ssl=ssl.SSLContext()) as response:
             logger.debug("Request '%s' to '%s'", method, url)
             data = await response.text()
