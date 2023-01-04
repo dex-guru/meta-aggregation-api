@@ -1,11 +1,12 @@
 from urllib.parse import urljoin
 
 from meta_aggregation_api.config.apm import APMConfig
+from meta_aggregation_api.config.auth import AuthConfig
 from meta_aggregation_api.config.logger import LoggerConfig
 from meta_aggregation_api.config.providers import providers
 
 
-class Config(APMConfig, LoggerConfig):
+class Config(APMConfig, LoggerConfig, AuthConfig):
     SERVER_HOST: str = 'localhost'
     SERVER_PORT: int = 8000
     RELOAD: bool = True

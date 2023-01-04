@@ -3,6 +3,7 @@ dexguru-sdk==0.2.6
 
 # api
 fastapi==0.88.0
+fastapi_jwt_auth==0.5.0
 pydantic~=1.8.2
 starlette~=0.22.0
 httpx==0.23.1
