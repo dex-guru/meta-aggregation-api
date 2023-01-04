@@ -1,5 +1,6 @@
 from typing import Optional, List
 
+from aiocache import cached
 from fastapi import APIRouter, Query, Path, Depends
 from fastapi.security import HTTPBearer
 from fastapi_jwt_auth import AuthJWT
@@ -13,15 +14,15 @@ from meta_aggregation_api.services.meta_aggregation_service import (get_swap_met
 from meta_aggregation_api.utils.common import address_to_lower
 from meta_aggregation_api.utils.errors import responses
 
+PRICE_CACHE_TTL = 5
 swap_route = APIRouter()
 
 
-@swap_route.get('/{chain_id}/price', response_model=MetaPriceModel, responses=responses,
-                dependencies=[Depends(HTTPBearer())])
+@cached(ttl=PRICE_CACHE_TTL)
+@swap_route.get('/{chain_id}/price', response_model=MetaPriceModel, responses=responses)
 @swap_route.get('/{chain_id}/price/', response_model=MetaPriceModel,
-                include_in_schema=False, dependencies=[Depends(HTTPBearer())])
+                include_in_schema=False)
 async def get_swap_price(
-    authorize: AuthJWT = Depends(),
     buy_token: address_to_lower = Query(..., alias='buyToken'),
     sell_token: address_to_lower = Query(..., alias='sellToken'),
     sell_amount: conint(gt=0) = Query(..., alias='sellAmount'),
@@ -51,7 +52,6 @@ async def get_swap_price(
     - **buy_token_percentage_fee**: Percentage of the buy token fee (optional) (0.01 = 1%)
     - **provider**: Provider name from /info (optional). If not specified, the best price will be returned
     """
-    authorize.jwt_required()
     params = {
         "buy_token": buy_token,
         "sell_token": sell_token,
@@ -71,12 +71,12 @@ async def get_swap_price(
     return next((quote for quote in res if quote.is_best), None)
 
 
+@cached(ttl=PRICE_CACHE_TTL)
 @swap_route.get('/{chain_id}/price/all', response_model=List[MetaPriceModel],
-                responses=responses, dependencies=[Depends(HTTPBearer())])
+                responses=responses)
 @swap_route.get('/{chain_id}/price/all/', include_in_schema=False,
-                response_model=List[MetaPriceModel], dependencies=[Depends(HTTPBearer())])
+                response_model=List[MetaPriceModel])
 async def get_all_swap_prices(
-    authorize: AuthJWT = Depends(),
     buy_token: address_to_lower = Query(..., alias='buyToken'),
     sell_token: address_to_lower = Query(..., alias='sellToken'),
     sell_amount: conint(gt=0) = Query(..., alias='sellAmount'),
@@ -102,7 +102,6 @@ async def get_all_swap_prices(
     - **fee_recipient**: Address of the fee recipient (optional)
     - **buy_token_percentage_fee**: Percentage of the buy token fee (optional) (0.01 = 1%)
     """
-    authorize.jwt_required()
     params = {
         "buy_token": buy_token,
         "sell_token": sell_token,

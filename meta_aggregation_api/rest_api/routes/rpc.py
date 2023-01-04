@@ -1,9 +1,7 @@
 import ssl
 
 from aiohttp import ClientResponseError
-from fastapi import APIRouter, Path, Depends, HTTPException
-from fastapi.security import HTTPBearer
-from fastapi_jwt_auth import AuthJWT
+from fastapi import APIRouter, Path, HTTPException
 from starlette.requests import Request
 
 from meta_aggregation_api.utils.common import get_web3_url
@@ -13,10 +11,9 @@ v1_rpc = APIRouter()
 logger = get_logger(__name__)
 
 
-@v1_rpc.post('/rpc/{chain_id}', dependencies=[Depends(HTTPBearer())])
+@v1_rpc.post('/rpc/{chain_id}')
 async def send_rpc(
     request: Request,
-    authorize: AuthJWT = Depends(),
     chain_id: int = Path(..., description="Chain ID"),
 ):
     """
@@ -24,7 +21,6 @@ async def send_rpc(
     that is currently synced with the most other nodes. It takes in a JSON-RPC 2.0 compliant
     request and returns a JSON-RPC 2.0 compliant response.
     """
-    authorize.jwt_required()
     from meta_aggregation_api.utils.httputils import CLIENT_SESSION
     node = get_web3_url(chain_id)
     try:

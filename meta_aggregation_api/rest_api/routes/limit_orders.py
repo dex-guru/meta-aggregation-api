@@ -1,22 +1,21 @@
 from typing import Optional, List
 
-from fastapi import APIRouter, Path, Query, Body, Depends
-from fastapi.security import HTTPBearer
-from fastapi_jwt_auth import AuthJWT
+from aiocache import cached
+from fastapi import APIRouter, Path, Query, Body
 
 from meta_aggregation_api.models.meta_agg_models import LimitOrderPostData
 from meta_aggregation_api.services.limit_orders import \
     (get_limit_orders_by_wallet_address, get_limit_order_by_hash, post_limit_order)
 from meta_aggregation_api.utils.common import address_to_lower
 
+LIMIT_ORDERS_CACHE_TTL = 10
 limit_orders = APIRouter()
 
 
-@limit_orders.get('/{chain_id}/address/{trader}',  dependencies=[Depends(HTTPBearer())])
-@limit_orders.get('/{chain_id}/address/{trader}/', include_in_schema=False,
-                  dependencies=[Depends(HTTPBearer())])
+@cached(ttl=LIMIT_ORDERS_CACHE_TTL)
+@limit_orders.get('/{chain_id}/address/{trader}')
+@limit_orders.get('/{chain_id}/address/{trader}/', include_in_schema=False)
 async def get_orders_by_trader(
-    authorize: AuthJWT = Depends(),
     chain_id: int = Path(...),
     trader: address_to_lower = Path(...,
                                     description='The address of either the maker or the taker'),
@@ -27,7 +26,6 @@ async def get_orders_by_trader(
                                                     description='The address of taker token'),
     statuses: Optional[List] = Query(None, description=''),
 ):
-    authorize.jwt_required()
     response = await get_limit_orders_by_wallet_address(
         chain_id=chain_id,
         provider=provider,
@@ -39,17 +37,15 @@ async def get_orders_by_trader(
     return response
 
 
-@limit_orders.get('/{chain_id}/events/{order_hash}',
-                  dependencies=[Depends(HTTPBearer())])
+@cached(ttl=LIMIT_ORDERS_CACHE_TTL)
+@limit_orders.get('/{chain_id}/events/{order_hash}')
 @limit_orders.get('/{chain_id}/events/{order_hash}/',
-                  include_in_schema=False, dependencies=[Depends(HTTPBearer())])
+                  include_in_schema=False)
 async def get_limit_order_by_order_hash(
-    authorize: AuthJWT = Depends(),
     chain_id: int = Path(...),
     order_hash: Optional[str] = Path(None, description='The hash of the order'),
     provider: str = Query(..., description='e.g. zero_x, one_inch'),
 ):
-    authorize.jwt_required()
     response = await get_limit_order_by_hash(
         chain_id=chain_id,
         provider=provider,
@@ -58,18 +54,15 @@ async def get_limit_order_by_order_hash(
     return response
 
 
-@limit_orders.post('/{chain_id}', dependencies=[Depends(HTTPBearer())])
-@limit_orders.post('/{chain_id}/', include_in_schema=False,
-                   dependencies=[Depends(HTTPBearer())])
+@limit_orders.post('/{chain_id}')
+@limit_orders.post('/{chain_id}/', include_in_schema=False)
 async def make_limit_order(
-    authorize: AuthJWT = Depends(),
     chain_id: int = Path(...),
     provider: Optional[str] = Query(..., description='e.g. zero_x, one_inch'),
     order_hash: str = Body(..., description='The hash of the order'),
     signature: str = Body(..., description='The signature of the order'),
     data: LimitOrderPostData = Body(..., description='The data of the order'),
 ):
-    authorize.jwt_required()
     response = await post_limit_order(
         chain_id=chain_id,
         provider=provider,
