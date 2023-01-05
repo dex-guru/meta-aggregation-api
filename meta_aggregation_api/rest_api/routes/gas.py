@@ -5,11 +5,11 @@ from fastapi.routing import APIRouter
 from meta_aggregation_api.models.gas_models import GasResponse
 from meta_aggregation_api.services.gas_service import get_gas_prices
 
-GAS_CACHE_TTL = 5
+GAS_CACHE_TTL_SEC = 5
 gas_routes = APIRouter()
 
 
-@cached(ttl=GAS_CACHE_TTL)
+@cached(ttl=GAS_CACHE_TTL_SEC)
 @gas_routes.get('/{chain_id}', response_model=GasResponse)
 @gas_routes.get('/{chain_id}/', include_in_schema=False)
 async def get_prices(
