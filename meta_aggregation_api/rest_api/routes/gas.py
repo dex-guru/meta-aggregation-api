@@ -10,9 +10,9 @@ GAS_CACHE_TTL_SEC = 5
 gas_routes = APIRouter()
 
 
-@cached(ttl=GAS_CACHE_TTL_SEC, **get_cache_config())
 @gas_routes.get('/{chain_id}', response_model=GasResponse)
 @gas_routes.get('/{chain_id}/', include_in_schema=False)
+@cached(ttl=GAS_CACHE_TTL_SEC, **get_cache_config())
 async def get_prices(
     chain_id: int = Path(..., description='Chain ID'),
 ) -> GasResponse:

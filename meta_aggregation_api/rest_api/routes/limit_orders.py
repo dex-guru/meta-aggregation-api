@@ -13,9 +13,9 @@ LIMIT_ORDERS_CACHE_TTL_SEC = 10
 limit_orders = APIRouter()
 
 
-@cached(ttl=LIMIT_ORDERS_CACHE_TTL_SEC, **get_cache_config())
 @limit_orders.get('/{chain_id}/address/{trader}')
 @limit_orders.get('/{chain_id}/address/{trader}/', include_in_schema=False)
+@cached(ttl=LIMIT_ORDERS_CACHE_TTL_SEC, **get_cache_config())
 async def get_orders_by_trader(
     chain_id: int = Path(...),
     trader: address_to_lower = Path(...,
@@ -38,10 +38,10 @@ async def get_orders_by_trader(
     return response
 
 
-@cached(ttl=LIMIT_ORDERS_CACHE_TTL_SEC, **get_cache_config())
 @limit_orders.get('/{chain_id}/events/{order_hash}')
 @limit_orders.get('/{chain_id}/events/{order_hash}/',
                   include_in_schema=False)
+@cached(ttl=LIMIT_ORDERS_CACHE_TTL_SEC, **get_cache_config())
 async def get_limit_order_by_order_hash(
     chain_id: int = Path(...),
     order_hash: Optional[str] = Path(None, description='The hash of the order'),

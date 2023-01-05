@@ -19,10 +19,10 @@ PRICE_CACHE_TTL_SEC = 5
 swap_route = APIRouter()
 
 
-@cached(ttl=PRICE_CACHE_TTL_SEC, **get_cache_config())
 @swap_route.get('/{chain_id}/price', response_model=MetaPriceModel, responses=responses)
 @swap_route.get('/{chain_id}/price/', response_model=MetaPriceModel,
                 include_in_schema=False)
+@cached(ttl=PRICE_CACHE_TTL_SEC, **get_cache_config())
 async def get_swap_price(
     buy_token: address_to_lower = Query(..., alias='buyToken'),
     sell_token: address_to_lower = Query(..., alias='sellToken'),
@@ -72,11 +72,11 @@ async def get_swap_price(
     return next((quote for quote in res if quote.is_best), None)
 
 
-@cached(ttl=PRICE_CACHE_TTL_SEC, **get_cache_config())
 @swap_route.get('/{chain_id}/price/all', response_model=List[MetaPriceModel],
                 responses=responses)
 @swap_route.get('/{chain_id}/price/all/', include_in_schema=False,
                 response_model=List[MetaPriceModel])
+@cached(ttl=PRICE_CACHE_TTL_SEC, **get_cache_config())
 async def get_all_swap_prices(
     buy_token: address_to_lower = Query(..., alias='buyToken'),
     sell_token: address_to_lower = Query(..., alias='sellToken'),
