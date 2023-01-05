@@ -12,7 +12,7 @@ async def setup_client_session() -> None:
 
     """
     global CLIENT_SESSION  # pylint: disable=global-statement
-    CLIENT_SESSION = ClientSession()
+    CLIENT_SESSION = ClientSession(trust_env=True)
 
 
 async def teardown_client_session() -> None:
