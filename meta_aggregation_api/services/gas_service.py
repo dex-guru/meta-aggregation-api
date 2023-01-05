@@ -9,6 +9,7 @@ from tenacity import retry, retry_if_exception_type
 from meta_aggregation_api.clients.blockchain.web3_client import Web3Client
 from meta_aggregation_api.models.gas_models import GasResponse
 from meta_aggregation_api.services.chains import chains
+from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.common import get_web3_url
 from meta_aggregation_api.utils.logger import get_logger
 
@@ -17,7 +18,7 @@ GAS_SOURCE = 'DEXGURU'
 logger = get_logger(__name__)
 
 
-@cached(ttl=5)
+@cached(ttl=5, **get_cache_config())
 async def get_gas_prices(chain_id: int) -> GasResponse:
     logger.debug('Getting gas prices for network %s', chain_id)
     web3_client = Web3Client(get_web3_url(chain_id))
@@ -26,7 +27,7 @@ async def get_gas_prices(chain_id: int) -> GasResponse:
     return await get_gas_prices_legacy(web3_client)
 
 
-@cached(ttl=5)
+@cached(ttl=5, **get_cache_config())
 @retry(retry=retry_if_exception_type(ReadTimeout), stop=3)
 async def get_base_gas_price(chain_id: int) -> int:
     logger.debug('Getting base gas price for network %s', chain_id)

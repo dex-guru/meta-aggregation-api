@@ -18,6 +18,7 @@ from meta_aggregation_api.models.meta_agg_models import (ProviderQuoteResponse,
                                                          ProviderPriceResponse)
 from meta_aggregation_api.models.provider_response_models import SwapSources
 from meta_aggregation_api.providers.base_provider import BaseProvider
+from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.errors import (EstimationError,
                                                AggregationProviderError,
                                                InsufficientLiquidityError,
@@ -214,7 +215,7 @@ class OneInchProviderV5(BaseProvider):
             raise e
         return response
 
-    @cached(ttl=30)
+    @cached(ttl=30, **get_cache_config())
     async def get_swap_price(
         self,
         buy_token: str,

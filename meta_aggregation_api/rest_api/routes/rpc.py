@@ -1,8 +1,7 @@
 import ssl
 
 from aiohttp import ClientResponseError
-from fastapi import APIRouter, Path, Depends, HTTPException
-from fastapi.security import HTTPBearer
+from fastapi import APIRouter, Path, HTTPException
 from starlette.requests import Request
 
 from meta_aggregation_api.utils.common import get_web3_url
@@ -12,7 +11,7 @@ v1_rpc = APIRouter()
 logger = get_logger(__name__)
 
 
-@v1_rpc.post('/rpc/{chain_id}', dependencies=[Depends(HTTPBearer())])
+@v1_rpc.post('/rpc/{chain_id}')
 async def send_rpc(
     request: Request,
     chain_id: int = Path(..., description="Chain ID"),

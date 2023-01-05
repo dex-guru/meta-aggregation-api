@@ -1,15 +1,19 @@
 from typing import Optional, List
 
+from aiocache import cached
 from fastapi import APIRouter, Path, Query, Body
 
 from meta_aggregation_api.models.meta_agg_models import LimitOrderPostData
 from meta_aggregation_api.services.limit_orders import \
     (get_limit_orders_by_wallet_address, get_limit_order_by_hash, post_limit_order)
+from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.common import address_to_lower
 
+LIMIT_ORDERS_CACHE_TTL_SEC = 10
 limit_orders = APIRouter()
 
 
+@cached(ttl=LIMIT_ORDERS_CACHE_TTL_SEC, **get_cache_config())
 @limit_orders.get('/{chain_id}/address/{trader}')
 @limit_orders.get('/{chain_id}/address/{trader}/', include_in_schema=False)
 async def get_orders_by_trader(
@@ -34,8 +38,10 @@ async def get_orders_by_trader(
     return response
 
 
+@cached(ttl=LIMIT_ORDERS_CACHE_TTL_SEC, **get_cache_config())
 @limit_orders.get('/{chain_id}/events/{order_hash}')
-@limit_orders.get('/{chain_id}/events/{order_hash}/', include_in_schema=False)
+@limit_orders.get('/{chain_id}/events/{order_hash}/',
+                  include_in_schema=False)
 async def get_limit_order_by_order_hash(
     chain_id: int = Path(...),
     order_hash: Optional[str] = Path(None, description='The hash of the order'),

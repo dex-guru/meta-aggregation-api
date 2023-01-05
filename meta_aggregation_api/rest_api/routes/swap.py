@@ -1,6 +1,9 @@
 from typing import Optional, List
 
-from fastapi import APIRouter, Query, Path
+from aiocache import cached
+from fastapi import APIRouter, Query, Path, Depends
+from fastapi.security import HTTPBearer
+from fastapi_jwt_auth import AuthJWT
 from pydantic import conint
 
 from meta_aggregation_api.models.meta_agg_models import MetaPriceModel
@@ -8,12 +11,15 @@ from meta_aggregation_api.models.meta_agg_models import ProviderQuoteResponse
 from meta_aggregation_api.services.meta_aggregation_service import (get_swap_meta_price,
                                                                     get_meta_swap_quote,
                                                                     get_provider_price)
+from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.common import address_to_lower
 from meta_aggregation_api.utils.errors import responses
 
+PRICE_CACHE_TTL_SEC = 5
 swap_route = APIRouter()
 
 
+@cached(ttl=PRICE_CACHE_TTL_SEC, **get_cache_config())
 @swap_route.get('/{chain_id}/price', response_model=MetaPriceModel, responses=responses)
 @swap_route.get('/{chain_id}/price/', response_model=MetaPriceModel,
                 include_in_schema=False)
@@ -66,6 +72,7 @@ async def get_swap_price(
     return next((quote for quote in res if quote.is_best), None)
 
 
+@cached(ttl=PRICE_CACHE_TTL_SEC, **get_cache_config())
 @swap_route.get('/{chain_id}/price/all', response_model=List[MetaPriceModel],
                 responses=responses)
 @swap_route.get('/{chain_id}/price/all/', include_in_schema=False,
@@ -113,10 +120,11 @@ async def get_all_swap_prices(
 
 
 @swap_route.get('/{chain_id}/quote', response_model=ProviderQuoteResponse,
-                responses=responses)
+                responses=responses, dependencies=[Depends(HTTPBearer())])
 @swap_route.get('/{chain_id}/quote/', response_model=ProviderQuoteResponse,
-                include_in_schema=False)
+                include_in_schema=False, dependencies=[Depends(HTTPBearer())])
 async def get_swap_quote(
+    authorize: AuthJWT = Depends(),
     buy_token: address_to_lower = Query(..., alias='buyToken'),
     sell_token: address_to_lower = Query(..., alias='sellToken'),
     sell_amount: conint(gt=0) = Query(..., alias='sellAmount'),
@@ -144,6 +152,7 @@ async def get_swap_quote(
     - **fee_recipient**: Address of the fee recipient (optional)
     - **buy_token_percentage_fee**: Percentage of the buy token fee (optional) (0.01 = 1%)
     """
+    authorize.jwt_required()
     quote = await get_meta_swap_quote(
         buy_token=buy_token,
         sell_token=sell_token,
