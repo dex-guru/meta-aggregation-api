@@ -11,6 +11,7 @@ from meta_aggregation_api.models.meta_agg_models import ProviderQuoteResponse
 from meta_aggregation_api.services.meta_aggregation_service import (get_swap_meta_price,
                                                                     get_meta_swap_quote,
                                                                     get_provider_price)
+from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.common import address_to_lower
 from meta_aggregation_api.utils.errors import responses
 
@@ -18,7 +19,7 @@ PRICE_CACHE_TTL_SEC = 5
 swap_route = APIRouter()
 
 
-@cached(ttl=PRICE_CACHE_TTL_SEC)
+@cached(ttl=PRICE_CACHE_TTL_SEC, **get_cache_config())
 @swap_route.get('/{chain_id}/price', response_model=MetaPriceModel, responses=responses)
 @swap_route.get('/{chain_id}/price/', response_model=MetaPriceModel,
                 include_in_schema=False)
@@ -71,7 +72,7 @@ async def get_swap_price(
     return next((quote for quote in res if quote.is_best), None)
 
 
-@cached(ttl=PRICE_CACHE_TTL_SEC)
+@cached(ttl=PRICE_CACHE_TTL_SEC, **get_cache_config())
 @swap_route.get('/{chain_id}/price/all', response_model=List[MetaPriceModel],
                 responses=responses)
 @swap_route.get('/{chain_id}/price/all/', include_in_schema=False,

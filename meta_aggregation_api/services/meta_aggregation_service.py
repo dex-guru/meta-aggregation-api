@@ -16,6 +16,7 @@ from meta_aggregation_api.models.meta_agg_models import (MetaPriceModel,
 from meta_aggregation_api.providers import all_providers
 from meta_aggregation_api.services.chains import chains
 from meta_aggregation_api.services.gas_service import get_base_gas_price
+from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.common import get_web3_url
 from meta_aggregation_api.utils.errors import ProviderNotFound
 from meta_aggregation_api.utils.logger import get_logger
@@ -23,7 +24,7 @@ from meta_aggregation_api.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-@cached(ttl=5)
+@cached(ttl=5, **get_cache_config())
 async def get_token_allowance(
     token_address: str,
     spender_address: str,
@@ -42,7 +43,7 @@ async def get_token_allowance(
     return allowance
 
 
-@cached(ttl=5)
+@cached(ttl=5, **get_cache_config())
 async def get_approve_cost(
     owner_address: str,
     spender_address: str,
@@ -207,7 +208,7 @@ async def get_swap_meta_price(
     ]
 
 
-@cached(ttl=60 * 60 * 24)
+@cached(ttl=60 * 60 * 24, **get_cache_config())
 async def get_decimals_for_native_and_buy_token(chain_id: int, buy_token: str) -> Tuple[
     int, int]:
     """

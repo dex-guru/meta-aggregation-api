@@ -16,6 +16,7 @@ from meta_aggregation_api.models.meta_agg_models import (ProviderQuoteResponse,
                                                          ProviderPriceResponse)
 from meta_aggregation_api.providers.base_provider import BaseProvider
 from meta_aggregation_api.services.chains import chains
+from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.errors import (AggregationProviderError,
                                                UserBalanceError,
                                                BaseAggregationProviderError,
@@ -235,7 +236,7 @@ class ZeroXProviderV1(BaseProvider):
         logger.debug(f'Proxing url {url} with params {query}')
         return await self._get_response(url, params=query)
 
-    @cached(ttl=30)
+    @cached(ttl=30, **get_cache_config())
     async def get_swap_price(
         self,
         buy_token: str,
