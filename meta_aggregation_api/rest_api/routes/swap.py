@@ -3,9 +3,9 @@ from typing import Optional, List
 from aiocache import cached
 from fastapi import APIRouter, Query, Path, Depends
 from fastapi.security import HTTPBearer
-from fastapi_jwt_auth import AuthJWT
 from pydantic import conint
 
+from meta_aggregation_api.config.auth import AuthJWT
 from meta_aggregation_api.models.meta_agg_models import MetaPriceModel
 from meta_aggregation_api.models.meta_agg_models import ProviderQuoteResponse
 from meta_aggregation_api.services.meta_aggregation_service import (get_swap_meta_price,

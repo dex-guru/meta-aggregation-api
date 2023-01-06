@@ -1,11 +1,9 @@
 from fastapi_jwt_auth import AuthJWT
-from pydantic import BaseModel
+from pydantic import BaseSettings
 
 
-class AuthConfig(BaseModel):
-    authjwt_secret_key: str = (
-        'secretkey'
-    )
+class AuthConfig(BaseSettings):
+    authjwt_secret_key: str = 'secretkey'
 
 
 @AuthJWT.load_config

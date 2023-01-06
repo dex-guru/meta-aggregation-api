@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from fastapi_jwt_auth.exceptions import AuthJWTException
 
 from meta_aggregation_api.clients.apm_client import apm_client
 from meta_aggregation_api.config import Config, providers
@@ -71,6 +72,13 @@ def create_app(config: Config):
         request: Request, exc: BaseAggregationProviderError
     ):
         return exc.to_http_exception()
+
+    @app.exception_handler(AuthJWTException)
+    def authjwt_exception_handler(request: Request, exc: AuthJWTException):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.message}
+        )
 
     @app.on_event("startup")
     async def startup_event():
