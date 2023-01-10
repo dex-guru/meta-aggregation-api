@@ -13,12 +13,14 @@ from meta_aggregation_api.models.meta_agg_models import (ProviderQuoteResponse,
                                                          ProviderPriceResponse)
 from meta_aggregation_api.models.provider_response_models import SwapSources
 from meta_aggregation_api.providers.base_provider import BaseProvider
+from meta_aggregation_api.utils.errors import BaseAggregationProviderError
 from meta_aggregation_api.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class OpenOceanProviderV2(BaseProvider):
+    """https://docs.openocean.finance/dev/openocean-api-3.0/api-reference"""
     TRADING_API = 'https://ethapi.openocean.finance/v2'
 
     with open(Path(__file__).parent / 'config.json') as f:
@@ -179,7 +181,7 @@ class OpenOceanProviderV2(BaseProvider):
                     ))
         return converted_sources
 
-    def handle_exception(self, e, **kwargs):
+    def handle_exception(self, e, **kwargs) -> BaseAggregationProviderError:
         e = super().handle_exception(e, **kwargs)
         logger.error(e)
         return e
