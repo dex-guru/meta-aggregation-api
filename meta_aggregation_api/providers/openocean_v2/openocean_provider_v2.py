@@ -36,7 +36,7 @@ class OpenOceanProviderV2(BaseProvider):
             except ClientResponseError as e:
                 # Fix bug with HTTP status code 0.
                 status = 500 if e.status not in range(100, 600) else e.status
-                data['source'] = 'proxied 0x.org API'
+                data['source'] = 'proxied OpenOcean API'
                 raise ClientResponseError(
                     request_info=e.request_info,
                     history=e.history,
@@ -114,7 +114,7 @@ class OpenOceanProviderV2(BaseProvider):
             exc = self.handle_exception(e, params=params, token_address=sell_token,
                                         chain_id=chain_id)
             raise exc
-        return self._convert_response_from_swap_quote(response, gas_price, url=url)
+        return self._convert_response_from_swap_quote(response)
 
     def _convert_response_from_swap_price(
         self,
