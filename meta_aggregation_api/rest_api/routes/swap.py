@@ -132,7 +132,7 @@ async def get_swap_quote(
     provider: str = Query(..., alias='provider'),
     gas_price: Optional[int] = Query(None, description='Gas price', gt=0,
                                      alias='gasPrice'),
-    slippage_percentage: Optional[float] = Query(None, alias='slippagePercentage'),
+    slippage_percentage: Optional[float] = Query(0.005, alias='slippagePercentage'),
     taker_address: Optional[address_to_lower] = Query(None, alias='takerAddress'),
     fee_recipient: Optional[address_to_lower] = Query(None, alias='feeRecipient'),
     buy_token_percentage_fee: Optional[float] = Query(None,
