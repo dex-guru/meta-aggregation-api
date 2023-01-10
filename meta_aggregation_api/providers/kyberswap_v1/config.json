@@ -1,0 +1,42 @@
+{
+  "name": "kyberswap",
+  "display_name": "KyberSwap",
+  "enabled": true,
+  "spenders": [
+    {
+      "chain_id": 1,
+      "limit_order": null,
+      "market_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    },
+    {
+      "chain_id": 10,
+      "limit_order": null,
+      "market_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    },
+    {
+      "chain_id": 56,
+      "limit_order": null,
+      "market_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    },
+    {
+      "chain_id": 137,
+      "limit_order": null,
+      "market_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    },
+    {
+      "chain_id": 250,
+      "limit_order": null,
+      "market_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    },
+    {
+      "chain_id": 42161,
+      "limit_order": null,
+      "market_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    },
+    {
+      "chain_id": 43114,
+      "limit_order": null,
+      "market_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    }
+  ]
+}
