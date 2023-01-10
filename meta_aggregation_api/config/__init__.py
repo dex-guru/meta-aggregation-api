@@ -22,6 +22,7 @@ class Config(APMConfig, LoggerConfig, AuthConfig, CacheConfig):
     CORS_METHODS = ['*']
     CORS_HEADERS = ['*']
     WORKERS_COUNT: int = 1
+    PARTNER: str = 'dex.guru'
 
     def get_web3_url(self, chain_id: int):
         return urljoin(self.PUBLIC_API_DOMAIN, f'{chain_id}/{self.PUBLIC_KEY}')
