@@ -67,6 +67,8 @@ class OpenOceanProviderV2(BaseProvider):
             'outTokenAddress': buy_token,
             'amount': sell_amount,
         }
+        if slippage_percentage:
+            params['slippage'] = slippage_percentage * 10000
         if gas_price:
             params['gasPrice'] = gas_price
         if taker_address:
@@ -103,6 +105,8 @@ class OpenOceanProviderV2(BaseProvider):
             'amount': sell_amount,
             'account': taker_address,
         }
+        if slippage_percentage:
+            params['slippage'] = slippage_percentage * 10000
         if gas_price:
             params['gasPrice'] = gas_price
         if fee_recipient:
