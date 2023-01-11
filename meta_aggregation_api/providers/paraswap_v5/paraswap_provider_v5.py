@@ -65,7 +65,7 @@ class ParaSwapProviderV5(BaseProvider):
     Docs: https://developers.paraswap.network/api/master
     """
     MAIN_API_URL: yarl.URL = yarl.URL('https://apiv5.paraswap.io/')
-    PARTNER: str = 'dex.guru'
+    PARTNER: str = config.PARTNER
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
 
