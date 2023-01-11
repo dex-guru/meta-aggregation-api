@@ -32,6 +32,8 @@ CHAIN_ID_TO_NETWORK = {
 
 
 class KyberSwapProviderV1(BaseProvider):
+    """https://docs.kyberswap.com/Aggregator/aggregator-api"""
+
     TRADING_API = 'https://aggregator-api.kyberswap.com'
     VERSION = '1'
 
@@ -51,7 +53,7 @@ class KyberSwapProviderV1(BaseProvider):
             except ClientResponseError as e:
                 # Fix bug with HTTP status code 0.
                 status = 500 if e.status not in range(100, 600) else e.status
-                data['source'] = 'proxied OpenOcean API'
+                data['source'] = 'proxied KyberSwap API'
                 raise ClientResponseError(
                     request_info=e.request_info,
                     history=e.history,
@@ -186,7 +188,9 @@ class KyberSwapProviderV1(BaseProvider):
 
         try:
             response = await self._get_response(url, params)
-        except Exception as e:
+        except (
+                ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError
+        ) as e:
             exc = self.handle_exception(e, params=params, token_address=sell_token,
                                         chain_id=chain_id)
             raise exc
