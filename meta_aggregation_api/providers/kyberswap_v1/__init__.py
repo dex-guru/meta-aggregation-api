@@ -1,1 +1,1 @@
-from .kyberswap_v1 import KyberSwapProviderV1
+from .kyberswap_provider_v1 import KyberSwapProviderV1

@@ -2,7 +2,7 @@ import asyncio
 import ssl
 from _decimal import Decimal
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import ujson
 from aiocache import cached
@@ -15,7 +15,8 @@ from meta_aggregation_api.models.meta_agg_models import (ProviderPriceResponse,
 from meta_aggregation_api.models.provider_response_models import SwapSources
 from meta_aggregation_api.providers.base_provider import BaseProvider
 from meta_aggregation_api.utils.cache import get_cache_config
-from meta_aggregation_api.utils.errors import BaseAggregationProviderError
+from meta_aggregation_api.utils.errors import (BaseAggregationProviderError,
+                                               AggregationProviderError)
 from meta_aggregation_api.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -242,8 +243,19 @@ class KyberSwapProviderV1(BaseProvider):
                     raise e
         return converted_sources
 
-    def handle_exception(self, exception: Exception,
-                         **kwargs) -> BaseAggregationProviderError:
-        e = super().handle_exception(exception, **kwargs)
-        logger.error(e)
-        return e
+    def handle_exception(
+        self,
+        exception: Union[ClientResponseError, KeyError, ValidationError],
+        **kwargs,
+    ) -> BaseAggregationProviderError:
+        exc = super().handle_exception(exception, **kwargs)
+        if exc:
+            logger.error(*exc.to_log_args(), extra=exc.to_dict())
+            return exc
+        msg = exception.message
+        exc = AggregationProviderError(
+            self.PROVIDER_NAME,
+            msg,
+            **kwargs,
+        )
+        return exc
