@@ -13,8 +13,7 @@ class CustomHttpSession(ClientSession):
     """
 
     async def _request(self, *args, **kwargs):
-        kwargs.pop('proxy', None)
-        proxy = os.environ.get('PROXY_URL')
+        proxy = kwargs.pop('proxy', os.environ.get('PROXY_URL'))
         return await super()._request(proxy=proxy, *args, **kwargs)
 
 
