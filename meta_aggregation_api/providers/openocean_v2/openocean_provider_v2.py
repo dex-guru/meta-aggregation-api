@@ -62,6 +62,12 @@ class OpenOceanProviderV2(BaseProvider):
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
     ):
+        if buy_token.lower() == config.NATIVE_TOKEN_ADDRESS:
+            buy_token = '0x0000000000000000000000000000000000000000'
+
+        if sell_token.lower() == config.NATIVE_TOKEN_ADDRESS:
+            sell_token = '0x0000000000000000000000000000000000000000'
+
         url = '%s/%s/quote' % (self.TRADING_API, chain_id)
         params = {
             'inTokenAddress': sell_token,
@@ -99,6 +105,12 @@ class OpenOceanProviderV2(BaseProvider):
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None
     ) -> ProviderQuoteResponse:
+        if buy_token.lower() == config.NATIVE_TOKEN_ADDRESS:
+            buy_token = '0x0000000000000000000000000000000000000000'
+
+        if sell_token.lower() == config.NATIVE_TOKEN_ADDRESS:
+            sell_token = '0x0000000000000000000000000000000000000000'
+
         url = '%s/%s/swap' % (self.TRADING_API, chain_id)
         params = {
             'inTokenAddress': sell_token,
