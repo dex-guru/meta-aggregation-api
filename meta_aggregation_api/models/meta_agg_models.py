@@ -16,6 +16,27 @@ class ProviderPriceResponse(BaseModel):
     price: str  # price for buy_token in sell_token
 
 
+class BridgePriceResponse(BaseModel):
+    provider: str  # provider name. Set in provider class
+    route: str  # route id
+    sources: List[dict]  # list of liquidity sources for the swap
+    buy_amount: str  # amount of buy_token to buy
+    sell_amount: str  # amount of sell_token to sell
+    value: str  # amount of native token that should be sent with the transaction
+    price: str  # price for buy_token in sell_token
+    is_best: bool  # is this the best price for the swap
+
+
+class BridgeMetaPriceModel(BaseModel):
+    provider: str  # provider name. Set in provider class
+    route: str  # route id
+    price_response: dict  # price response object from provider
+    is_allowed: bool  # if the provider has allowance to spend the sell_token of taker_address
+    is_best: Optional[
+        bool] = None  # none for request with one provider. True if the provider has the best price
+    approve_cost: int = 0  # 0 for requests without taker_address. Cost of approve transaction for the provider
+
+
 class MetaPriceModel(BaseModel):
     provider: str  # provider name. Set in provider class
     price_response: ProviderPriceResponse  # price response object from provider

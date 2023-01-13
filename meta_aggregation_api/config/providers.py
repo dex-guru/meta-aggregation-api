@@ -34,26 +34,29 @@ class ProvidersConfig(metaclass=Singleton):
         return self.__dict__.values()
 
     def get_providers_on_chain(self, chain_id: int) -> dict:
-        providers_on_chain = {
-            'market_order': [],
-            'limit_order': [],
-        }
+        providers_on_chain = defaultdict(list)
         for provider in self.values():
             if chain_id in provider:
-                if provider[chain_id]['market_order']:
+                if provider[chain_id].get('market_order'):
                     providers_on_chain['market_order'].append({
                         'display_name': provider['display_name'],
                         'address': provider[chain_id]['market_order'],
                         'name': provider['name'],
                     })
-                if provider[chain_id]['limit_order']:
+                if provider[chain_id].get('limit_order'):
                     providers_on_chain['limit_order'].append({
                         'display_name': provider['display_name'],
                         'address': provider[chain_id]['limit_order'],
                         'name': provider['name'],
                     })
-        if not providers_on_chain['market_order'] and not providers_on_chain[
-            'limit_order']:
+                if provider[chain_id].get('multichain_order'):
+                    providers_on_chain['multichain_order'].append({
+                        'display_name': provider['display_name'],
+                        'address': provider[chain_id]['multichain_order'],
+                        'name': provider['name'],
+                    })
+        if not providers_on_chain.get('market_order') and not providers_on_chain.get(
+            'limit_order') and not providers_on_chain.get('multichain_order'):
             raise ValueError(f'Chain ID {chain_id} not found')
         return providers_on_chain
 
@@ -74,6 +77,12 @@ class ProvidersConfig(metaclass=Singleton):
                     provider_on_chains[chain['chain_id']]['limit_order'].append({
                         'display_name': provider['display_name'],
                         'address': chain['limit_order'],
+                        'name': provider['name'],
+                    })
+                if chain.get('multichain_order'):
+                    provider_on_chains[chain['chain_id']]['multichain_order'].append({
+                        'display_name': provider['display_name'],
+                        'address': chain['multichain_order'],
                         'name': provider['name'],
                     })
         return [

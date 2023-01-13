@@ -12,7 +12,9 @@ from meta_aggregation_api.config import config
 from meta_aggregation_api.config.providers import providers
 from meta_aggregation_api.models.meta_agg_models import (MetaPriceModel,
                                                          ProviderPriceResponse,
-                                                         ProviderQuoteResponse)
+                                                         ProviderQuoteResponse,
+                                                         BridgePriceResponse,
+                                                         BridgeMetaPriceModel)
 from meta_aggregation_api.providers import all_providers
 from meta_aggregation_api.services.chains import chains
 from meta_aggregation_api.services.gas_service import get_base_gas_price
@@ -208,6 +210,90 @@ async def get_swap_meta_price(
     ]
 
 
+async def get_multichain_meta_price(
+    buy_token: str,
+    sell_token: str,
+    sell_amount: int,
+    chain_id: int,
+    to_chain_id: int,
+    gas_price: Optional[int] = None,
+    slippage_percentage: Optional[float] = None,
+    taker_address: Optional[str] = None,
+    fee_recipient: Optional[str] = None,
+    buy_token_percentage_fee: Optional[float] = None,
+) -> List[BridgeMetaPriceModel]:
+    """
+    Get swap prices from all providers and find the best one.
+    Calculating the best price based on the received tokens after swap, spent gas and approve cost.
+
+    Args:
+        buy_token:str: Specify the token address that you want to buy
+        sell_token:str: Specify the token address that is sold in the swap
+        sell_amount:int: Specify the amount of tokens to sell in base units (e.g. 1 ETH = 10 ** 18)
+        taker_address:str: Specify the address of the user who will be using this price_response
+        chain_id:int: Specify the chain on which to perform the swap
+        gas_price:Optional[int]=None: Set the gas price for the transaction. If not set, the gas price will be fetched web3
+        slippage_percentage:Optional[float]=None: Set a maximum percentage of slippage for the trade. (0.01 = 1%)
+        fee_recipient:Optional[str]=None: Specify the address of a fee recipient
+        buy_token_percentage_fee:Optional[float]=None: Specify a percentage of the buy_amount that will be used to pay fees
+
+
+    Returns:
+        A list of MetaPriceModel objects, which contain the following fields:
+            provider:str: The name of the provider
+            price_response:ProviderPriceResponse: The price_response from the provider
+            approve_cost:int: The cost of the approve transaction
+            is_allowed:bool: The user has enough allowance for the swap on this provider
+            is_best:bool: The best price_response for the swap
+
+    Raises:
+        ValueError: If not found any possible swap for the given parameters on all providers
+    """
+
+    prices_tasks = []
+    for provider in providers.values():
+        if provider is None:
+            continue
+        if provider[chain_id].get('multichain_order') is None:
+            continue
+        provider_name = provider['name']
+        provider_class = all_providers.get(provider_name)
+        if not provider_class:
+            continue
+        provider_instance = provider_class()
+        prices_tasks.append(asyncio.create_task(provider_instance.get_swap_price(
+            buy_token, sell_token, sell_amount, chain_id, to_chain_id,
+            gas_price, slippage_percentage, taker_address,
+            fee_recipient, buy_token_percentage_fee,
+        )))
+    prices_list = await asyncio.gather(*prices_tasks, return_exceptions=True)
+    prices_list = [price for sublist in prices_list for price in sublist]
+
+    if not prices_list:
+        logger.error(
+            'No prices found',
+            extra={'buy_token': buy_token, 'sell_token': sell_token,
+                   'sell_amount': sell_amount,
+                   'chain_id': chain_id, 'providers': prices_list}
+        )
+        raise ValueError('No prices found')
+
+    resulting_list = []
+    approve_costs = 0
+
+    for route_price in prices_list:
+        resulting_list.append(BridgeMetaPriceModel(
+            provider=route_price.provider,
+            route=route_price.route,
+            is_allowed=0,
+            price_response=route_price.dict(),
+            is_best=route_price.is_best,
+            approve_cost=approve_costs
+        ))
+
+    return resulting_list
+
+
 @cached(ttl=60 * 60 * 24, **get_cache_config())
 async def get_decimals_for_native_and_buy_token(chain_id: int, buy_token: str) -> Tuple[
     int, int]:
@@ -367,6 +453,70 @@ async def get_meta_swap_quote(
         buy_token_percentage_fee=buy_token_percentage_fee,
     )
     return quote
+
+
+async def get_multichain_provider_price(
+    buy_token: str,
+    sell_token: str,
+    sell_amount: int,
+    chain_id: int,
+    to_chain_id: int,
+    provider: str,
+    route: str,
+    gas_price: Optional[int] = None,
+    slippage_percentage: Optional[float] = None,
+    taker_address: Optional[str] = None,
+    fee_recipient: Optional[str] = None,
+    buy_token_percentage_fee: Optional[float] = None
+) -> Optional[BridgeMetaPriceModel]:
+    """
+    Get a data for swap from a specific provider.
+
+    Args:
+        buy_token:str: Specify the token address that you want to buy
+        sell_token:str: Specify the token address that is sold in the swap
+        sell_amount:int: Specify the amount of tokens to sell in base units (e.g. 1 ETH = 10 ** 18)
+        chain_id:int: Specify the chain on which to perform the swap
+        to_chain_id:int: Specify the chain on which to perform the swap
+        provider:str: Specify the provider to use
+        gas_price:Optional[int]=None: Set the gas price for the transaction. If not set, the gas price will be fetched web3
+        slippage_percentage:Optional[float]=None: Set a maximum percentage of slippage for the trade. (0.01 = 1%)
+        taker_address:Optional[str]=None: Specify the address of the user who will be using this price_response
+        fee_recipient:Optional[str]=None: Specify the address of a fee recipient
+        buy_token_percentage_fee:Optional[float]=None: Specify a percentage of the buy_amount that will be used to pay fees
+
+    Returns:
+        ProviderQuoteResponse: The price_response object
+
+    Raises:
+        ProviderNotFound: If passed provider is not supported
+        Type[BaseAggregationProviderError]: check utils/errors.py to get all possible errors
+    """
+    provider_class = all_providers.get(provider)
+    if not provider_class:
+        raise ProviderNotFound(provider)
+
+    provider_instance = provider_class()
+
+    prices_list = await provider_instance.get_swap_price(
+        buy_token=buy_token, sell_token=sell_token, sell_amount=sell_amount,
+        chain_id=chain_id,
+        to_chain_id=to_chain_id,
+        gas_price=gas_price, slippage_percentage=slippage_percentage,
+        taker_address=taker_address,
+        fee_recipient=fee_recipient, buy_token_percentage_fee=buy_token_percentage_fee,
+    )
+
+    for route_price in prices_list:
+        if route_price.route == route:
+            return BridgeMetaPriceModel(
+                provider=route_price.provider,
+                route=route_price.route,
+                is_allowed=0,
+                price_response=route_price.dict(),
+                is_best=route_price.is_best,
+                approve_cost=0
+            )
 
 
 async def get_provider_price(

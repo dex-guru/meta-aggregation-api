@@ -1,0 +1,35 @@
+{
+  "name": "lifi",
+  "display_name": "LiFi",
+  "enabled": true,
+  "spenders": [
+    {
+      "chain_id": 1,
+      "multichain_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    },
+    {
+      "chain_id": 10,
+      "multichain_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    },
+    {
+      "chain_id": 56,
+      "multichain_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    },
+    {
+      "chain_id": 137,
+      "multichain_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    },
+    {
+      "chain_id": 250,
+      "multichain_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    },
+    {
+      "chain_id": 42161,
+      "multichain_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    },
+    {
+      "chain_id": 43114,
+      "multichain_order": "0x00555513Acf282B42882420E5e5bA87b44D8fA6E"
+    }
+  ]
+}

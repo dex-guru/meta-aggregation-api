@@ -12,8 +12,9 @@ from meta_aggregation_api.rest_api.middlewares import RouteLoggerMiddleware
 from meta_aggregation_api.rest_api.routes.gas import gas_routes
 from meta_aggregation_api.rest_api.routes.info import info_route
 from meta_aggregation_api.rest_api.routes.limit_orders import limit_orders
+from meta_aggregation_api.rest_api.routes.multichain import multichain_route
 from meta_aggregation_api.rest_api.routes.rpc import v1_rpc
-from meta_aggregation_api.rest_api.routes.swap import swap_route
+from meta_aggregation_api.rest_api.routes.market import market_route
 from meta_aggregation_api.services.chains import chains
 from meta_aggregation_api.utils.errors import BaseAggregationProviderError
 from meta_aggregation_api.utils.httputils import (setup_client_session,
@@ -140,5 +141,6 @@ def register_route(app: FastAPI):
     app.include_router(v1_rpc, prefix="/v1", tags=["RPC Requests"])
     app.include_router(gas_routes, prefix="/v1/gas", tags=["Gas"])
     app.include_router(info_route, prefix="/v1/info", tags=["Info"])
-    app.include_router(swap_route, prefix="/v1/market", tags=["Swap"])
+    app.include_router(market_route, prefix="/v1/market", tags=["Market"])
     app.include_router(limit_orders, prefix="/v1/limit", tags=["Limit Orders"])
+    app.include_router(multichain_route, prefix="/v1/multichain", tags=["MultiChain"])

@@ -14,7 +14,7 @@ class Config(APMConfig, LoggerConfig, AuthConfig, CacheConfig):
     NATIVE_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     VERSION = '0.0.1'
     PUBLIC_KEY = 'Get your key at https://developers.dex.guru/'
-    PUBLIC_API_DOMAIN = 'https://public-stage-lax.dexguru.biz/'
+    PUBLIC_API_DOMAIN = 'https://api.dev.dex.guru/'
     API_VERSION = 1
     WEB3_TIMEOUT: int = 10
     CORS_ORIGINS = ['*']

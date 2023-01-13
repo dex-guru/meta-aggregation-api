@@ -12,7 +12,9 @@ from meta_aggregation_api.services.meta_aggregation_service import (get_token_al
                                                                     get_swap_meta_price,
                                                                     get_decimals_for_native_and_buy_token,
                                                                     choose_best_provider,
-                                                                    get_meta_swap_quote)
+                                                                    get_meta_swap_quote,
+                                                                    get_multichain_meta_price,
+                                                                    get_multichain_provider_price)
 from meta_aggregation_api.utils.errors import ProviderNotFound
 
 
@@ -225,3 +227,20 @@ async def test_get_meta_swap_quote():
             chain_id=1,
             taker_address='test',
         )
+
+
+@pytest.mark.asyncio()
+async def test_get_multichain_price(aiohttp_session):
+    # provider = 'invalid_provider'
+    # with pytest.raises(ProviderNotFound):
+    params = {
+        'buy_token': '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c',
+        'sell_amount': '253785440705476742',
+        'sell_token': '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+        'fee_recipient': "0x720c9244473Dfc596547c1f7B6261c7112A3dad4",
+        'chain_id': 1,
+        'taker_address': '0xA0942D8352FFaBCc0f6dEE32b2b081C703e726A5',
+        'to_chain_id': 56,
+    }
+    multichain_price = await get_multichain_meta_price(**params)
+    assert multichain_price is not None
