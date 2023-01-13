@@ -14,6 +14,7 @@ from meta_aggregation_api.models.meta_agg_models import (ProviderPriceResponse,
                                                          ProviderQuoteResponse)
 from meta_aggregation_api.models.provider_response_models import SwapSources
 from meta_aggregation_api.providers.base_provider import BaseProvider
+from meta_aggregation_api.services.chains import chains
 from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.errors import (BaseAggregationProviderError,
                                                AggregationProviderError)
@@ -94,6 +95,7 @@ class KyberSwapProviderV1(BaseProvider):
             response,
             sell_token_address=sell_token,
             buy_token_address=buy_token,
+            chain_id=chain_id,
         )
 
     async def get_swap_quote(
@@ -121,20 +123,28 @@ class KyberSwapProviderV1(BaseProvider):
             fee_recipient=fee_recipient,
             buy_token_percentage_fee=buy_token_percentage_fee,
         )
-        return self._convert_response_from_swap_quote(response, sell_token, buy_token)
+        return self._convert_response_from_swap_quote(response, sell_token,
+                                                      buy_token, chain_id)
 
     def _convert_response_from_swap_quote(
         self,
         response: dict,
         sell_token_address: str,
         buy_token_address: str,
+        chain_id: int,
     ) -> ProviderQuoteResponse:
         sources = self._convert_sources_for_meta_aggregation(response['swaps'])
         value = '0'
         if sell_token_address.lower() == config.NATIVE_TOKEN_ADDRESS:
             value = response['inputAmount']
-        sell_token_decimals = response['tokens'][sell_token_address.lower()]['decimals']
-        buy_token_decimals = response['tokens'][buy_token_address.lower()]['decimals']
+            sell_token_decimals = chains.get_chain_by_id(chain_id).native_token.decimals
+        else:
+            sell_token_decimals = response['tokens'][sell_token_address.lower()][
+                'decimals']
+        if buy_token_address.lower() == config.NATIVE_TOKEN_ADDRESS:
+            buy_token_decimals = chains.get_chain_by_id(chain_id).native_token.decimals
+        else:
+            buy_token_decimals = response['tokens'][buy_token_address.lower()]['decimals']
         sell_amount = Decimal(response['inputAmount']) / 10 ** sell_token_decimals
         buy_amount = Decimal(response['outputAmount']) / 10 ** buy_token_decimals
         price = buy_amount / sell_amount
@@ -170,10 +180,8 @@ class KyberSwapProviderV1(BaseProvider):
         params = {
             'tokenIn': sell_token,
             'tokenOut': buy_token,
-            'amountIn': sell_amount,
+            'amountIn': str(sell_amount),
             'clientData': "{'source': '%s'}" % config.PARTNER,
-            'saveGas': 0,
-            'gasInclude': 0,
         }
         if taker_address:
             params['to'] = taker_address
@@ -181,11 +189,11 @@ class KyberSwapProviderV1(BaseProvider):
             # KyberSwap has only one endpoint that require taker address
             params['to'] = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
         if slippage_percentage:
-            params['slippageTolerance'] = slippage_percentage * 10000  # 0.1% == 10
+            params['slippageTolerance'] = str(int(slippage_percentage * 10000))  # 0.1% == 10
         if buy_token_percentage_fee and fee_recipient:
             params['feeReceiver'] = fee_recipient
             params['isInBps'] = 0
-            params['feeAmount'] = buy_token_percentage_fee * 10000  # 0.1% == 10
+            params['feeAmount'] = str(int(buy_token_percentage_fee * 10000))  # 0.1% == 10
 
         try:
             response = await self._get_response(url, params)
@@ -202,13 +210,21 @@ class KyberSwapProviderV1(BaseProvider):
         response: dict,
         sell_token_address: str,
         buy_token_address: str,
+        chain_id: int,
     ) -> ProviderPriceResponse:
         sources = self._convert_sources_for_meta_aggregation(response['swaps'])
         value = '0'
         if sell_token_address.lower() == config.NATIVE_TOKEN_ADDRESS:
             value = response['inputAmount']
-        sell_token_decimals = response['tokens'][sell_token_address.lower()]['decimals']
-        buy_token_decimals = response['tokens'][buy_token_address.lower()]['decimals']
+            sell_token_decimals = chains.get_chain_by_id(chain_id).native_token.decimals
+        else:
+            sell_token_decimals = response['tokens'][sell_token_address.lower()][
+                'decimals']
+        if buy_token_address.lower() == config.NATIVE_TOKEN_ADDRESS:
+            buy_token_decimals = chains.get_chain_by_id(chain_id).native_token.decimals
+        else:
+            buy_token_decimals = response['tokens'][buy_token_address.lower()][
+                'decimals']
         sell_amount = Decimal(response['inputAmount']) / 10 ** sell_token_decimals
         buy_amount = Decimal(response['outputAmount']) / 10 ** buy_token_decimals
         price = buy_amount / sell_amount
