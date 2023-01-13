@@ -154,7 +154,7 @@ class KyberSwapProviderV1(BaseProvider):
                 buy_amount=response['outputAmount'],
                 gas=response['totalGas'],
                 sell_amount=response['inputAmount'],
-                gas_price=Decimal(response['gasPriceGwei']) * 10 ** 9,
+                gas_price=str(int(Decimal(response['gasPriceGwei']) * 10 ** 9)),
                 value=value,
                 price=price,
                 to=response['routerAddress'],
@@ -235,7 +235,7 @@ class KyberSwapProviderV1(BaseProvider):
                 buy_amount=response['outputAmount'],
                 gas=response['totalGas'],
                 sell_amount=response['inputAmount'],
-                gas_price=Decimal(response['gasPriceGwei']) * 10 ** 9,
+                gas_price=str(int(Decimal(response['gasPriceGwei']) * 10 ** 9)),
                 value=value,
                 price=price,
             )
