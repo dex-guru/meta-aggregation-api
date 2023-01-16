@@ -1,23 +1,24 @@
 import asyncio
-import logging
 import re
 import ssl
 from pathlib import Path
 from typing import List, Optional, Union
 
+import aiohttp
 import ujson
 from aiocache import cached
 from aiohttp import ClientResponse, ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
-from tenacity import before_log, retry, retry_if_exception_type, stop_after_attempt
 
+from meta_aggregation_api.clients.apm_client import ApmClient
+from meta_aggregation_api.config import Config
 from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
     SwapSources,
 )
 from meta_aggregation_api.providers.base_provider import BaseProvider
-from meta_aggregation_api.services.chains import chains
+from meta_aggregation_api.services.chains import ChainsConfig
 from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.errors import (
     AggregationProviderError,
@@ -54,21 +55,33 @@ class ZeroXProviderV1(BaseProvider):
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
 
-    @classmethod
-    def _api_domain_builder(cls, chain_id: int = None) -> str:
+    def __init__(
+        self,
+        session: aiohttp.ClientSession,
+        config: Config,
+        chains: ChainsConfig,
+        apm_client: ApmClient,
+    ):
+        super().__init__(session=session, config=config, apm_client=apm_client)
+        self.chains = chains
+
+        self.get_swap_price = cached(
+            ttl=30, **get_cache_config(self.config), noself=True
+        )(self.get_swap_price)
+
+    def _api_domain_builder(self, chain_id: int = None) -> str:
         network = (
             ''
-            if not chain_id or chain_id == chains.eth.chain_id
-            else f'{chains.get_chain_by_id(chain_id).name}.'
+            if not chain_id or chain_id == self.chains.eth.chain_id
+            else f'{self.chains.get_chain_by_id(chain_id).name}.'
         )
-        return f'{network}{cls.API_DOMAIN}'
+        return f'{network}{self.API_DOMAIN}'
 
-    @classmethod
     def _api_path_builder(
-        cls, path: str, endpoint: str, chain_id: Optional[str] = None
+        self, path: str, endpoint: str, chain_id: Optional[str] = None
     ) -> str:
-        domain = cls._api_domain_builder(chain_id)
-        return f'https://{domain}/{path}/v{cls.TRADING_API_VERSION}/{endpoint}'
+        domain = self._api_domain_builder(chain_id)
+        return f'https://{domain}/{path}/v{self.TRADING_API_VERSION}/{endpoint}'
 
     async def _get_response(self, url: str, params: Optional[dict] = None) -> dict:
         async with self.aiohttp_session.get(
@@ -254,7 +267,6 @@ class ZeroXProviderV1(BaseProvider):
         logger.debug(f'Proxing url {url} with params {query}')
         return await self._get_response(url, params=query)
 
-    @cached(ttl=30, **get_cache_config())
     async def get_swap_price(
         self,
         buy_token: str,

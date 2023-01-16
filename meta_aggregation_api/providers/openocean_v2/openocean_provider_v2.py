@@ -1,14 +1,13 @@
 import asyncio
 import ssl
+from _decimal import Decimal
 from pathlib import Path
 from typing import Optional, Union
 
 import ujson
-from _decimal import Decimal
 from aiohttp import ClientResponse, ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
 
-from meta_aggregation_api.config import config
 from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
@@ -67,10 +66,10 @@ class OpenOceanProviderV2(BaseProvider):
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
     ):
-        if buy_token.lower() == config.NATIVE_TOKEN_ADDRESS:
+        if buy_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             buy_token = '0x0000000000000000000000000000000000000000'
 
-        if sell_token.lower() == config.NATIVE_TOKEN_ADDRESS:
+        if sell_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             sell_token = '0x0000000000000000000000000000000000000000'
 
         url = '%s/%s/quote' % (self.TRADING_API, chain_id)
@@ -114,10 +113,10 @@ class OpenOceanProviderV2(BaseProvider):
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
     ) -> ProviderQuoteResponse:
-        if buy_token.lower() == config.NATIVE_TOKEN_ADDRESS:
+        if buy_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             buy_token = '0x0000000000000000000000000000000000000000'
 
-        if sell_token.lower() == config.NATIVE_TOKEN_ADDRESS:
+        if sell_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             sell_token = '0x0000000000000000000000000000000000000000'
 
         url = '%s/%s/swap' % (self.TRADING_API, chain_id)
@@ -163,7 +162,7 @@ class OpenOceanProviderV2(BaseProvider):
             response['outToken']['decimals']
         )
         price = buy_amount / sell_amount
-        if response['inToken']['address'] == config.NATIVE_TOKEN_ADDRESS:
+        if response['inToken']['address'] == self.config.NATIVE_TOKEN_ADDRESS:
             value = response['inAmount']
         try:
             return ProviderPriceResponse(

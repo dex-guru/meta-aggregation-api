@@ -2,9 +2,11 @@ import asyncio
 from abc import abstractmethod
 from typing import Optional
 
-from aiohttp import ClientSession, ServerDisconnectedError
+import aiohttp
 from pydantic import ValidationError
 
+from meta_aggregation_api.clients.apm_client import ApmClient
+from meta_aggregation_api.config import Config
 from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
@@ -18,17 +20,19 @@ from meta_aggregation_api.utils.logger import capture_exception
 
 
 class BaseProvider:
-    aiohttp_session: ClientSession
     PROVIDER_NAME = 'base_provider'
     REQUEST_TIMEOUT = 7
 
-    def __init__(self, aiohttp_session: Optional[ClientSession] = None):
-        if not aiohttp_session:
-            from meta_aggregation_api.utils.httputils import CLIENT_SESSION
-
-            self.aiohttp_session = CLIENT_SESSION
-        else:
-            self.aiohttp_session = aiohttp_session
+    def __init__(
+        self,
+        session: aiohttp.ClientSession,
+        config: Config,
+        apm_client: ApmClient,
+        **_,
+    ):
+        self.apm_client = apm_client
+        self.aiohttp_session = session
+        self.config = config
 
     @abstractmethod
     async def get_swap_quote(
@@ -96,10 +100,12 @@ class BaseProvider:
     def handle_exception(
         self, exception: Exception, **kwargs
     ) -> BaseAggregationProviderError:
-        capture_exception()
+        capture_exception(self.apm_client)
         if isinstance(exception, (KeyError, ValidationError)):
             exc = ParseResponseError(self.PROVIDER_NAME, str(exception), **kwargs)
             return exc
-        if isinstance(exception, (ServerDisconnectedError, asyncio.TimeoutError)):
+        if isinstance(
+            exception, (aiohttp.ServerDisconnectedError, asyncio.TimeoutError)
+        ):
             exc = ProviderTimeoutError(self.PROVIDER_NAME, str(exception), **kwargs)
             return exc

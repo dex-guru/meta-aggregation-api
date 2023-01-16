@@ -1,11 +1,10 @@
 from contextvars import ContextVar
 from logging import LoggerAdapter, getLogger
-from logging.config import dictConfig
 from typing import Optional, Tuple
 from uuid import uuid4
 
-from meta_aggregation_api.clients.apm_client import apm_client
-from meta_aggregation_api.config import config
+from meta_aggregation_api.clients.apm_client import ApmClient
+from meta_aggregation_api.config import Config
 
 CORRELATION_ID = "cid"
 SESSION_ID = "sid"
@@ -18,40 +17,43 @@ ERR_TYPE = "err_type"  # error type log argument
 #   and never changed.
 EXTRA = "extra"
 
-CONFIG = dict(
-    # See: <https://docs.python.org/3.7/library/logging.config.html#logging.config.fileConfig>
-    # and find `disable_existing_loggers`, it's same configuration parameter as for dictConfig function.
-    disable_existing_loggers=False,
-    version=1,
-    formatters={
-        'simple': {
-            'format': '%(asctime)s - %(filename)s:%(lineno)s:%(funcName)s - %(levelname)s - %(message)s'
+
+def config(meta_agg_api_config: Config):
+    return dict(
+        # See: <https://docs.python.org/3.7/library/logging.config.html#logging.config.fileConfig>
+        # and find `disable_existing_loggers`, it's same configuration parameter as for dictConfig function.
+        disable_existing_loggers=False,
+        version=1,
+        formatters={
+            'simple': {
+                'format': '%(asctime)s - %(filename)s:%(lineno)s:%(funcName)s - %(levelname)s - %(message)s'
+            },
+            'logstash': {'()': 'logstash_formatter.LogstashFormatterV1'},
         },
-        'logstash': {'()': 'logstash_formatter.LogstashFormatterV1'},
-    },
-    handlers={
-        'console': {
-            'class': 'logging.StreamHandler',
-            'level': config.LOGGING_LEVEL,
-            'formatter': 'simple',
-            'stream': 'ext://sys.stdout',
+        handlers={
+            'console': {
+                'class': 'logging.StreamHandler',
+                'level': meta_agg_api_config.LOGGING_LEVEL,
+                'formatter': 'simple',
+                'stream': 'ext://sys.stdout',
+            },
+            'logstash': {
+                'level': meta_agg_api_config.LOGSTASH_LOGGING_LEVEL,
+                'class': 'logstash_async.handler.AsynchronousLogstashHandler',
+                'transport': 'logstash_async.transport.TcpTransport',
+                'formatter': 'logstash',
+                'host': meta_agg_api_config.LOGSTASH,
+                'port': meta_agg_api_config.PORT,
+                'database_path': None,
+                'event_ttl': 30,  # sec
+            },
         },
-        'logstash': {
-            'level': config.LOGSTASH_LOGGING_LEVEL,
-            'class': 'logstash_async.handler.AsynchronousLogstashHandler',
-            'transport': 'logstash_async.transport.TcpTransport',
-            'formatter': 'logstash',
-            'host': config.LOGSTASH,
-            'port': config.PORT,
-            'database_path': None,
-            'event_ttl': 30,  # sec
+        root={
+            'handlers': meta_agg_api_config.LOG_HANDLERS,
+            'level': meta_agg_api_config.LOGGING_LEVEL,
         },
-    },
-    root={
-        'handlers': config.LOG_HANDLERS,
-        'level': config.LOGGING_LEVEL,
-    },
-)
+    )
+
 
 correlation_id = ContextVar(CORRELATION_ID, default=uuid4().hex)
 session_id = ContextVar(SESSION_ID, default=None)
@@ -111,8 +113,6 @@ class LogArgs:
 def get_logger(
     name: str, extra: Optional[dict] = None, corr_id: Optional[str] = None
 ) -> "CustomContextLogger":
-    dictConfig(CONFIG)
-
     extra = extra or {}
 
     if corr_id:
@@ -134,10 +134,14 @@ def set_session_id(sid: str):
     session_id.set(sid)
 
 
-def capture_exception(exc_info: Optional[Tuple] = None) -> Optional[int]:
+def capture_exception(
+    apm_client: ApmClient,
+    exc_info: Optional[Tuple] = None,
+) -> Optional[int]:
     """Capture exception in APM.
 
     Args:
+        apm_client: APM client.
         exc_info: Optional[tuple]: A (type, value, traceback) tuple as returned by sys.exc_info().
                 If not provided, it will be captured automatically,
                 if capture_message() was called in an except block.

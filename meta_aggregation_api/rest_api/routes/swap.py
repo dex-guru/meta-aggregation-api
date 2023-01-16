@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-from aiocache import cached
 from fastapi import APIRouter, Depends, Path, Query
 from fastapi.security import HTTPBearer
 from pydantic import conint
@@ -10,12 +9,7 @@ from meta_aggregation_api.models.meta_agg_models import (
     MetaPriceModel,
     ProviderQuoteResponse,
 )
-from meta_aggregation_api.services.meta_aggregation_service import (
-    get_meta_swap_quote,
-    get_provider_price,
-    get_swap_meta_price,
-)
-from meta_aggregation_api.utils.cache import get_cache_config
+from meta_aggregation_api.rest_api import dependencies
 from meta_aggregation_api.utils.common import address_to_lower
 from meta_aggregation_api.utils.errors import responses
 
@@ -27,7 +21,6 @@ swap_route = APIRouter()
 @swap_route.get(
     '/{chain_id}/price/', response_model=MetaPriceModel, include_in_schema=False
 )
-@cached(ttl=PRICE_CACHE_TTL_SEC, **get_cache_config())
 async def get_swap_price(
     buy_token: address_to_lower = Query(..., alias='buyToken'),
     sell_token: address_to_lower = Query(..., alias='sellToken'),
@@ -45,6 +38,9 @@ async def get_swap_price(
         None, alias='buyTokenPercentageFee'
     ),
     provider: Optional[str] = Query(None, alias='provider'),
+    meta_aggregation_service: dependencies.MetaAggregationService = Depends(
+        dependencies.meta_aggregation_service
+    ),
 ) -> MetaPriceModel:
     """
     Price endpoints are used to get the best price for a swap. It does not return data for swap and therefore
@@ -73,10 +69,12 @@ async def get_swap_price(
         "buy_token_percentage_fee": buy_token_percentage_fee,
     }
     if provider:
-        res = await get_provider_price(provider=provider, **params)
+        res = await meta_aggregation_service.get_provider_price(
+            provider=provider, **params
+        )
         return res
     else:
-        res = await get_swap_meta_price(**params)
+        res = await meta_aggregation_service.get_swap_meta_price(**params)
     return next((quote for quote in res if quote.is_best), None)
 
 
@@ -88,7 +86,6 @@ async def get_swap_price(
     include_in_schema=False,
     response_model=List[MetaPriceModel],
 )
-@cached(ttl=PRICE_CACHE_TTL_SEC, **get_cache_config())
 async def get_all_swap_prices(
     buy_token: address_to_lower = Query(..., alias='buyToken'),
     sell_token: address_to_lower = Query(..., alias='sellToken'),
@@ -102,6 +99,9 @@ async def get_all_swap_prices(
     fee_recipient: Optional[address_to_lower] = Query(None, alias='feeRecipient'),
     buy_token_percentage_fee: Optional[float] = Query(
         None, alias='buyTokenPercentageFee'
+    ),
+    meta_aggregation_service: dependencies.MetaAggregationService = Depends(
+        dependencies.meta_aggregation_service
     ),
 ) -> List[MetaPriceModel]:
     """
@@ -117,19 +117,17 @@ async def get_all_swap_prices(
     - **fee_recipient**: Address of the fee recipient (optional)
     - **buy_token_percentage_fee**: Percentage of the buy token fee (optional) (0.01 = 1%)
     """
-    params = {
-        "buy_token": buy_token,
-        "sell_token": sell_token,
-        "sell_amount": sell_amount,
-        "chain_id": chain_id,
-        "gas_price": gas_price,
-        "slippage_percentage": slippage_percentage,
-        "taker_address": taker_address,
-        "fee_recipient": fee_recipient,
-        "buy_token_percentage_fee": buy_token_percentage_fee,
-    }
-
-    res = await get_swap_meta_price(**params)
+    res = await meta_aggregation_service.get_swap_meta_price(
+        buy_token=buy_token,
+        sell_token=sell_token,
+        sell_amount=sell_amount,
+        chain_id=chain_id,
+        gas_price=gas_price,
+        slippage_percentage=slippage_percentage,
+        taker_address=taker_address,
+        fee_recipient=fee_recipient,
+        buy_token_percentage_fee=buy_token_percentage_fee,
+    )
     return res
 
 
@@ -161,6 +159,9 @@ async def get_swap_quote(
     buy_token_percentage_fee: Optional[float] = Query(
         None, alias='buyTokenPercentageFee'
     ),
+    meta_aggregation_service: dependencies.MetaAggregationService = Depends(
+        dependencies.meta_aggregation_service
+    ),
 ) -> ProviderQuoteResponse:
     """
     Returns a data for swap from a specific provider.
@@ -177,7 +178,7 @@ async def get_swap_quote(
     - **buy_token_percentage_fee**: Percentage of the buy token fee (optional) (0.01 = 1%)
     """
     authorize.jwt_required()
-    quote = await get_meta_swap_quote(
+    quote = await meta_aggregation_service.get_meta_swap_quote(
         buy_token=buy_token,
         sell_token=sell_token,
         sell_amount=sell_amount,

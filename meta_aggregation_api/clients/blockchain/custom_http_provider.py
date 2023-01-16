@@ -15,7 +15,7 @@ from urllib3 import Retry
 from web3 import AsyncHTTPProvider, HTTPProvider
 from web3.types import RPCEndpoint, RPCResponse
 
-from meta_aggregation_api.config import config
+from meta_aggregation_api.config import Config
 from meta_aggregation_api.utils.logger import LogArgs, get_logger
 
 _logger = get_logger(__name__)
@@ -93,7 +93,11 @@ async def _get_async_session(endpoint_uri: URI) -> ClientSession:
 
 
 def _make_post_request(
-    endpoint_uri: URI, data: bytes, *args: Any, **kwargs: Any
+    endpoint_uri: URI,
+    data: bytes,
+    config: Config,
+    *args: Any,
+    **kwargs: Any,
 ) -> bytes:
     kwargs.setdefault("timeout", config.WEB3_TIMEOUT)
     session = _get_session(endpoint_uri)
@@ -104,7 +108,10 @@ def _make_post_request(
 
 
 async def _async_make_post_request(
-    endpoint_uri: URI, data: bytes, **kwargs: Any
+    endpoint_uri: URI,
+    data: bytes,
+    config: Config,
+    **kwargs: Any,
 ) -> bytes:
     kwargs.setdefault("timeout", config.WEB3_TIMEOUT)
     session = await _get_async_session(endpoint_uri)
@@ -114,6 +121,10 @@ async def _async_make_post_request(
 
 
 class CustomHTTPProvider(HTTPProvider):
+    def __init__(self, endpoint_uri: URI, config: Config, *args: Any, **kwargs: Any):
+        super().__init__(endpoint_uri, *args, **kwargs)
+        self.config = config
+
     def make_request(self, method: RPCEndpoint, params: Any) -> RPCResponse:
         self.logger.debug(
             "Making request HTTP. URI: %s, Method: %s", self.endpoint_uri, method
@@ -122,6 +133,7 @@ class CustomHTTPProvider(HTTPProvider):
         raw_response = _make_post_request(
             self.endpoint_uri,
             request_data,
+            self.config,
             **self.get_request_kwargs()
             # type: ignore # see to_dict decorator on the method
         )
@@ -136,6 +148,10 @@ class CustomHTTPProvider(HTTPProvider):
 
 
 class AsyncCustomHTTPProvider(AsyncHTTPProvider):
+    def __init__(self, endpoint_uri: URI, config: Config, *args: Any, **kwargs: Any):
+        super().__init__(endpoint_uri, *args, **kwargs)
+        self.config = config
+
     async def make_request(self, method: RPCEndpoint, params: Any) -> RPCResponse:
         self.logger.debug(
             "Making request HTTP. URI: %s, Method: %s", self.endpoint_uri, method
@@ -144,6 +160,7 @@ class AsyncCustomHTTPProvider(AsyncHTTPProvider):
         raw_response = await _async_make_post_request(
             self.endpoint_uri,
             request_data,
+            self.config,
             **self.get_request_kwargs(),
             # type: ignore # see to_dict decorator on the method
             ssl=ssl.SSLContext(),

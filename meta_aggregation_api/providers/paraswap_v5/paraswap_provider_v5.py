@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import re
 import ssl
 from decimal import Decimal
@@ -12,9 +11,7 @@ import yarl
 from aiocache import cached
 from aiohttp import ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
-from tenacity import before_log, retry, retry_if_exception_type, stop_after_attempt
 
-from meta_aggregation_api.config import config
 from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
@@ -46,8 +43,8 @@ PARASWAP_ERRORS = {
     'ERROR_GETTING_PRICES': PriceError,
     # ---- price_response errors
     'Unable to check price impact': PriceError,
-    'not enough \w+ balance': UserBalanceError,
-    'not enough \w+ allowance': AllowanceError,
+    r'not enough \w+ balance': UserBalanceError,
+    r'not enough \w+ allowance': AllowanceError,
     'It seems like your wallet doesn\'t contain enough': UserBalanceError,
     'Network Mismatch': ValidationFailedError,
     'Missing srcAmount': ValidationFailedError,
@@ -72,9 +69,15 @@ class ParaSwapProviderV5(BaseProvider):
     """
 
     MAIN_API_URL: yarl.URL = yarl.URL('https://apiv5.paraswap.io/')
-    PARTNER: str = config.PARTNER
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.get_swap_price = cached(
+            ttl=30, **get_cache_config(self.config), noself=True
+        )(self.get_swap_price)
 
     async def request(self, method: str, path: str, *args, **kwargs):
         request_function = getattr(self.aiohttp_session, method.lower())
@@ -98,7 +101,6 @@ class ParaSwapProviderV5(BaseProvider):
                 )
         return ujson.loads(data)
 
-    @cached(ttl=30, **get_cache_config())
     async def get_swap_price(
         self,
         buy_token: str,
@@ -119,7 +121,7 @@ class ParaSwapProviderV5(BaseProvider):
             'side': 'SELL',
             'network': chain_id,
             'otherExchangePrices': 'false',
-            'partner': self.PARTNER,
+            'partner': self.config.PARTNER,
         }
 
         try:
@@ -136,7 +138,7 @@ class ParaSwapProviderV5(BaseProvider):
             raise e
         response = self._convert_response_from_swap_price(quotes)
         response.gas_price = gas_price or 0
-        if sell_token.lower() == config.NATIVE_TOKEN_ADDRESS:
+        if sell_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             response.value = str(sell_amount)
         return response
 
@@ -160,7 +162,7 @@ class ParaSwapProviderV5(BaseProvider):
             'side': 'SELL',
             'network': chain_id,
             'otherExchangePrices': 'false',
-            'partner': self.PARTNER,
+            'partner': self.config.PARTNER,
         }
         if taker_address:
             params['userAddress'] = taker_address
@@ -187,7 +189,7 @@ class ParaSwapProviderV5(BaseProvider):
             'srcAmount': str(sell_amount),
             'priceRoute': price_route,
             'userAddress': taker_address,
-            'partner': self.PARTNER,
+            'partner': self.config.PARTNER,
             'srcDecimals': price_route['srcDecimals'],
             'destDecimals': price_route['destDecimals'],
         }
@@ -328,7 +330,8 @@ class ParaSwapProviderV5(BaseProvider):
             logger.warning(
                 f'potentially blacklist. %({LogArgs.token_idx})',
                 {
-                    LogArgs.token_idx: f"{kwargs.get('token_address')}-{kwargs.get('chain_id')}"
+                    LogArgs.token_idx: f"{kwargs.get('token_address')}"
+                    f"-{kwargs.get('chain_id')}"
                 },
                 extra={
                     'token_address': kwargs.get('token_address'),

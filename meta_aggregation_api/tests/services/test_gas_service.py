@@ -1,43 +1,37 @@
-from unittest.mock import AsyncMock, Mock, patch
+from unittest import mock
+from unittest.mock import Mock, patch
 
 import pytest
 
-from meta_aggregation_api.services.gas_service import get_gas_prices
+from meta_aggregation_api.services.gas_service import GasService
 
 
 @pytest.mark.asyncio()
-@patch(
-    'meta_aggregation_api.clients.blockchain.web3_client.Web3Client', new_callable=Mock
-)
-@patch(
-    'meta_aggregation_api.services.gas_service.get_gas_prices_eip1559',
-    new_callable=AsyncMock,
-)
-@patch(
-    'meta_aggregation_api.services.gas_service.get_gas_prices_legacy',
-    new_callable=AsyncMock,
-)
 async def test_get_gas_price_eip_chain(
-    get_legacy_gas_mock: AsyncMock, get_eip_gas_mock: AsyncMock, web3_mock: Mock
+    config,
+    gas_service: GasService,
 ):
-    await get_gas_prices(1)
-    get_eip_gas_mock.assert_awaited_once()
-    get_legacy_gas_mock.assert_not_awaited()
+    with (
+        mock.patch.object(gas_service, 'get_gas_prices_eip1559') as get_eip_gas_mock,
+        mock.patch.object(gas_service, 'get_gas_prices_legacy') as get_legacy_gas_mock,
+        mock.patch('meta_aggregation_api.clients.blockchain.web3_client.Web3Client'),
+    ):
+        await gas_service.get_gas_prices(1)
+        get_eip_gas_mock.assert_awaited_once()
+        get_legacy_gas_mock.assert_not_awaited()
 
 
 @pytest.mark.asyncio()
-@patch('meta_aggregation_api.services.gas_service.Web3Client', new_callable=Mock)
-@patch(
-    'meta_aggregation_api.services.gas_service.get_gas_prices_eip1559',
-    new_callable=AsyncMock,
-)
-@patch(
-    'meta_aggregation_api.services.gas_service.get_gas_prices_legacy',
-    new_callable=AsyncMock,
-)
+@patch('meta_aggregation_api.services.gas_service.Web3Client')
 async def test_get_gas_price_legacy_chain(
-    get_legacy_gas_mock: AsyncMock, get_eip_gas_mock: AsyncMock, web3_mock: Mock
+    web3_mock: Mock,
+    gas_service: GasService,
 ):
-    await get_gas_prices(56)
-    get_eip_gas_mock.assert_not_awaited()
-    get_legacy_gas_mock.assert_awaited_once()
+    assert not gas_service.get_gas_prices.cache._cache
+    with (
+        mock.patch.object(gas_service, 'get_gas_prices_eip1559') as get_eip_gas_mock,
+        mock.patch.object(gas_service, 'get_gas_prices_legacy') as get_legacy_gas_mock,
+    ):
+        await gas_service.get_gas_prices(56)
+        get_eip_gas_mock.assert_not_awaited()
+        get_legacy_gas_mock.assert_awaited_once()

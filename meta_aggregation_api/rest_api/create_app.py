@@ -1,3 +1,4 @@
+import aiohttp
 import pydantic
 from elasticapm.contrib.starlette import ElasticAPM
 from fastapi import FastAPI, Request, Response
@@ -6,21 +7,17 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth.exceptions import AuthJWTException
 
-from meta_aggregation_api.clients.apm_client import apm_client
-from meta_aggregation_api.config import Config, providers
+from meta_aggregation_api.clients.apm_client import ApmClient
+from meta_aggregation_api.config import Config
 from meta_aggregation_api.rest_api.middlewares import RouteLoggerMiddleware
 from meta_aggregation_api.rest_api.routes.gas import gas_routes
 from meta_aggregation_api.rest_api.routes.info import info_route
 from meta_aggregation_api.rest_api.routes.limit_orders import limit_orders
 from meta_aggregation_api.rest_api.routes.rpc import v1_rpc
 from meta_aggregation_api.rest_api.routes.swap import swap_route
-from meta_aggregation_api.services.chains import chains
 from meta_aggregation_api.utils.errors import BaseAggregationProviderError
-from meta_aggregation_api.utils.httputils import (
-    setup_client_session,
-    teardown_client_session,
-)
 from meta_aggregation_api.utils.logger import get_logger
+from . import dependencies
 
 logger = get_logger(__name__)
 
@@ -39,14 +36,45 @@ def create_app(config: Config):
         redoc_url='/docs',
         # openapi_tags=config.TAGS_METADATA
     )
-    # pass config object to application
-    app.config = config
 
-    register_cors(app)
+    apm_client = ApmClient(config)
+
+    # Setup and register dependencies.
+    aiohttp_session = aiohttp.ClientSession(trust_env=True)
+    chains = dependencies.ChainsConfig(
+        api_key=config.PUBLIC_KEY,
+        domain=config.PUBLIC_API_DOMAIN,
+    )
+    gas_service = dependencies.GasService(
+        config=config,
+        chains=chains,
+    )
+    providers = dependencies.ProvidersConfig()
+    deps = dependencies.Dependencies(
+        aiohttp_session=aiohttp_session,
+        config=config,
+        chains=chains,
+        gas_service=gas_service,
+        limit_orders_service=dependencies.LimitOrdersService(config=config),
+        meta_aggregation_service=dependencies.MetaAggregationService(
+            config=config,
+            gas_service=gas_service,
+            chains=chains,
+            providers=providers,
+            session=aiohttp_session,
+            apm_client=apm_client,
+        ),
+        providers=providers,
+    )
+    deps.register(app)
+
+    # Setup and register middlewares and routes.
+    register_cors(app, config)
     register_gzip(app)
     register_route(app)
     register_route_logging(app)
-    register_elastic_apm(app)
+    if config.APM_ENABLED:
+        register_elastic_apm(app, ApmClient(config))
 
     # Common RFC 5741 Exceptions handling, https://tools.ietf.org/html/rfc5741#section-2
     @app.exception_handler(Exception)
@@ -87,16 +115,11 @@ def create_app(config: Config):
 
     @app.on_event("startup")
     async def startup_event():
-        await setup_client_session()
         await chains.set_chains()
-        app.chains = chains
-        app.providers = providers
-
-        assert app.providers
 
     @app.on_event("shutdown")
     async def shutdown_event():
-        await teardown_client_session()
+        await aiohttp_session.close()
 
     @app.get("/health_check", include_in_schema=False)
     def health_check():
@@ -114,13 +137,13 @@ def create_app(config: Config):
     return app
 
 
-def register_cors(app: FastAPI):
+def register_cors(app: FastAPI, config: Config):
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=app.config.CORS_ORIGINS,
-        allow_credentials=app.config.CORS_CREDENTIALS,
-        allow_methods=app.config.CORS_METHODS,
-        allow_headers=app.config.CORS_HEADERS,
+        allow_origins=config.CORS_ORIGINS,
+        allow_credentials=config.CORS_CREDENTIALS,
+        allow_methods=config.CORS_METHODS,
+        allow_headers=config.CORS_HEADERS,
     )
 
 
@@ -132,10 +155,8 @@ def register_route_logging(app: FastAPI):
     app.add_middleware(RouteLoggerMiddleware)
 
 
-def register_elastic_apm(app: FastAPI):
-    app_config: Config = app.config
-    if app_config.APM_ENABLED:
-        app.add_middleware(ElasticAPM, client=apm_client.client)
+def register_elastic_apm(app: FastAPI, apm_client: ApmClient):
+    app.add_middleware(ElasticAPM, client=apm_client.client)
 
 
 def register_route(app: FastAPI):

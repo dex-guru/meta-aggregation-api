@@ -10,21 +10,21 @@ from meta_aggregation_api.providers.zerox_v1.zerox_provider import ZeroXProvider
 
 
 @pytest.fixture()
-def one_inch_provider(aiohttp_session):
-    from meta_aggregation_api.utils.httputils import CLIENT_SESSION
-
-    return OneInchProviderV5(CLIENT_SESSION)
-
-
-@pytest.fixture()
-def zerox_provider(aiohttp_session):
-    from meta_aggregation_api.utils.httputils import CLIENT_SESSION
-
-    return ZeroXProviderV1(CLIENT_SESSION)
+def one_inch_provider(aiohttp_session, config, apm_client):
+    return OneInchProviderV5(
+        session=aiohttp_session, config=config, apm_client=apm_client
+    )
 
 
 @pytest.fixture()
-def paraswap_provider(aiohttp_session):
-    from meta_aggregation_api.utils.httputils import CLIENT_SESSION
+def zerox_provider(aiohttp_session, config, chains, apm_client):
+    return ZeroXProviderV1(
+        session=aiohttp_session, config=config, chains=chains, apm_client=apm_client
+    )
 
-    return ParaSwapProviderV5(CLIENT_SESSION)
+
+@pytest.fixture()
+def paraswap_provider(aiohttp_session, config, apm_client):
+    return ParaSwapProviderV5(
+        session=aiohttp_session, config=config, apm_client=apm_client
+    )

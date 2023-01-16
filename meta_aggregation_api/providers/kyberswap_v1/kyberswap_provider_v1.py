@@ -3,20 +3,22 @@ import ssl
 from pathlib import Path
 from typing import Optional, Union
 
+import aiohttp
 import ujson
 from _decimal import Decimal
 from aiocache import cached
 from aiohttp import ClientResponse, ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
 
-from meta_aggregation_api.config import config
+from meta_aggregation_api.clients.apm_client import ApmClient
+from meta_aggregation_api.config import Config
 from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
 )
 from meta_aggregation_api.models.provider_response_models import SwapSources
 from meta_aggregation_api.providers.base_provider import BaseProvider
-from meta_aggregation_api.services.chains import chains
+from meta_aggregation_api.services.chains import ChainsConfig
 from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.errors import (
     AggregationProviderError,
@@ -46,6 +48,21 @@ class KyberSwapProviderV1(BaseProvider):
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
 
+    def __init__(
+        self,
+        session: aiohttp.ClientSession,
+        config: Config,
+        apm_client: ApmClient,
+        chains: ChainsConfig,
+        **_,
+    ):
+        super().__init__(session, config, apm_client)
+        self.chains = chains
+
+        self.get_swap_price = cached(
+            ttl=30, **get_cache_config(self.config), noself=True
+        )(self.get_swap_price)
+
     async def _get_response(self, url: str, params: Optional[dict] = None) -> dict:
         async with self.aiohttp_session.get(
             url,
@@ -73,7 +90,6 @@ class KyberSwapProviderV1(BaseProvider):
                 )
         return data
 
-    @cached(ttl=30, **get_cache_config())
     async def get_swap_price(
         self,
         buy_token: str,
@@ -143,15 +159,19 @@ class KyberSwapProviderV1(BaseProvider):
     ) -> ProviderQuoteResponse:
         sources = self._convert_sources_for_meta_aggregation(response['swaps'])
         value = '0'
-        if sell_token_address.lower() == config.NATIVE_TOKEN_ADDRESS:
+        if sell_token_address.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             value = response['inputAmount']
-            sell_token_decimals = chains.get_chain_by_id(chain_id).native_token.decimals
+            sell_token_decimals = self.chains.get_chain_by_id(
+                chain_id
+            ).native_token.decimals
         else:
             sell_token_decimals = response['tokens'][sell_token_address.lower()][
                 'decimals'
             ]
-        if buy_token_address.lower() == config.NATIVE_TOKEN_ADDRESS:
-            buy_token_decimals = chains.get_chain_by_id(chain_id).native_token.decimals
+        if buy_token_address.lower() == self.config.NATIVE_TOKEN_ADDRESS:
+            buy_token_decimals = self.chains.get_chain_by_id(
+                chain_id
+            ).native_token.decimals
         else:
             buy_token_decimals = response['tokens'][buy_token_address.lower()][
                 'decimals'
@@ -192,7 +212,7 @@ class KyberSwapProviderV1(BaseProvider):
             'tokenIn': sell_token,
             'tokenOut': buy_token,
             'amountIn': str(sell_amount),
-            'clientData': "{'source': '%s'}" % config.PARTNER,
+            'clientData': "{'source': '%s'}" % self.config.PARTNER,
         }
         if taker_address:
             params['to'] = taker_address
@@ -233,15 +253,19 @@ class KyberSwapProviderV1(BaseProvider):
     ) -> ProviderPriceResponse:
         sources = self._convert_sources_for_meta_aggregation(response['swaps'])
         value = '0'
-        if sell_token_address.lower() == config.NATIVE_TOKEN_ADDRESS:
+        if sell_token_address.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             value = response['inputAmount']
-            sell_token_decimals = chains.get_chain_by_id(chain_id).native_token.decimals
+            sell_token_decimals = self.chains.get_chain_by_id(
+                chain_id
+            ).native_token.decimals
         else:
             sell_token_decimals = response['tokens'][sell_token_address.lower()][
                 'decimals'
             ]
-        if buy_token_address.lower() == config.NATIVE_TOKEN_ADDRESS:
-            buy_token_decimals = chains.get_chain_by_id(chain_id).native_token.decimals
+        if buy_token_address.lower() == self.config.NATIVE_TOKEN_ADDRESS:
+            buy_token_decimals = self.chains.get_chain_by_id(
+                chain_id
+            ).native_token.decimals
         else:
             buy_token_decimals = response['tokens'][buy_token_address.lower()][
                 'decimals'

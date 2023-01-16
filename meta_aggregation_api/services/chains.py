@@ -1,19 +1,16 @@
 from dexguru_sdk import DexGuru
 from pydantic import HttpUrl
 
-from meta_aggregation_api.config import config
 from meta_aggregation_api.models.chain import ChainModel
-from meta_aggregation_api.utils.singleton import Singleton
 
 
-class ChainsConfig(metaclass=Singleton):
+class ChainsConfig:
     """
     All supported chains are defined here.
     Chain object contains name, chain_id, description and native_token.
     Native token is an object with address, name, symbol and decimals.
     Models defined in models/chain.py
     Usage:
-        from config import chains
         chain = chains.eth
         chain.chain_id
         # 1
@@ -42,6 +39,3 @@ class ChainsConfig(metaclass=Singleton):
 
     def __getattr__(self, item):
         return self.chains[item]
-
-
-chains = ChainsConfig(api_key=config.PUBLIC_KEY, domain=config.PUBLIC_API_DOMAIN)

@@ -4,10 +4,8 @@ from pathlib import Path
 
 import ujson
 
-from meta_aggregation_api.utils.singleton import Singleton
 
-
-class ProvidersConfig(metaclass=Singleton):
+class ProvidersConfig:
     def __init__(self) -> None:
         for path, _, files in os.walk(Path(__file__).parent.parent / 'providers'):
             for file in files:
@@ -93,6 +91,3 @@ class ProvidersConfig(metaclass=Singleton):
         return [
             {'chain_id': chain, **item} for chain, item in provider_on_chains.items()
         ]
-
-
-providers = ProvidersConfig()

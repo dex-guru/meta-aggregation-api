@@ -2,18 +2,18 @@ import asyncio
 import re
 import ssl
 from itertools import chain
-from logging import DEBUG as LOG_DEBUG
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
+import aiohttp
 import ujson
 from aiocache import cached
 from aiohttp import ClientResponse, ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
-from tenacity import before_log, retry, retry_if_exception_type, stop_after_attempt
 from yarl import URL
 
-from meta_aggregation_api.config import config
+from meta_aggregation_api.clients.apm_client import ApmClient
+from meta_aggregation_api.config import Config
 from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
@@ -79,6 +79,20 @@ class OneInchProviderV5(BaseProvider):
     TRADING_API_VERSION = 5.0
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
+
+    def __init__(
+        self,
+        *,
+        config: Config,
+        session: aiohttp.ClientSession,
+        apm_client: ApmClient,
+        **_,
+    ) -> None:
+        super().__init__(config=config, session=session, apm_client=apm_client)
+
+        self.get_swap_price = cached(
+            ttl=30, **get_cache_config(self.config), noself=True
+        )(self.get_swap_price)
 
     @classmethod
     def _limit_order_path_builder(
@@ -244,7 +258,6 @@ class OneInchProviderV5(BaseProvider):
             raise e
         return response
 
-    @cached(ttl=30, **get_cache_config())
     async def get_swap_price(
         self,
         buy_token: str,
@@ -290,7 +303,7 @@ class OneInchProviderV5(BaseProvider):
         )
         price = buy_amount / sell_amount
         value = '0'
-        if sell_token.lower() == config.NATIVE_TOKEN_ADDRESS:
+        if sell_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             value = str(sell_amount)
         try:
             sources = self.convert_sources_for_meta_aggregation(response['protocols'])
