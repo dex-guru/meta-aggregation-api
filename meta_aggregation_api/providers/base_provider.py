@@ -123,11 +123,9 @@ class BaseProvider:
         self, exception: Exception, **kwargs
     ) -> BaseAggregationProviderError:
         capture_exception()
-        if isinstance(exception, KeyError) or isinstance(exception, ValidationError):
+        if isinstance(exception, (KeyError, ValidationError)):
             exc = ParseResponseError(self.PROVIDER_NAME, str(exception), **kwargs)
             return exc
-        if isinstance(exception, ServerDisconnectedError) or isinstance(
-            exception, asyncio.TimeoutError
-        ):
+        if isinstance(exception, (ServerDisconnectedError, asyncio.TimeoutError)):
             exc = ProviderTimeoutError(self.PROVIDER_NAME, str(exception), **kwargs)
             return exc
