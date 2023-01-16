@@ -24,7 +24,7 @@ async def send_rpc(
     from meta_aggregation_api.utils.httputils import CLIENT_SESSION
     node = get_web3_url(chain_id)
     try:
-        async with CLIENT_SESSION.post(node, json=await request.json(),
+        async with CLIENT_SESSION.post(node, proxy=None, json=await request.json(),
                                        ssl=ssl.SSLContext()) as response:
             return await response.json()
     except ClientResponseError as e:
