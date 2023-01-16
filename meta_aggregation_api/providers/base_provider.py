@@ -93,32 +93,6 @@ class BaseProvider:
             A ProviderPriceResponse object with the price for the swap. Check return type for more info.
         """
 
-    async def post_limit_order(
-        self,
-        chain_id: Optional[int],
-        order_hash: str,
-        signature: str,
-        data: dict,
-    ):
-        raise NotImplementedError
-
-    async def get_orders_by_trader(
-        self,
-        chain_id: Optional[int],
-        trader: str,
-        maker_token: Optional[str] = None,
-        taker_token: Optional[str] = None,
-        statuses: Optional[list[str]] = None,
-    ) -> list[Optional[dict]]:
-        raise NotImplementedError
-
-    async def get_order_by_hash(
-        self,
-        chain_id: Optional[int],
-        order_hash: str,
-    ) -> Optional[dict[str, list[dict]]]:
-        raise NotImplementedError
-
     def handle_exception(
         self, exception: Exception, **kwargs
     ) -> BaseAggregationProviderError:
