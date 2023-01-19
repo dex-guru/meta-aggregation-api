@@ -191,8 +191,9 @@ class KyberSwapProviderV1(BaseProvider):
         if slippage_percentage:
             params['slippageTolerance'] = str(int(slippage_percentage * 10000))  # 0.1% == 10
         if buy_token_percentage_fee and fee_recipient:
+            params['chargeFeeBy'] = 'currency_out'
             params['feeReceiver'] = fee_recipient
-            params['isInBps'] = 0
+            params['isInBps'] = 1
             params['feeAmount'] = str(int(buy_token_percentage_fee * 10000))  # 0.1% == 10
 
         try:

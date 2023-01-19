@@ -1,7 +1,9 @@
 from typing import Optional, List
 
 from aiocache import cached
-from fastapi import APIRouter, Path, Query, Body
+from fastapi import APIRouter, Path, Query, Body, Depends
+from fastapi.security import HTTPBearer
+from fastapi_jwt_auth import AuthJWT
 
 from meta_aggregation_api.models.meta_agg_models import LimitOrderPostData
 from meta_aggregation_api.services.limit_orders import \
@@ -55,15 +57,18 @@ async def get_limit_order_by_order_hash(
     return response
 
 
-@limit_orders.post('/{chain_id}')
-@limit_orders.post('/{chain_id}/', include_in_schema=False)
+@limit_orders.post('/{chain_id}', dependencies=[Depends(HTTPBearer())])
+@limit_orders.post('/{chain_id}/', include_in_schema=False,
+                   dependencies=[Depends(HTTPBearer())])
 async def make_limit_order(
+    authorize: AuthJWT = Depends(),
     chain_id: int = Path(...),
     provider: Optional[str] = Query(..., description='e.g. zero_x, one_inch'),
     order_hash: str = Body(..., description='The hash of the order'),
     signature: str = Body(..., description='The signature of the order'),
     data: LimitOrderPostData = Body(..., description='The data of the order'),
 ):
+    authorize.jwt_required()
     response = await post_limit_order(
         chain_id=chain_id,
         provider=provider,
