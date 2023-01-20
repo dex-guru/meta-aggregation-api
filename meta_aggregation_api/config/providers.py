@@ -15,6 +15,8 @@ class ProvidersConfig(metaclass=Singleton):
                 if 'config.json' == file:
                     with open(Path(path, file)) as f:
                         provider_config = ujson.load(f)
+                        if not provider_config.get('enabled'):
+                            continue
                         self.__dict__[provider_config['name']] = provider_config
                         for spender in provider_config['spenders']:
                             self.__dict__[provider_config['name']][
@@ -64,6 +66,7 @@ class ProvidersConfig(metaclass=Singleton):
             for chain in provider.values():
                 if not isinstance(chain, dict):
                     continue
+
                 if chain.get('market_order'):
                     provider_on_chains[chain['chain_id']]['market_order'].append({
                         'display_name': provider['display_name'],

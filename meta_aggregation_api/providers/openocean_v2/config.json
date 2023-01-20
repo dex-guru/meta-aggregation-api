@@ -1,7 +1,7 @@
 {
   "name": "openocean",
   "display_name": "OpenOcean",
-  "enabled": true,
+  "enabled": false,
   "spenders": [
     {
       "chain_id": 1,
