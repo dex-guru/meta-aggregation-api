@@ -1,23 +1,27 @@
 import asyncio
 import ssl
-from _decimal import Decimal
 from pathlib import Path
 from typing import Optional, Union
 
 import ujson
+from _decimal import Decimal
 from aiocache import cached
 from aiohttp import ClientResponse, ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
 
 from meta_aggregation_api.config import config
-from meta_aggregation_api.models.meta_agg_models import (ProviderPriceResponse,
-                                                         ProviderQuoteResponse)
+from meta_aggregation_api.models.meta_agg_models import (
+    ProviderPriceResponse,
+    ProviderQuoteResponse,
+)
 from meta_aggregation_api.models.provider_response_models import SwapSources
 from meta_aggregation_api.providers.base_provider import BaseProvider
 from meta_aggregation_api.services.chains import chains
 from meta_aggregation_api.utils.cache import get_cache_config
-from meta_aggregation_api.utils.errors import (BaseAggregationProviderError,
-                                               AggregationProviderError)
+from meta_aggregation_api.utils.errors import (
+    AggregationProviderError,
+    BaseAggregationProviderError,
+)
 from meta_aggregation_api.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -44,8 +48,11 @@ class KyberSwapProviderV1(BaseProvider):
 
     async def _get_response(self, url: str, params: Optional[dict] = None) -> dict:
         async with self.aiohttp_session.get(
-            url, params=params, timeout=self.REQUEST_TIMEOUT, ssl=ssl.SSLContext(),
-            headers={'Accept-Version': self.VERSION}
+            url,
+            params=params,
+            timeout=self.REQUEST_TIMEOUT,
+            ssl=ssl.SSLContext(),
+            headers={'Accept-Version': self.VERSION},
         ) as response:
             response: ClientResponse
             logger.debug(f'Request GET {response.url}')
@@ -62,7 +69,7 @@ class KyberSwapProviderV1(BaseProvider):
                     status=status,
                     # Hack for error init method: expected str, but list and dict also works.
                     message=[data],
-                    headers=e.headers
+                    headers=e.headers,
                 )
         return data
 
@@ -108,7 +115,7 @@ class KyberSwapProviderV1(BaseProvider):
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         fee_recipient: Optional[str] = None,
-        buy_token_percentage_fee: Optional[float] = None
+        buy_token_percentage_fee: Optional[float] = None,
     ) -> ProviderQuoteResponse:
         if not taker_address:
             raise ValueError('Taker address is required')
@@ -123,8 +130,9 @@ class KyberSwapProviderV1(BaseProvider):
             fee_recipient=fee_recipient,
             buy_token_percentage_fee=buy_token_percentage_fee,
         )
-        return self._convert_response_from_swap_quote(response, sell_token,
-                                                      buy_token, chain_id)
+        return self._convert_response_from_swap_quote(
+            response, sell_token, buy_token, chain_id
+        )
 
     def _convert_response_from_swap_quote(
         self,
@@ -140,13 +148,16 @@ class KyberSwapProviderV1(BaseProvider):
             sell_token_decimals = chains.get_chain_by_id(chain_id).native_token.decimals
         else:
             sell_token_decimals = response['tokens'][sell_token_address.lower()][
-                'decimals']
+                'decimals'
+            ]
         if buy_token_address.lower() == config.NATIVE_TOKEN_ADDRESS:
             buy_token_decimals = chains.get_chain_by_id(chain_id).native_token.decimals
         else:
-            buy_token_decimals = response['tokens'][buy_token_address.lower()]['decimals']
-        sell_amount = Decimal(response['inputAmount']) / 10 ** sell_token_decimals
-        buy_amount = Decimal(response['outputAmount']) / 10 ** buy_token_decimals
+            buy_token_decimals = response['tokens'][buy_token_address.lower()][
+                'decimals'
+            ]
+        sell_amount = Decimal(response['inputAmount']) / 10**sell_token_decimals
+        buy_amount = Decimal(response['outputAmount']) / 10**buy_token_decimals
         price = buy_amount / sell_amount
         try:
             return ProviderQuoteResponse(
@@ -154,7 +165,7 @@ class KyberSwapProviderV1(BaseProvider):
                 buy_amount=response['outputAmount'],
                 gas=response['totalGas'],
                 sell_amount=response['inputAmount'],
-                gas_price=str(int(Decimal(response['gasPriceGwei']) * 10 ** 9)),
+                gas_price=str(int(Decimal(response['gasPriceGwei']) * 10**9)),
                 value=value,
                 price=price,
                 to=response['routerAddress'],
@@ -174,7 +185,7 @@ class KyberSwapProviderV1(BaseProvider):
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         fee_recipient: Optional[str] = None,
-        buy_token_percentage_fee: Optional[float] = None
+        buy_token_percentage_fee: Optional[float] = None,
     ):
         url = f'{self.TRADING_API}/{CHAIN_ID_TO_NETWORK[chain_id]}/route/encode'
         params = {
@@ -189,20 +200,27 @@ class KyberSwapProviderV1(BaseProvider):
             # KyberSwap has only one endpoint that require taker address
             params['to'] = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
         if slippage_percentage:
-            params['slippageTolerance'] = str(int(slippage_percentage * 10000))  # 0.1% == 10
+            params['slippageTolerance'] = str(
+                int(slippage_percentage * 10000)
+            )  # 0.1% == 10
         if buy_token_percentage_fee and fee_recipient:
             params['chargeFeeBy'] = 'currency_out'
             params['feeReceiver'] = fee_recipient
             params['isInBps'] = 1
-            params['feeAmount'] = str(int(buy_token_percentage_fee * 10000))  # 0.1% == 10
+            params['feeAmount'] = str(
+                int(buy_token_percentage_fee * 10000)
+            )  # 0.1% == 10
 
         try:
             response = await self._get_response(url, params)
         except (
-                ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError
+            ClientResponseError,
+            asyncio.TimeoutError,
+            ServerDisconnectedError,
         ) as e:
-            exc = self.handle_exception(e, params=params, token_address=sell_token,
-                                        chain_id=chain_id)
+            exc = self.handle_exception(
+                e, params=params, token_address=sell_token, chain_id=chain_id
+            )
             raise exc
         return response
 
@@ -220,14 +238,16 @@ class KyberSwapProviderV1(BaseProvider):
             sell_token_decimals = chains.get_chain_by_id(chain_id).native_token.decimals
         else:
             sell_token_decimals = response['tokens'][sell_token_address.lower()][
-                'decimals']
+                'decimals'
+            ]
         if buy_token_address.lower() == config.NATIVE_TOKEN_ADDRESS:
             buy_token_decimals = chains.get_chain_by_id(chain_id).native_token.decimals
         else:
             buy_token_decimals = response['tokens'][buy_token_address.lower()][
-                'decimals']
-        sell_amount = Decimal(response['inputAmount']) / 10 ** sell_token_decimals
-        buy_amount = Decimal(response['outputAmount']) / 10 ** buy_token_decimals
+                'decimals'
+            ]
+        sell_amount = Decimal(response['inputAmount']) / 10**sell_token_decimals
+        buy_amount = Decimal(response['outputAmount']) / 10**buy_token_decimals
         price = buy_amount / sell_amount
         try:
             return ProviderPriceResponse(
@@ -236,7 +256,7 @@ class KyberSwapProviderV1(BaseProvider):
                 buy_amount=response['outputAmount'],
                 gas=response['totalGas'],
                 sell_amount=response['inputAmount'],
-                gas_price=str(int(Decimal(response['gasPriceGwei']) * 10 ** 9)),
+                gas_price=str(int(Decimal(response['gasPriceGwei']) * 10**9)),
                 value=value,
                 price=price,
             )

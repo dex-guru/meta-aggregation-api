@@ -1,20 +1,24 @@
 import asyncio
 import ssl
-from _decimal import Decimal
 from pathlib import Path
 from typing import Optional, Union
 
 import ujson
+from _decimal import Decimal
 from aiohttp import ClientResponse, ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
 
 from meta_aggregation_api.config import config
-from meta_aggregation_api.models.meta_agg_models import (ProviderQuoteResponse,
-                                                         ProviderPriceResponse)
+from meta_aggregation_api.models.meta_agg_models import (
+    ProviderPriceResponse,
+    ProviderQuoteResponse,
+)
 from meta_aggregation_api.models.provider_response_models import SwapSources
 from meta_aggregation_api.providers.base_provider import BaseProvider
-from meta_aggregation_api.utils.errors import (BaseAggregationProviderError,
-                                               AggregationProviderError)
+from meta_aggregation_api.utils.errors import (
+    AggregationProviderError,
+    BaseAggregationProviderError,
+)
 from meta_aggregation_api.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,6 +26,7 @@ logger = get_logger(__name__)
 
 class OpenOceanProviderV2(BaseProvider):
     """https://docs.openocean.finance/dev/openocean-api-3.0/api-reference"""
+
     TRADING_API = 'https://ethapi.openocean.finance/v2'
 
     with open(Path(__file__).parent / 'config.json') as f:
@@ -46,7 +51,7 @@ class OpenOceanProviderV2(BaseProvider):
                     status=status,
                     # Hack for error init method: expected str, but list and dict also works.
                     message=[data],
-                    headers=e.headers
+                    headers=e.headers,
                 )
         return data
 
@@ -87,9 +92,13 @@ class OpenOceanProviderV2(BaseProvider):
         try:
             response = await self._get_response(url, params)
         except (
-            ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            exc = self.handle_exception(e, params=params, token_address=sell_token,
-                                        chain_id=chain_id)
+            ClientResponseError,
+            asyncio.TimeoutError,
+            ServerDisconnectedError,
+        ) as e:
+            exc = self.handle_exception(
+                e, params=params, token_address=sell_token, chain_id=chain_id
+            )
             raise exc
         return self._convert_response_from_swap_price(response, gas_price, url=url)
 
@@ -103,7 +112,7 @@ class OpenOceanProviderV2(BaseProvider):
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         fee_recipient: Optional[str] = None,
-        buy_token_percentage_fee: Optional[float] = None
+        buy_token_percentage_fee: Optional[float] = None,
     ) -> ProviderQuoteResponse:
         if buy_token.lower() == config.NATIVE_TOKEN_ADDRESS:
             buy_token = '0x0000000000000000000000000000000000000000'
@@ -129,9 +138,13 @@ class OpenOceanProviderV2(BaseProvider):
         try:
             response = await self._get_response(url, params)
         except (
-            ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            exc = self.handle_exception(e, params=params, token_address=sell_token,
-                                        chain_id=chain_id)
+            ClientResponseError,
+            asyncio.TimeoutError,
+            ServerDisconnectedError,
+        ) as e:
+            exc = self.handle_exception(
+                e, params=params, token_address=sell_token, chain_id=chain_id
+            )
             raise exc
         return self._convert_response_from_swap_quote(response)
 
@@ -143,8 +156,12 @@ class OpenOceanProviderV2(BaseProvider):
     ) -> ProviderPriceResponse:
         sources = self.convert_sources_for_meta_aggregation(response['path']['routes'])
         value = '0'
-        sell_amount = Decimal(response['inAmount']) / 10 ** Decimal(response['inToken']['decimals'])
-        buy_amount = Decimal(response['outAmount']) / 10 ** Decimal(response['outToken']['decimals'])
+        sell_amount = Decimal(response['inAmount']) / 10 ** Decimal(
+            response['inToken']['decimals']
+        )
+        buy_amount = Decimal(response['outAmount']) / 10 ** Decimal(
+            response['outToken']['decimals']
+        )
         price = buy_amount / sell_amount
         if response['inToken']['address'] == config.NATIVE_TOKEN_ADDRESS:
             value = response['inAmount']
@@ -160,14 +177,24 @@ class OpenOceanProviderV2(BaseProvider):
                 price=str(price),
             )
         except (KeyError, ValidationError) as e:
-            e = self.handle_exception(e, response=response,
-                                      method='_convert_response_from_swap_quote',
-                                      price=price, **kwargs)
+            e = self.handle_exception(
+                e,
+                response=response,
+                method='_convert_response_from_swap_quote',
+                price=price,
+                **kwargs,
+            )
             raise e
 
-    def _convert_response_from_swap_quote(self, response: dict) -> ProviderQuoteResponse:
-        sell_amount = Decimal(response['inAmount']) / 10 ** Decimal(response['inToken']['decimals'])
-        buy_amount = Decimal(response['outAmount']) / 10 ** Decimal(response['outToken']['decimals'])
+    def _convert_response_from_swap_quote(
+        self, response: dict
+    ) -> ProviderQuoteResponse:
+        sell_amount = Decimal(response['inAmount']) / 10 ** Decimal(
+            response['inToken']['decimals']
+        )
+        buy_amount = Decimal(response['outAmount']) / 10 ** Decimal(
+            response['outToken']['decimals']
+        )
         price = buy_amount / sell_amount
         try:
             return ProviderQuoteResponse(
@@ -182,8 +209,9 @@ class OpenOceanProviderV2(BaseProvider):
                 to=response['to'],
             )
         except (KeyError, ValidationError) as e:
-            e = self.handle_exception(e, response=response,
-                                      method='_convert_response_from_swap_quote')
+            e = self.handle_exception(
+                e, response=response, method='_convert_response_from_swap_quote'
+            )
             raise e
 
     @staticmethod
@@ -192,10 +220,12 @@ class OpenOceanProviderV2(BaseProvider):
         for source in sources:
             for route in source.get('subRoutes', []):
                 for dex in route.get('dexes', []):
-                    converted_sources.append(SwapSources(
-                        name=dex['dex'],
-                        proportion=dex['percentage'],
-                    ))
+                    converted_sources.append(
+                        SwapSources(
+                            name=dex['dex'],
+                            proportion=dex['percentage'],
+                        )
+                    )
         return converted_sources
 
     def handle_exception(
@@ -214,4 +244,3 @@ class OpenOceanProviderV2(BaseProvider):
             **kwargs,
         )
         return exc
-

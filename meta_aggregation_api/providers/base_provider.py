@@ -5,11 +5,15 @@ from typing import Optional
 from aiohttp import ClientSession, ServerDisconnectedError
 from pydantic import ValidationError
 
-from meta_aggregation_api.models.meta_agg_models import (ProviderQuoteResponse,
-                                                         ProviderPriceResponse)
-from meta_aggregation_api.utils.errors import (ParseResponseError,
-                                               BaseAggregationProviderError,
-                                               ProviderTimeoutError)
+from meta_aggregation_api.models.meta_agg_models import (
+    ProviderPriceResponse,
+    ProviderQuoteResponse,
+)
+from meta_aggregation_api.utils.errors import (
+    BaseAggregationProviderError,
+    ParseResponseError,
+    ProviderTimeoutError,
+)
 from meta_aggregation_api.utils.logger import capture_exception
 
 
@@ -21,6 +25,7 @@ class BaseProvider:
     def __init__(self, aiohttp_session: Optional[ClientSession] = None):
         if not aiohttp_session:
             from meta_aggregation_api.utils.httputils import CLIENT_SESSION
+
             self.aiohttp_session = CLIENT_SESSION
         else:
             self.aiohttp_session = aiohttp_session
@@ -36,7 +41,7 @@ class BaseProvider:
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         fee_recipient: Optional[str] = None,
-        buy_token_percentage_fee: Optional[float] = None
+        buy_token_percentage_fee: Optional[float] = None,
     ) -> ProviderQuoteResponse:
         """
         The get_swap_quote function is used to get the data for a swap from the provider.
@@ -87,6 +92,7 @@ class BaseProvider:
         Returns:
             A ProviderPriceResponse object with the price for the swap. Check return type for more info.
         """
+
     async def post_limit_order(
         self,
         chain_id: Optional[int],
@@ -113,13 +119,15 @@ class BaseProvider:
     ) -> Optional[dict[str, list[dict]]]:
         raise NotImplementedError
 
-    def handle_exception(self, exception: Exception,
-                         **kwargs) -> BaseAggregationProviderError:
+    def handle_exception(
+        self, exception: Exception, **kwargs
+    ) -> BaseAggregationProviderError:
         capture_exception()
         if isinstance(exception, KeyError) or isinstance(exception, ValidationError):
             exc = ParseResponseError(self.PROVIDER_NAME, str(exception), **kwargs)
             return exc
-        if isinstance(exception, ServerDisconnectedError) or isinstance(exception,
-                                                                        asyncio.TimeoutError):
+        if isinstance(exception, ServerDisconnectedError) or isinstance(
+            exception, asyncio.TimeoutError
+        ):
             exc = ProviderTimeoutError(self.PROVIDER_NAME, str(exception), **kwargs)
             return exc

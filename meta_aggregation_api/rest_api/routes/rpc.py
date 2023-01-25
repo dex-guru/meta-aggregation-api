@@ -1,7 +1,7 @@
 import ssl
 
 from aiohttp import ClientResponseError
-from fastapi import APIRouter, Path, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException, Path
 from fastapi.security import HTTPBearer
 from fastapi_jwt_auth import AuthJWT
 from starlette.requests import Request
@@ -26,10 +26,12 @@ async def send_rpc(
     """
     authorize.jwt_required()
     from meta_aggregation_api.utils.httputils import CLIENT_SESSION
+
     node = get_web3_url(chain_id)
     try:
-        async with CLIENT_SESSION.post(node, proxy=None, json=await request.json(),
-                                       ssl=ssl.SSLContext()) as response:
+        async with CLIENT_SESSION.post(
+            node, proxy=None, json=await request.json(), ssl=ssl.SSLContext()
+        ) as response:
             return await response.json()
     except ClientResponseError as e:
         raise HTTPException(status_code=e.status, detail=e.message)

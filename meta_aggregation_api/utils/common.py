@@ -21,5 +21,6 @@ def get_web3_url(chain_id: int):
     return urljoin(config.PUBLIC_API_DOMAIN, f'{chain_id}/{config.PUBLIC_KEY}')
 
 
-address_to_lower = constr(strip_whitespace=True, min_length=42, max_length=42,
-                          to_lower=True)
+address_to_lower = constr(
+    strip_whitespace=True, min_length=42, max_length=42, to_lower=True
+)

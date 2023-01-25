@@ -12,21 +12,27 @@ import yarl
 from aiocache import cached
 from aiohttp import ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
-from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
+from tenacity import before_log, retry, retry_if_exception_type, stop_after_attempt
 
 from meta_aggregation_api.config import config
-from meta_aggregation_api.models.meta_agg_models import (ProviderQuoteResponse,
-                                                         ProviderPriceResponse)
+from meta_aggregation_api.models.meta_agg_models import (
+    ProviderPriceResponse,
+    ProviderQuoteResponse,
+)
 from meta_aggregation_api.models.provider_response_models import SwapSources
 from meta_aggregation_api.providers.base_provider import BaseProvider
 from meta_aggregation_api.utils.cache import get_cache_config
-from meta_aggregation_api.utils.errors import (AggregationProviderError,
-                                               EstimationError,
-                                               UserBalanceError, TokensError,
-                                               PriceError,
-                                               AllowanceError, ValidationFailedError,
-                                               BaseAggregationProviderError)
-from meta_aggregation_api.utils.logger import get_logger, LogArgs
+from meta_aggregation_api.utils.errors import (
+    AggregationProviderError,
+    AllowanceError,
+    BaseAggregationProviderError,
+    EstimationError,
+    PriceError,
+    TokensError,
+    UserBalanceError,
+    ValidationFailedError,
+)
+from meta_aggregation_api.utils.logger import LogArgs, get_logger
 
 logger = get_logger(__name__)
 
@@ -64,6 +70,7 @@ class ParaSwapProviderV5(BaseProvider):
     Trading Provider for Paraswap v5 dex aggregator
     Docs: https://developers.paraswap.network/api/master
     """
+
     MAIN_API_URL: yarl.URL = yarl.URL('https://apiv5.paraswap.io/')
     PARTNER: str = config.PARTNER
     with open(Path(__file__).parent / 'config.json') as f:
@@ -72,8 +79,9 @@ class ParaSwapProviderV5(BaseProvider):
     async def request(self, method: str, path: str, *args, **kwargs):
         request_function = getattr(self.aiohttp_session, method.lower())
         url = self.MAIN_API_URL / path
-        async with request_function(url, *args, timeout=self.REQUEST_TIMEOUT, **kwargs,
-                                    ssl=ssl.SSLContext()) as response:
+        async with request_function(
+            url, *args, timeout=self.REQUEST_TIMEOUT, **kwargs, ssl=ssl.SSLContext()
+        ) as response:
             logger.debug("Request '%s' to '%s'", method, url)
             data = await response.text()
             try:
@@ -116,10 +124,15 @@ class ParaSwapProviderV5(BaseProvider):
 
         try:
             quotes = await self.request(method='get', path=path, params=params)
-        except (ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError,
-                Exception) as e:
-            e = self.handle_exception(e, method='get_swap_price', params=params,
-                                      chain_id=chain_id)
+        except (
+            ClientResponseError,
+            asyncio.TimeoutError,
+            ServerDisconnectedError,
+            Exception,
+        ) as e:
+            e = self.handle_exception(
+                e, method='get_swap_price', params=params, chain_id=chain_id
+            )
             raise e
         response = self._convert_response_from_swap_price(quotes)
         response.gas_price = gas_price or 0
@@ -154,9 +167,13 @@ class ParaSwapProviderV5(BaseProvider):
         try:
             response = await self.request(method='get', path='prices', params=params)
         except (
-            ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            e = self.handle_exception(e, method='get_swap_quote', params=params,
-                                      chain_id=chain_id)
+            ClientResponseError,
+            asyncio.TimeoutError,
+            ServerDisconnectedError,
+        ) as e:
+            e = self.handle_exception(
+                e, method='get_swap_quote', params=params, chain_id=chain_id
+            )
             raise e
 
         price_route = response['priceRoute']
@@ -177,11 +194,12 @@ class ParaSwapProviderV5(BaseProvider):
 
         if buy_token_percentage_fee:
             data['partnerFeeBps'] = int(
-                buy_token_percentage_fee * 10000)  # 100% -> 10000
+                buy_token_percentage_fee * 10000
+            )  # 100% -> 10000
         if slippage_percentage:
             data['slippage'] = int(slippage_percentage * 10000)  # 100% -> 10000
         else:
-            data['destAmount'] = str(price_route['destAmount']),
+            data['destAmount'] = (str(price_route['destAmount']),)
 
         if fee_recipient:
             data['partnerAddress'] = fee_recipient
@@ -194,9 +212,13 @@ class ParaSwapProviderV5(BaseProvider):
                 json=data,
             )
         except (
-            ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            e = self.handle_exception(e, response=response, data=data, params=params,
-                                      chain_id=chain_id)
+            ClientResponseError,
+            asyncio.TimeoutError,
+            ServerDisconnectedError,
+        ) as e:
+            e = self.handle_exception(
+                e, response=response, data=data, params=params, chain_id=chain_id
+            )
             raise e
         return self._convert_response_from_swap_quote(response, price_route)
 
@@ -207,7 +229,8 @@ class ParaSwapProviderV5(BaseProvider):
         **kwargs,
     ) -> Optional[ProviderQuoteResponse]:
         price = Decimal(price_response['destAmount']) / Decimal(
-            price_response['srcAmount'])
+            price_response['srcAmount']
+        )
         sources = self.convert_sources_for_meta_aggregation(price_response['bestRoute'])
         try:
             prepared_response = ProviderQuoteResponse(
@@ -222,19 +245,26 @@ class ParaSwapProviderV5(BaseProvider):
                 price=str(price),
             )
         except (KeyError, ValidationError) as e:
-            e = self.handle_exception(e, response=quote_response,
-                                      method='_convert_response_from_swap_quote',
-                                      price_response=price, **kwargs)
+            e = self.handle_exception(
+                e,
+                response=quote_response,
+                method='_convert_response_from_swap_quote',
+                price_response=price,
+                **kwargs,
+            )
             raise e
         return prepared_response
 
-    def _convert_response_from_swap_price(self, price_response: dict) -> Optional[
-        ProviderPriceResponse]:
+    def _convert_response_from_swap_price(
+        self, price_response: dict
+    ) -> Optional[ProviderPriceResponse]:
         price_response = price_response['priceRoute']
-        dst_amount = (Decimal(price_response['destAmount']) / 10 ** price_response[
-            'destDecimals'])
-        src_amount = (Decimal(price_response['srcAmount']) / 10 ** price_response[
-            'srcDecimals'])
+        dst_amount = (
+            Decimal(price_response['destAmount']) / 10 ** price_response['destDecimals']
+        )
+        src_amount = (
+            Decimal(price_response['srcAmount']) / 10 ** price_response['srcDecimals']
+        )
         price = dst_amount / src_amount
         sources = self.convert_sources_for_meta_aggregation(price_response['bestRoute'])
         try:
@@ -249,8 +279,9 @@ class ParaSwapProviderV5(BaseProvider):
                 price=str(price),
             )
         except (KeyError, ValidationError) as e:
-            e = self.handle_exception(e, response=price_response,
-                                      method='_convert_response_from_swap_price')
+            e = self.handle_exception(
+                e, response=price_response, method='_convert_response_from_swap_price'
+            )
             raise e
         else:
             return prepared_response
@@ -267,12 +298,13 @@ class ParaSwapProviderV5(BaseProvider):
         converted_sources = []
         for source in sources_list:
             converted_sources.append(
-                SwapSources(name=source['exchange'], proportion=source['percent']))
+                SwapSources(name=source['exchange'], proportion=source['percent'])
+            )
         return converted_sources
 
-    def handle_exception(self, exception: Union[
-        ClientResponseError, KeyError, ValidationError],
-                         **kwargs) -> BaseAggregationProviderError:
+    def handle_exception(
+        self, exception: Union[ClientResponseError, KeyError, ValidationError], **kwargs
+    ) -> BaseAggregationProviderError:
         """
         exception.message: '{'error': 'Not enough liquidity for this trade'}'
         """
@@ -296,9 +328,12 @@ class ParaSwapProviderV5(BaseProvider):
             logger.warning(
                 f'potentially blacklist. %({LogArgs.token_idx})',
                 {
-                    LogArgs.token_idx: f"{kwargs.get('token_address')}-{kwargs.get('chain_id')}"},
-                extra={'token_address': kwargs.get('token_address'),
-                       'chain_id': kwargs.get('chain_id')},
+                    LogArgs.token_idx: f"{kwargs.get('token_address')}-{kwargs.get('chain_id')}"
+                },
+                extra={
+                    'token_address': kwargs.get('token_address'),
+                    'chain_id': kwargs.get('chain_id'),
+                },
             )
         logger.warning(*exc.to_log_args(), extra=exc.to_dict())
         return exc

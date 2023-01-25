@@ -49,38 +49,42 @@ async def get_gas_prices_eip1559(w3: Web3Client) -> Optional[GasResponse]:
     fast_priority = int(mean(reward_fast))
     instant_priority = int(mean(reward_instant))
     overkill_priority = int(mean(reward_overkill))
-    return GasResponse.parse_obj({
-        'source': GAS_SOURCE,
-        'timestamp': int(time()),
-        'eip1559': {
-            'fast': {
-                'max_fee': base_fee + fast_priority,
-                'base_fee': base_fee,
-                'max_priority_fee': fast_priority,
+    return GasResponse.parse_obj(
+        {
+            'source': GAS_SOURCE,
+            'timestamp': int(time()),
+            'eip1559': {
+                'fast': {
+                    'max_fee': base_fee + fast_priority,
+                    'base_fee': base_fee,
+                    'max_priority_fee': fast_priority,
+                },
+                'instant': {
+                    'max_fee': base_fee + instant_priority,
+                    'base_fee': base_fee,
+                    'max_priority_fee': instant_priority,
+                },
+                'overkill': {
+                    'max_fee': base_fee + overkill_priority,
+                    'base_fee': base_fee,
+                    'max_priority_fee': overkill_priority,
+                },
             },
-            'instant': {
-                'max_fee': base_fee + instant_priority,
-                'base_fee': base_fee,
-                'max_priority_fee': instant_priority,
-            },
-            'overkill': {
-                'max_fee': base_fee + overkill_priority,
-                'base_fee': base_fee,
-                'max_priority_fee': overkill_priority,
-            }
         }
-    })
+    )
 
 
 @retry(retry=retry_if_exception_type(ReadTimeout), stop=3)
 async def get_gas_prices_legacy(w3: Web3Client) -> GasResponse:
     gas_price = await w3.w3.eth.gas_price
-    return GasResponse.parse_obj({
-        'source': GAS_SOURCE,
-        'timestamp': int(time()),
-        'legacy': {
-            'fast': gas_price,
-            'instant': gas_price,
-            'overkill': gas_price,
+    return GasResponse.parse_obj(
+        {
+            'source': GAS_SOURCE,
+            'timestamp': int(time()),
+            'legacy': {
+                'fast': gas_price,
+                'instant': gas_price,
+                'overkill': gas_price,
+            },
         }
-    })
+    )

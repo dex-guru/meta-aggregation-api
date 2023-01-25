@@ -8,7 +8,6 @@ from meta_aggregation_api.utils.singleton import Singleton
 
 
 class ProvidersConfig(metaclass=Singleton):
-
     def __init__(self) -> None:
         for path, _, files in os.walk(Path(__file__).parent.parent / 'providers'):
             for file in files:
@@ -20,7 +19,8 @@ class ProvidersConfig(metaclass=Singleton):
                         self.__dict__[provider_config['name']] = provider_config
                         for spender in provider_config['spenders']:
                             self.__dict__[provider_config['name']][
-                                spender['chain_id']] = spender
+                                spender['chain_id']
+                            ] = spender
                         self.__dict__[provider_config['name']].pop('spenders')
 
     def __iter__(self):
@@ -43,42 +43,53 @@ class ProvidersConfig(metaclass=Singleton):
         for provider in self.values():
             if chain_id in provider:
                 if provider[chain_id]['market_order']:
-                    providers_on_chain['market_order'].append({
-                        'display_name': provider['display_name'],
-                        'address': provider[chain_id]['market_order'],
-                        'name': provider['name'],
-                    })
+                    providers_on_chain['market_order'].append(
+                        {
+                            'display_name': provider['display_name'],
+                            'address': provider[chain_id]['market_order'],
+                            'name': provider['name'],
+                        }
+                    )
                 if provider[chain_id]['limit_order']:
-                    providers_on_chain['limit_order'].append({
-                        'display_name': provider['display_name'],
-                        'address': provider[chain_id]['limit_order'],
-                        'name': provider['name'],
-                    })
-        if not providers_on_chain['market_order'] and not providers_on_chain[
-            'limit_order']:
+                    providers_on_chain['limit_order'].append(
+                        {
+                            'display_name': provider['display_name'],
+                            'address': provider[chain_id]['limit_order'],
+                            'name': provider['name'],
+                        }
+                    )
+        if (
+            not providers_on_chain['market_order']
+            and not providers_on_chain['limit_order']
+        ):
             raise ValueError(f'Chain ID {chain_id} not found')
         return providers_on_chain
 
     def get_all_providers(self) -> list[dict]:
         provider_on_chains = defaultdict(
-            lambda: defaultdict(limit_order=[], market_order=[]))
+            lambda: defaultdict(limit_order=[], market_order=[])
+        )
         for provider in self.values():
             for chain in provider.values():
                 if not isinstance(chain, dict):
                     continue
 
                 if chain.get('market_order'):
-                    provider_on_chains[chain['chain_id']]['market_order'].append({
-                        'display_name': provider['display_name'],
-                        'address': chain['market_order'],
-                        'name': provider['name'],
-                    })
+                    provider_on_chains[chain['chain_id']]['market_order'].append(
+                        {
+                            'display_name': provider['display_name'],
+                            'address': chain['market_order'],
+                            'name': provider['name'],
+                        }
+                    )
                 if chain.get('limit_order'):
-                    provider_on_chains[chain['chain_id']]['limit_order'].append({
-                        'display_name': provider['display_name'],
-                        'address': chain['limit_order'],
-                        'name': provider['name'],
-                    })
+                    provider_on_chains[chain['chain_id']]['limit_order'].append(
+                        {
+                            'display_name': provider['display_name'],
+                            'address': chain['limit_order'],
+                            'name': provider['name'],
+                        }
+                    )
         return [
             {'chain_id': chain, **item} for chain, item in provider_on_chains.items()
         ]

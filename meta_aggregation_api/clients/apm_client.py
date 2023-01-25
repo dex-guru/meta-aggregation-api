@@ -3,11 +3,11 @@ from typing import Optional
 from elasticapm.base import Client
 from elasticapm.contrib.starlette import make_apm_client
 
-from meta_aggregation_api.config import config as cfg, Config
+from meta_aggregation_api.config import Config
+from meta_aggregation_api.config import config as cfg
 
 
 class ApmClient:
-
     def __init__(self, config: Config):
         self.client: Optional[Client] = None
         self._make_apm_client(config)

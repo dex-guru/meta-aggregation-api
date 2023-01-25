@@ -27,16 +27,14 @@ CONFIG = dict(
         'simple': {
             'format': '%(asctime)s - %(filename)s:%(lineno)s:%(funcName)s - %(levelname)s - %(message)s'
         },
-        'logstash': {
-            '()': 'logstash_formatter.LogstashFormatterV1'
-        }
+        'logstash': {'()': 'logstash_formatter.LogstashFormatterV1'},
     },
     handlers={
         'console': {
             'class': 'logging.StreamHandler',
             'level': config.LOGGING_LEVEL,
             'formatter': 'simple',
-            'stream': 'ext://sys.stdout'
+            'stream': 'ext://sys.stdout',
         },
         'logstash': {
             'level': config.LOGSTASH_LOGGING_LEVEL,
@@ -46,8 +44,8 @@ CONFIG = dict(
             'host': config.LOGSTASH,
             'port': config.PORT,
             'database_path': None,
-            'event_ttl': 30  # sec
-        }
+            'event_ttl': 30,  # sec
+        },
     },
     root={
         'handlers': config.LOG_HANDLERS,
@@ -60,7 +58,6 @@ session_id = ContextVar(SESSION_ID, default=None)
 
 
 class CustomContextLogger(LoggerAdapter):
-
     def __init__(self, logger, extra):
         super(CustomContextLogger, self).__init__(logger, extra)
 
@@ -97,7 +94,7 @@ class LogArgs:
     chain_id = "chain_id"  # blockchain identifier
     token = "token"  # ERC20Token details
     token_address = "token_address"
-    token_finances = "token_finances",  # token address to token finance map
+    token_finances = ("token_finances",)  # token address to token finance map
     token_finances_list = "token_finances_list"
     token_idx = "token_idx"
     msg = "msg"  # async message details
@@ -111,8 +108,9 @@ class LogArgs:
     aggregation_provider = "aggregation_provider"  # meta aggregation provider
 
 
-def get_logger(name: str, extra: Optional[dict] = None,
-               corr_id: Optional[str] = None) -> "CustomContextLogger":
+def get_logger(
+    name: str, extra: Optional[dict] = None, corr_id: Optional[str] = None
+) -> "CustomContextLogger":
     dictConfig(CONFIG)
 
     extra = extra or {}

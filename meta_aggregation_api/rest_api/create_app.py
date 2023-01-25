@@ -16,8 +16,10 @@ from meta_aggregation_api.rest_api.routes.rpc import v1_rpc
 from meta_aggregation_api.rest_api.routes.swap import swap_route
 from meta_aggregation_api.services.chains import chains
 from meta_aggregation_api.utils.errors import BaseAggregationProviderError
-from meta_aggregation_api.utils.httputils import (setup_client_session,
-                                                  teardown_client_session)
+from meta_aggregation_api.utils.httputils import (
+    setup_client_session,
+    teardown_client_session,
+)
 from meta_aggregation_api.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -26,11 +28,12 @@ logger = get_logger(__name__)
 def create_app(config: Config):
     app = FastAPI(
         title='DexGuru Trading API',
-        description=("""API serves as a DEX aggregators gateway and bargains finder (best quote) between assets and provides
+        description=(
+            """API serves as a DEX aggregators gateway and bargains finder (best quote) between assets and provides
             unified interface wrapping up differences between different aggregators.
             User request price, getting sorted list of quotes and bargain calcs,
             and can request a quote (with tx data included) for selected bargain."""
-                     ),
+        ),
         version=config.VERSION,
         docs_url='/',
         redoc_url='/docs',
@@ -52,10 +55,13 @@ def create_app(config: Config):
             "type": "Internal Server Error",
             "title": exc.__class__.__name__,
             "instance": f"{config.SERVER_HOST}{request.url.path}",
-            "detail": f"{exc.__class__.__name__} at {str(exc)} when executing {request.method} request"
+            "detail": f"{exc.__class__.__name__} at {str(exc)} when executing {request.method} request",
         }
-        logger.error("Exception when %s: %s", exception_dict["instance"],
-                     exception_dict["detail"])
+        logger.error(
+            "Exception when %s: %s",
+            exception_dict["instance"],
+            exception_dict["detail"],
+        )
         return JSONResponse(exception_dict, status_code=500)
 
     @app.exception_handler(pydantic.error_wrappers.ValidationError)
@@ -76,8 +82,7 @@ def create_app(config: Config):
     @app.exception_handler(AuthJWTException)
     def authjwt_exception_handler(request: Request, exc: AuthJWTException):
         return JSONResponse(
-            status_code=exc.status_code,
-            content={"detail": exc.message}
+            status_code=exc.status_code, content={"detail": exc.message}
         )
 
     @app.on_event("startup")
@@ -120,14 +125,11 @@ def register_cors(app: FastAPI):
 
 
 def register_gzip(app: FastAPI):
-    app.add_middleware(
-        GZipMiddleware,
-        minimum_size=1000)
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
 def register_route_logging(app: FastAPI):
-    app.add_middleware(
-        RouteLoggerMiddleware)
+    app.add_middleware(RouteLoggerMiddleware)
 
 
 def register_elastic_apm(app: FastAPI):

@@ -2,7 +2,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from meta_aggregation_api.config import config, providers
-from meta_aggregation_api.models.chain import TokenModel, ChainModel
+from meta_aggregation_api.models.chain import ChainModel, TokenModel
 from meta_aggregation_api.rest_api.create_app import create_app
 from meta_aggregation_api.services.chains import ChainsConfig
 from meta_aggregation_api.tests.fixtures import *  # noqa: F401, F403
@@ -22,7 +22,7 @@ async def chains_fixture():
                 decimals=18,
                 name='Wrapped Ether',
                 symbol='WETH',
-            )
+            ),
         ),
         'bsc': ChainModel(
             name='bsc',
@@ -34,7 +34,7 @@ async def chains_fixture():
                 decimals=18,
                 name='Wrapped BNB',
                 symbol='WBNB',
-            )
+            ),
         ),
     }
     return chains

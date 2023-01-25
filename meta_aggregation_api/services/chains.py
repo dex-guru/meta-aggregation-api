@@ -18,6 +18,7 @@ class ChainsConfig(metaclass=Singleton):
         chain.chain_id
         # 1
     """
+
     chains = {}
 
     def __init__(self, api_key: str, domain: HttpUrl):
@@ -29,8 +30,9 @@ class ChainsConfig(metaclass=Singleton):
             self.chains[chain.name.lower()] = ChainModel.parse_obj(chain.dict())
 
     def __contains__(self, item: str | int):
-        return item in self.chains.keys() or item in [chain.chain_id for chain in
-                                                      self.__dict__.values()]
+        return item in self.chains.keys() or item in [
+            chain.chain_id for chain in self.__dict__.values()
+        ]
 
     def get_chain_by_id(self, chain_id: int):
         for chain in self.chains.values():

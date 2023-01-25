@@ -1,5 +1,5 @@
 from aiocache import cached
-from fastapi import Path, Depends
+from fastapi import Depends, Path
 from fastapi.routing import APIRouter
 from fastapi.security import HTTPBearer
 from fastapi_jwt_auth import AuthJWT
@@ -12,15 +12,16 @@ GAS_CACHE_TTL_SEC = 5
 gas_routes = APIRouter()
 
 
-@gas_routes.get('/{chain_id}', response_model=GasResponse,
-                dependencies=[Depends(HTTPBearer())])
-@gas_routes.get('/{chain_id}/', include_in_schema=False,
-                dependencies=[Depends(HTTPBearer())])
+@gas_routes.get(
+    '/{chain_id}', response_model=GasResponse, dependencies=[Depends(HTTPBearer())]
+)
+@gas_routes.get(
+    '/{chain_id}/', include_in_schema=False, dependencies=[Depends(HTTPBearer())]
+)
 @cached(ttl=GAS_CACHE_TTL_SEC, **get_cache_config())
 async def get_prices(
     authorize: AuthJWT = Depends(),
     chain_id: int = Path(..., description='Chain ID'),
-
 ) -> GasResponse:
     """
     Returns the gas prices for a given chain.

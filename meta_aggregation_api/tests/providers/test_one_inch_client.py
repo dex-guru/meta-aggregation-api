@@ -4,9 +4,10 @@ import pytest
 from aiohttp import ClientResponseError, RequestInfo
 
 from meta_aggregation_api.models.meta_agg_models import ProviderQuoteResponse
-from meta_aggregation_api.providers.one_inch_v5.one_inch_provider import \
-    LIMIT_ORDER_VERSION
-from meta_aggregation_api.utils.errors import ParseResponseError, AllowanceError
+from meta_aggregation_api.providers.one_inch_v5.one_inch_provider import (
+    LIMIT_ORDER_VERSION,
+)
+from meta_aggregation_api.utils.errors import AllowanceError, ParseResponseError
 
 
 def test_build_limit_order_url(one_inch_provider):
@@ -20,12 +21,17 @@ def test_build_limit_order_url(one_inch_provider):
         path=path,
         chain_id=chain_id,
     )
-    assert str(url) == f'https://{one_inch_provider.LIMIT_ORDERS_DOMAIN}/v{version}/{chain_id}/limit-order/{path}/{endpoint}'
+    assert (
+        str(url)
+        == f'https://{one_inch_provider.LIMIT_ORDERS_DOMAIN}/v{version}/{chain_id}/limit-order/{path}/{endpoint}'
+    )
 
 
 @pytest.mark.asyncio()
-@patch('meta_aggregation_api.providers.one_inch_v5.OneInchProviderV5.get_response',
-       new_callable=AsyncMock)
+@patch(
+    'meta_aggregation_api.providers.one_inch_v5.OneInchProviderV5.get_response',
+    new_callable=AsyncMock,
+)
 async def test_get_orders_by_trader(get_response_mock: AsyncMock, one_inch_provider):
     get_response_mock.return_value = []
     trader = 'test_trader'
@@ -40,8 +46,9 @@ async def test_get_orders_by_trader(get_response_mock: AsyncMock, one_inch_provi
         'makerAsset': maker_token,
         'takerAsset': taker_token,
     }
-    url = one_inch_provider._limit_order_path_builder(LIMIT_ORDER_VERSION, path, trader,
-                                                      chain_id)
+    url = one_inch_provider._limit_order_path_builder(
+        LIMIT_ORDER_VERSION, path, trader, chain_id
+    )
     await one_inch_provider.get_orders_by_trader(
         chain_id=chain_id,
         trader=trader,
@@ -52,16 +59,19 @@ async def test_get_orders_by_trader(get_response_mock: AsyncMock, one_inch_provi
 
 
 @pytest.mark.asyncio()
-@patch('meta_aggregation_api.providers.one_inch_v5.OneInchProviderV5.get_response',
-       new_callable=AsyncMock)
+@patch(
+    'meta_aggregation_api.providers.one_inch_v5.OneInchProviderV5.get_response',
+    new_callable=AsyncMock,
+)
 async def test_get_order_by_hash(get_response_mock: AsyncMock, one_inch_provider):
     get_response_mock.return_value = []
     order_hash = 'test_order_hash'
     chain_id = 1
     path = 'events'
     query = None
-    url = one_inch_provider._limit_order_path_builder(LIMIT_ORDER_VERSION, path,
-                                                      order_hash, chain_id)
+    url = one_inch_provider._limit_order_path_builder(
+        LIMIT_ORDER_VERSION, path, order_hash, chain_id
+    )
     await one_inch_provider.get_order_by_hash(
         chain_id=chain_id,
         order_hash=order_hash,
@@ -92,8 +102,10 @@ async def test_get_swap_quote_raises(one_inch_provider):
 
 
 @pytest.mark.asyncio()
-@patch('meta_aggregation_api.providers.one_inch_v5.OneInchProviderV5.get_response',
-       new_callable=AsyncMock)
+@patch(
+    'meta_aggregation_api.providers.one_inch_v5.OneInchProviderV5.get_response',
+    new_callable=AsyncMock,
+)
 async def test_get_swap_quote(get_response_mock: AsyncMock, one_inch_provider):
     get_response_mock.return_value = {
         'toTokenAmount': 1,
@@ -154,8 +166,12 @@ def test_handle_exception_key_error(one_inch_provider, caplog):
 
 
 def test_handle_exception_client_response_error(one_inch_provider, caplog):
-    exc = one_inch_provider.handle_exception(ClientResponseError(
-        RequestInfo(url='abc', method='GET', headers=None), None,
-        message='not enough allowance'))
+    exc = one_inch_provider.handle_exception(
+        ClientResponseError(
+            RequestInfo(url='abc', method='GET', headers=None),
+            None,
+            message='not enough allowance',
+        )
+    )
     assert caplog.text
     assert isinstance(exc, AllowanceError)

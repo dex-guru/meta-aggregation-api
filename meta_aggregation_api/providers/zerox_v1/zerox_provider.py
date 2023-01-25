@@ -3,26 +3,31 @@ import logging
 import re
 import ssl
 from pathlib import Path
-from typing import Union, Optional, List
+from typing import List, Optional, Union
 
 import ujson
 from aiocache import cached
-from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
+from aiohttp import ClientResponse, ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
-from tenacity import retry, stop_after_attempt, retry_if_exception_type, before_log
+from tenacity import before_log, retry, retry_if_exception_type, stop_after_attempt
 
-from meta_aggregation_api.models.meta_agg_models import (ProviderQuoteResponse,
-                                                         SwapSources,
-                                                         ProviderPriceResponse)
+from meta_aggregation_api.models.meta_agg_models import (
+    ProviderPriceResponse,
+    ProviderQuoteResponse,
+    SwapSources,
+)
 from meta_aggregation_api.providers.base_provider import BaseProvider
 from meta_aggregation_api.services.chains import chains
 from meta_aggregation_api.utils.cache import get_cache_config
-from meta_aggregation_api.utils.errors import (AggregationProviderError,
-                                               UserBalanceError,
-                                               BaseAggregationProviderError,
-                                               TokensError,
-                                               InsufficientLiquidityError,
-                                               AllowanceError, EstimationError)
+from meta_aggregation_api.utils.errors import (
+    AggregationProviderError,
+    AllowanceError,
+    BaseAggregationProviderError,
+    EstimationError,
+    InsufficientLiquidityError,
+    TokensError,
+    UserBalanceError,
+)
 from meta_aggregation_api.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -43,6 +48,7 @@ ZERO_X_ERRORS = {
 
 class ZeroXProviderV1(BaseProvider):
     """Docs: https://0x.org/docs/api#introduction"""
+
     API_DOMAIN = 'api.0x.org'
     TRADING_API_VERSION = 1
     with open(Path(__file__).parent / 'config.json') as f:
@@ -50,15 +56,16 @@ class ZeroXProviderV1(BaseProvider):
 
     @classmethod
     def _api_domain_builder(cls, chain_id: int = None) -> str:
-        network = '' if not chain_id or chain_id == chains.eth.chain_id else f'{chains.get_chain_by_id(chain_id).name}.'
+        network = (
+            ''
+            if not chain_id or chain_id == chains.eth.chain_id
+            else f'{chains.get_chain_by_id(chain_id).name}.'
+        )
         return f'{network}{cls.API_DOMAIN}'
 
     @classmethod
     def _api_path_builder(
-        cls,
-        path: str,
-        endpoint: str,
-        chain_id: Optional[str] = None
+        cls, path: str, endpoint: str, chain_id: Optional[str] = None
     ) -> str:
         domain = cls._api_domain_builder(chain_id)
         return f'https://{domain}/{path}/v{cls.TRADING_API_VERSION}/{endpoint}'
@@ -82,13 +89,14 @@ class ZeroXProviderV1(BaseProvider):
                     status=status,
                     # Hack for error init method: expected str, but list and dict also works.
                     message=[data],
-                    headers=e.headers
+                    headers=e.headers,
                 )
 
         return data
 
-    def _convert_response_from_swap_quote(self, response: dict) -> Optional[
-        ProviderQuoteResponse]:
+    def _convert_response_from_swap_quote(
+        self, response: dict
+    ) -> Optional[ProviderQuoteResponse]:
         sources = self.convert_sources_for_meta_aggregation(response['sources'])
         try:
             prepared_response = ProviderQuoteResponse(
@@ -119,9 +127,14 @@ class ZeroXProviderV1(BaseProvider):
             if not float(source['proportion']):
                 continue
             if source.get('hops'):
-                converted_sources.extend([SwapSources(
-                    name=hop, proportion=float(source['proportion']) * 100
-                ) for hop in source['hops']])
+                converted_sources.extend(
+                    [
+                        SwapSources(
+                            name=hop, proportion=float(source['proportion']) * 100
+                        )
+                        for hop in source['hops']
+                    ]
+                )
                 continue
             converted_sources.append(
                 SwapSources(
@@ -132,8 +145,9 @@ class ZeroXProviderV1(BaseProvider):
             )
         return converted_sources
 
-    def _convert_response_from_swap_price(self, response: dict) -> Optional[
-        ProviderPriceResponse]:
+    def _convert_response_from_swap_price(
+        self, response: dict
+    ) -> Optional[ProviderPriceResponse]:
         try:
             sources = self.convert_sources_for_meta_aggregation(response['sources'])
             prepared_response = ProviderPriceResponse(
@@ -144,7 +158,7 @@ class ZeroXProviderV1(BaseProvider):
                 sell_amount=response['sellAmount'],
                 gas_price=response['gasPrice'],
                 value=response['value'],
-                price=response['price']
+                price=response['price'],
             )
         except (KeyError, ValidationError) as e:
             e = self.handle_exception(e, response=response)
@@ -200,9 +214,13 @@ class ZeroXProviderV1(BaseProvider):
         try:
             response = await self._get_response(url, params=query)
         except (
-            ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            e = self.handle_exception(e, query=query, method='get_swap_quote',
-                                      chain_id=chain_id)
+            ClientResponseError,
+            asyncio.TimeoutError,
+            ServerDisconnectedError,
+        ) as e:
+            e = self.handle_exception(
+                e, query=query, method='get_swap_quote', chain_id=chain_id
+            )
             raise e
         logger.info(f'Got price_response from 0x.org: {response}')
         return self._convert_response_from_swap_quote(response)
@@ -247,7 +265,7 @@ class ZeroXProviderV1(BaseProvider):
         slippage_percentage: Optional[float] = None,
         taker_address: Optional[str] = None,
         fee_recipient: Optional[str] = None,
-        buy_token_percentage_fee: Optional[float] = None
+        buy_token_percentage_fee: Optional[float] = None,
     ) -> Optional[ProviderPriceResponse]:
         """
         Docs: https://0x.org/docs/api#get-swapv1price
@@ -256,7 +274,7 @@ class ZeroXProviderV1(BaseProvider):
         query = {
             'buyToken': buy_token,
             'sellToken': sell_token,
-            'sellAmount': sell_amount
+            'sellAmount': sell_amount,
         }
 
         if gas_price:
@@ -277,15 +295,19 @@ class ZeroXProviderV1(BaseProvider):
         try:
             response = await self._get_response(url, params=query)
         except (
-            ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            e = self.handle_exception(e, query=query, method='get_swap_price',
-                                      chain_id=chain_id)
+            ClientResponseError,
+            asyncio.TimeoutError,
+            ServerDisconnectedError,
+        ) as e:
+            e = self.handle_exception(
+                e, query=query, method='get_swap_price', chain_id=chain_id
+            )
             raise e
         return self._convert_response_from_swap_price(response) if response else None
 
-    def handle_exception(self, exception: Union[
-        ClientResponseError, KeyError, ValidationError],
-                         **kwargs) -> BaseAggregationProviderError:
+    def handle_exception(
+        self, exception: Union[ClientResponseError, KeyError, ValidationError], **kwargs
+    ) -> BaseAggregationProviderError:
         """
         exception.message: [
             {
@@ -316,8 +338,9 @@ class ZeroXProviderV1(BaseProvider):
             logger.error(*exc.to_log_args(), extra=exc.to_dict())
             return exc
         msg = exception.message
-        if isinstance(exception.message, list) and isinstance(exception.message[0],
-                                                              dict):
+        if isinstance(exception.message, list) and isinstance(
+            exception.message[0], dict
+        ):
             msg = exception.message[0]
             if msg.get('validationErrors'):
                 msg = {msg['field']: msg['reason'] for msg in msg['validationErrors']}

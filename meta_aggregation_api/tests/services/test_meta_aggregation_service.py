@@ -1,18 +1,20 @@
 from decimal import Decimal
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from web3 import Web3
 
 from meta_aggregation_api.config import config, providers
 from meta_aggregation_api.models.meta_agg_models import ProviderPriceResponse
-from meta_aggregation_api.services.meta_aggregation_service import (get_token_allowance,
-                                                                    get_approve_cost,
-                                                                    get_approve_costs_per_provider,
-                                                                    get_swap_meta_price,
-                                                                    get_decimals_for_native_and_buy_token,
-                                                                    choose_best_provider,
-                                                                    get_meta_swap_quote)
+from meta_aggregation_api.services.meta_aggregation_service import (
+    choose_best_provider,
+    get_approve_cost,
+    get_approve_costs_per_provider,
+    get_decimals_for_native_and_buy_token,
+    get_meta_swap_quote,
+    get_swap_meta_price,
+    get_token_allowance,
+)
 from meta_aggregation_api.utils.errors import ProviderNotFound
 
 
@@ -57,7 +59,7 @@ async def test_get_token_allowance_for_native_token():
         erc20_contract=contract_mock,
     )
     allowance_mock.assert_not_called()
-    assert allowance == 2 ** 256 - 1
+    assert allowance == 2**256 - 1
 
 
 @pytest.mark.asyncio()
@@ -73,7 +75,7 @@ async def test_get_approve_cost():
     await get_approve_cost(owner_address, spender_address, contract_mock)
     approve_mock.assert_called_once_with(
         Web3.toChecksumAddress(spender_address),
-        2 ** 256 - 1,
+        2**256 - 1,
     )
     estimate_gas_mock.assert_called_once_with(
         {'from': Web3.toChecksumAddress(owner_address)},
@@ -88,15 +90,18 @@ async def test_get_approve_costs_per_provider(sell_amount: int, approve_called: 
     taker_address = '0x61e1A8041186CeB8a561F6F264e8B2BB2E20e06D'
     erc20_contract = Mock()
     allowance_patcher = patch(
-        'meta_aggregation_api.services.meta_aggregation_service.get_token_allowance')
+        'meta_aggregation_api.services.meta_aggregation_service.get_token_allowance'
+    )
     approve_patcher = patch(
-        'meta_aggregation_api.services.meta_aggregation_service.get_approve_cost')
+        'meta_aggregation_api.services.meta_aggregation_service.get_approve_cost'
+    )
     allowance_mock = allowance_patcher.start()
     approve_mock = approve_patcher.start()
     allowance_mock.return_value = 10
     providers_ = providers.get_providers_on_chain(chain_id)['market_order']
-    await get_approve_costs_per_provider(sell_token, erc20_contract, sell_amount,
-                                         providers_, taker_address)
+    await get_approve_costs_per_provider(
+        sell_token, erc20_contract, sell_amount, providers_, taker_address
+    )
     allowance_mock.assert_called()
     if approve_called:
         assert approve_mock.call_count == len(providers_)
@@ -111,19 +116,23 @@ async def test_get_approve_cost_per_provider_no_taker():
     taker_address = None
     sell_amount = 10000
     providers_ = providers.get_providers_on_chain(1)['market_order']
-    approves = await get_approve_costs_per_provider(sell_token, erc20_contract,
-                                                    sell_amount, providers_,
-                                                    taker_address)
+    approves = await get_approve_costs_per_provider(
+        sell_token, erc20_contract, sell_amount, providers_, taker_address
+    )
     assert erc20_contract.functions.approve.call_count == 0
     for approve in approves.values():
         assert approve == 0
 
 
 @pytest.mark.asyncio()
-@patch('meta_aggregation_api.providers.zerox_v1.ZeroXProviderV1.get_swap_price',
-       new_callable=AsyncMock)
-@patch('meta_aggregation_api.providers.one_inch_v5.OneInchProviderV5.get_swap_price',
-       new_callable=AsyncMock)
+@patch(
+    'meta_aggregation_api.providers.zerox_v1.ZeroXProviderV1.get_swap_price',
+    new_callable=AsyncMock,
+)
+@patch(
+    'meta_aggregation_api.providers.one_inch_v5.OneInchProviderV5.get_swap_price',
+    new_callable=AsyncMock,
+)
 async def test_get_swap_meta_price_no_price(
     one_inch_mock: AsyncMock,
     zerox_mock: AsyncMock,
@@ -133,28 +142,38 @@ async def test_get_swap_meta_price_no_price(
     zerox_mock.return_value = None
     one_inch_mock.return_value = None
     approve_patcher = patch(
-        'meta_aggregation_api.services.meta_aggregation_service.get_approve_costs_per_provider')
+        'meta_aggregation_api.services.meta_aggregation_service.get_approve_costs_per_provider'
+    )
     approve_patcher.start()
     test_str = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
     test_str_2 = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
     test_int = 10
     with pytest.raises(ValueError, match='No prices found'):
         await get_swap_meta_price(
-            test_str, test_str_2, test_int, test_int, test_int, test_int, test_str,
-            test_str, None)
+            test_str,
+            test_str_2,
+            test_int,
+            test_int,
+            test_int,
+            test_int,
+            test_str,
+            test_str,
+            None,
+        )
 
 
 @pytest.mark.asyncio()
 @patch(
     'meta_aggregation_api.services.meta_aggregation_service.DexGuru.get_token_inventory_by_address',
-    new_callable=AsyncMock)
+    new_callable=AsyncMock,
+)
 @pytest.mark.parametrize(
     'token_address, call_count',
     (
         ('test_token', 1),
         (config.NATIVE_TOKEN_ADDRESS, 0),
-        ('0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', 0)
-    )
+        ('0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', 0),
+    ),
 )
 async def test_get_decimals_for_native_and_buy_token_call_count(
     get_token_mock: AsyncMock,
@@ -174,7 +193,7 @@ async def test_get_decimals_for_native_and_buy_token_call_count(
         ((15, 1, 1, 0), (30, 1, 1, 10), 'provider_2'),
         ((20, 4, 2, 0), (10, 1, 1, 0), 'provider_1'),
         ((20, 600, 2, 0), (10, 1, 1, 0), 'provider_1'),
-    )
+    ),
 )
 def test_choose_best_provider(
     buy_amount_1__gas_1__gas_price_1__approve_cost_1,
@@ -184,8 +203,18 @@ def test_choose_best_provider(
     token_price_native = 1000
     provider_1 = 'provider_1'
     provider_2 = 'provider_2'
-    buy_amount_1, gas_1, gas_price_1, approve_cost_1 = buy_amount_1__gas_1__gas_price_1__approve_cost_1
-    buy_amount_2, gas_2, gas_price_2, approve_cost_2 = buy_amount_2__gas_2__gas_price_2__approve_cost_2
+    (
+        buy_amount_1,
+        gas_1,
+        gas_price_1,
+        approve_cost_1,
+    ) = buy_amount_1__gas_1__gas_price_1__approve_cost_1
+    (
+        buy_amount_2,
+        gas_2,
+        gas_price_2,
+        approve_cost_2,
+    ) = buy_amount_2__gas_2__gas_price_2__approve_cost_2
     quote_1 = ProviderPriceResponse(
         provider=provider_1,
         sources=[],
@@ -208,8 +237,13 @@ def test_choose_best_provider(
     )
     approve_costs = {provider_1: approve_cost_1, provider_2: approve_cost_2}
     quotes = {provider_1: quote_1, provider_2: quote_2}
-    res = choose_best_provider(quotes, approve_costs, native_decimals=1,
-                               buy_token_decimals=1, buy_token_price=token_price_native)
+    res = choose_best_provider(
+        quotes,
+        approve_costs,
+        native_decimals=1,
+        buy_token_decimals=1,
+        buy_token_price=token_price_native,
+    )
     assert res == (expected_provider, quotes[expected_provider])
 
 

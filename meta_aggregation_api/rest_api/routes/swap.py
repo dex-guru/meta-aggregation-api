@@ -1,16 +1,20 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from aiocache import cached
-from fastapi import APIRouter, Query, Path, Depends
+from fastapi import APIRouter, Depends, Path, Query
 from fastapi.security import HTTPBearer
 from pydantic import conint
 
 from meta_aggregation_api.config.auth import AuthJWT
-from meta_aggregation_api.models.meta_agg_models import MetaPriceModel
-from meta_aggregation_api.models.meta_agg_models import ProviderQuoteResponse
-from meta_aggregation_api.services.meta_aggregation_service import (get_swap_meta_price,
-                                                                    get_meta_swap_quote,
-                                                                    get_provider_price)
+from meta_aggregation_api.models.meta_agg_models import (
+    MetaPriceModel,
+    ProviderQuoteResponse,
+)
+from meta_aggregation_api.services.meta_aggregation_service import (
+    get_meta_swap_quote,
+    get_provider_price,
+    get_swap_meta_price,
+)
 from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.common import address_to_lower
 from meta_aggregation_api.utils.errors import responses
@@ -20,22 +24,26 @@ swap_route = APIRouter()
 
 
 @swap_route.get('/{chain_id}/price', response_model=MetaPriceModel, responses=responses)
-@swap_route.get('/{chain_id}/price/', response_model=MetaPriceModel,
-                include_in_schema=False)
+@swap_route.get(
+    '/{chain_id}/price/', response_model=MetaPriceModel, include_in_schema=False
+)
 @cached(ttl=PRICE_CACHE_TTL_SEC, **get_cache_config())
 async def get_swap_price(
     buy_token: address_to_lower = Query(..., alias='buyToken'),
     sell_token: address_to_lower = Query(..., alias='sellToken'),
     sell_amount: conint(gt=0) = Query(..., alias='sellAmount'),
     chain_id: int = Path(..., description='Chain ID'),
-    gas_price: Optional[int] = Query(None, description='Gas price', gt=0,
-                                     alias='gasPrice'),
-    slippage_percentage: Optional[float] = Query(0.005, gte=0,
-                                                 alias='slippagePercentage'),
+    gas_price: Optional[int] = Query(
+        None, description='Gas price', gt=0, alias='gasPrice'
+    ),
+    slippage_percentage: Optional[float] = Query(
+        0.005, gte=0, alias='slippagePercentage'
+    ),
     taker_address: Optional[address_to_lower] = Query(None, alias='takerAddress'),
     fee_recipient: Optional[address_to_lower] = Query(None, alias='feeRecipient'),
-    buy_token_percentage_fee: Optional[float] = Query(None,
-                                                      alias='buyTokenPercentageFee'),
+    buy_token_percentage_fee: Optional[float] = Query(
+        None, alias='buyTokenPercentageFee'
+    ),
     provider: Optional[str] = Query(None, alias='provider'),
 ) -> MetaPriceModel:
     """
@@ -72,23 +80,29 @@ async def get_swap_price(
     return next((quote for quote in res if quote.is_best), None)
 
 
-@swap_route.get('/{chain_id}/price/all', response_model=List[MetaPriceModel],
-                responses=responses)
-@swap_route.get('/{chain_id}/price/all/', include_in_schema=False,
-                response_model=List[MetaPriceModel])
+@swap_route.get(
+    '/{chain_id}/price/all', response_model=List[MetaPriceModel], responses=responses
+)
+@swap_route.get(
+    '/{chain_id}/price/all/',
+    include_in_schema=False,
+    response_model=List[MetaPriceModel],
+)
 @cached(ttl=PRICE_CACHE_TTL_SEC, **get_cache_config())
 async def get_all_swap_prices(
     buy_token: address_to_lower = Query(..., alias='buyToken'),
     sell_token: address_to_lower = Query(..., alias='sellToken'),
     sell_amount: conint(gt=0) = Query(..., alias='sellAmount'),
     chain_id: int = Path(..., description='Chain ID'),
-    gas_price: Optional[int] = Query(None, description='Gas price', gt=0,
-                                     alias='gasPrice'),
+    gas_price: Optional[int] = Query(
+        None, description='Gas price', gt=0, alias='gasPrice'
+    ),
     slippage_percentage: Optional[float] = Query(0.005, alias='slippagePercentage'),
     taker_address: Optional[address_to_lower] = Query(None, alias='takerAddress'),
     fee_recipient: Optional[address_to_lower] = Query(None, alias='feeRecipient'),
-    buy_token_percentage_fee: Optional[float] = Query(None,
-                                                      alias='buyTokenPercentageFee'),
+    buy_token_percentage_fee: Optional[float] = Query(
+        None, alias='buyTokenPercentageFee'
+    ),
 ) -> List[MetaPriceModel]:
     """
     Works the same as /price endpoint, but returns all prices from all supported providers.
@@ -119,10 +133,18 @@ async def get_all_swap_prices(
     return res
 
 
-@swap_route.get('/{chain_id}/quote', response_model=ProviderQuoteResponse,
-                responses=responses, dependencies=[Depends(HTTPBearer())])
-@swap_route.get('/{chain_id}/quote/', response_model=ProviderQuoteResponse,
-                include_in_schema=False, dependencies=[Depends(HTTPBearer())])
+@swap_route.get(
+    '/{chain_id}/quote',
+    response_model=ProviderQuoteResponse,
+    responses=responses,
+    dependencies=[Depends(HTTPBearer())],
+)
+@swap_route.get(
+    '/{chain_id}/quote/',
+    response_model=ProviderQuoteResponse,
+    include_in_schema=False,
+    dependencies=[Depends(HTTPBearer())],
+)
 async def get_swap_quote(
     authorize: AuthJWT = Depends(),
     buy_token: address_to_lower = Query(..., alias='buyToken'),
@@ -131,12 +153,14 @@ async def get_swap_quote(
     chain_id: int = Path(..., description='Chain ID'),
     provider: str = Query(..., alias='provider'),
     taker_address: address_to_lower = Query(..., alias='takerAddress'),
-    gas_price: Optional[int] = Query(None, description='Gas price', gt=0,
-                                     alias='gasPrice'),
+    gas_price: Optional[int] = Query(
+        None, description='Gas price', gt=0, alias='gasPrice'
+    ),
     slippage_percentage: Optional[float] = Query(0.005, alias='slippagePercentage'),
     fee_recipient: Optional[address_to_lower] = Query(None, alias='feeRecipient'),
-    buy_token_percentage_fee: Optional[float] = Query(None,
-                                                      alias='buyTokenPercentageFee'),
+    buy_token_percentage_fee: Optional[float] = Query(
+        None, alias='buyTokenPercentageFee'
+    ),
 ) -> ProviderQuoteResponse:
     """
     Returns a data for swap from a specific provider.

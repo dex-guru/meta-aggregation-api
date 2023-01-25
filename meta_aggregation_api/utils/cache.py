@@ -26,10 +26,10 @@ def key_from_args(func, *args, **kwargs):
         kwargs.pop('request')
     ordered_kwargs = sorted(kwargs.items())
     key = (
-            (func.__module__ or "")
-            + func.__name__
-            + str(filtered_args)
-            + str(ordered_kwargs)
+        (func.__module__ or "")
+        + func.__name__
+        + str(filtered_args)
+        + str(ordered_kwargs)
     )
     md5_hash = md5(key.encode()).digest()
     return md5_hash

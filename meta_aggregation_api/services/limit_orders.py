@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 
 from meta_aggregation_api.models.meta_agg_models import LimitOrderPostData
 from meta_aggregation_api.providers import all_providers
@@ -22,9 +22,12 @@ async def get_limit_orders_by_wallet_address(
     provider_instance = provider_class()
     logger.info(
         f'Getting limit orders by wallet address: {trader}',
-        extra={'provider': provider.__class__.__name__,
-               'trader': trader, 'maker_token': maker_token,
-               'taker_token': taker_token}
+        extra={
+            'provider': provider.__class__.__name__,
+            'trader': trader,
+            'maker_token': maker_token,
+            'taker_token': taker_token,
+        },
     )
     res = await provider_instance.get_orders_by_trader(
         chain_id=chain_id,
@@ -35,8 +38,11 @@ async def get_limit_orders_by_wallet_address(
     )
     logger.info(
         f'got {len(res)} limit orders by wallet address: {trader}',
-        extra={'wallet_address': trader, 'limit_orders_count': len(res),
-               'provider': provider.__class__.__name__},
+        extra={
+            'wallet_address': trader,
+            'limit_orders_count': len(res),
+            'provider': provider.__class__.__name__,
+        },
     )
     return res
 
@@ -50,9 +56,10 @@ async def get_limit_order_by_hash(
     if not provider_class:
         raise ProviderNotFound(provider)
     provider_instance = provider_class()
-    logger.info(f'Getting limit order by hash: {order_hash}',
-                extra={'provider': provider.__class__.__name__,
-                       'order_hash': order_hash})
+    logger.info(
+        f'Getting limit order by hash: {order_hash}',
+        extra={'provider': provider.__class__.__name__, 'order_hash': order_hash},
+    )
     res = await provider_instance.get_order_by_hash(
         chain_id=chain_id,
         order_hash=order_hash,
@@ -73,8 +80,7 @@ async def post_limit_order(
     provider_instance = provider_class()
     logger.info(
         f'Posting limit order: {order_hash}',
-        extra={'provider': provider.__class__.__name__,
-               'order_hash': order_hash}
+        extra={'provider': provider.__class__.__name__, 'order_hash': order_hash},
     )
     response = await provider_instance.post_limit_order(
         chain_id=chain_id,
