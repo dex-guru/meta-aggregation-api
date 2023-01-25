@@ -1,8 +1,10 @@
 from typing import Dict, List, Optional
 
+import aiohttp
 from aiocache import cached
 
-from meta_aggregation_api.config import CacheConfig
+from meta_aggregation_api.clients.apm_client import ApmClient
+from meta_aggregation_api.config import Config
 from meta_aggregation_api.models.meta_agg_models import LimitOrderPostData
 from meta_aggregation_api.providers import all_providers
 from meta_aggregation_api.utils.cache import get_cache_config
@@ -13,16 +15,24 @@ logger = get_logger(__name__)
 
 
 class LimitOrdersService:
-    def __init__(self, *, config: CacheConfig):
-        self.static_method_cached = cached(ttl=10, **get_cache_config(config))
+    def __init__(
+        self,
+        *,
+        config: Config,
+        session: aiohttp.ClientSession,
+        apm_client: ApmClient,
+    ):
+        self.config = config
+        self.session = session
+        self.apm_client = apm_client
 
-        self.get_by_wallet_address = self.static_method_cached(
-            self.get_by_wallet_address
-        )
-        self.get_by_hash = self.static_method_cached(self.get_by_hash)
+        self.cached = cached(ttl=10, **get_cache_config(config), noself=True)
 
-    @staticmethod
+        self.get_by_wallet_address = self.cached(self.get_by_wallet_address)
+        self.get_by_hash = self.cached(self.get_by_hash)
+
     async def get_by_wallet_address(
+        self,
         chain_id: int,
         trader: str,
         provider: Optional[str] = None,
@@ -33,7 +43,7 @@ class LimitOrdersService:
         provider_class = all_providers.get(provider)
         if not provider_class:
             raise ProviderNotFound(provider)
-        provider_instance = provider_class()
+        provider_instance = provider_class(self.session, self.config, self.apm_client)
         logger.info(
             f'Getting limit orders by wallet address: {trader}',
             extra={
@@ -60,8 +70,8 @@ class LimitOrdersService:
         )
         return res
 
-    @staticmethod
     async def get_by_hash(
+        self,
         chain_id: int,
         order_hash: str,
         provider: Optional[str],
@@ -69,19 +79,19 @@ class LimitOrdersService:
         provider_class = all_providers.get(provider)
         if not provider_class:
             raise ProviderNotFound(provider)
-        provider_instance = provider_class()
+        provider_instance = provider_class(self.session, self.config, self.apm_client)
         logger.info(
             f'Getting limit order by hash: {order_hash}',
             extra={'provider': provider.__class__.__name__, 'order_hash': order_hash},
         )
-        res = await provider_instance.get_order_by_hash(
+        res = await provider_instance.get_order_by_hash(  # TODO: add the method to the base class?
             chain_id=chain_id,
             order_hash=order_hash,
         )
         return res
 
-    @staticmethod
     async def post(
+        self,
         chain_id: int,
         provider: Optional[str],
         order_hash: str,
@@ -91,12 +101,12 @@ class LimitOrdersService:
         provider_class = all_providers.get(provider)
         if not provider_class:
             raise ProviderNotFound(provider)
-        provider_instance = provider_class()
+        provider_instance = provider_class(self.session, self.config, self.apm_client)
         logger.info(
             f'Posting limit order: {order_hash}',
             extra={'provider': provider.__class__.__name__, 'order_hash': order_hash},
         )
-        response = await provider_instance.post_limit_order(
+        response = await provider_instance.post_limit_order(  # TODO: add the method to the base class?
             chain_id=chain_id,
             order_hash=order_hash,
             signature=signature,

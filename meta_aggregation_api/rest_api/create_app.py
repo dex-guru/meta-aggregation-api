@@ -57,7 +57,9 @@ def create_app(config: Config):
         session=aiohttp_session,
         apm_client=apm_client,
     )
-    limit_orders_service = dependencies.LimitOrdersService(config=config)
+    limit_orders_service = dependencies.LimitOrdersService(
+        config=config, session=aiohttp_session, apm_client=apm_client
+    )
     deps = dependencies.Dependencies(
         aiohttp_session=aiohttp_session,
         config=config,

@@ -1,5 +1,5 @@
 import asyncio
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Optional
 
 import aiohttp
@@ -19,7 +19,7 @@ from meta_aggregation_api.utils.errors import (
 from meta_aggregation_api.utils.logger import capture_exception
 
 
-class BaseProvider:
+class BaseProvider(ABC):
     PROVIDER_NAME = 'base_provider'
     REQUEST_TIMEOUT = 7
 
@@ -96,6 +96,18 @@ class BaseProvider:
         Returns:
             A ProviderPriceResponse object with the price for the swap. Check return type for more info.
         """
+
+    @abstractmethod
+    def get_orders_by_trader(
+        self,
+        *,
+        chain_id: int,
+        trader: str,
+        maker_token: str | None = None,
+        taker_token: str | None = None,
+        statuses: list | None = None,
+    ):
+        ...
 
     def handle_exception(
         self, exception: Exception, **kwargs

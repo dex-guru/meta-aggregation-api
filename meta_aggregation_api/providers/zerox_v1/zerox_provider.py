@@ -240,10 +240,11 @@ class ZeroXProviderV1(BaseProvider):
 
     async def get_orders_by_trader(
         self,
-        taker_token: str,
-        maker_token: str,
+        *,
+        chain_id: str,
         trader: str,
-        chain_id: Optional[int] = None,
+        maker_token: str = None,
+        taker_token: Optional[int] = None,
         statuses: Optional[List] = None,
     ) -> dict:
         """
