@@ -2,30 +2,35 @@ import asyncio
 import re
 import ssl
 from itertools import chain
-from logging import DEBUG as LOG_DEBUG
 from pathlib import Path
-from typing import Optional, Union, List, Dict
+from typing import Dict, List, Optional, Union
 
+import aiohttp
 import ujson
 from aiocache import cached
-from aiohttp import ClientResponseError, ClientResponse, ServerDisconnectedError
+from aiohttp import ClientResponse, ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, before_log
 from yarl import URL
 
-from meta_aggregation_api.config import config
-from meta_aggregation_api.models.meta_agg_models import (ProviderQuoteResponse,
-                                                         ProviderPriceResponse)
+from meta_aggregation_api.clients.apm_client import ApmClient
+from meta_aggregation_api.config import Config
+from meta_aggregation_api.models.meta_agg_models import (
+    ProviderPriceResponse,
+    ProviderQuoteResponse,
+)
 from meta_aggregation_api.models.provider_response_models import SwapSources
 from meta_aggregation_api.providers.base_provider import BaseProvider
 from meta_aggregation_api.utils.cache import get_cache_config
-from meta_aggregation_api.utils.errors import (EstimationError,
-                                               AggregationProviderError,
-                                               InsufficientLiquidityError,
-                                               UserBalanceError,
-                                               AllowanceError, TokensError,
-                                               BaseAggregationProviderError)
-from meta_aggregation_api.utils.logger import get_logger, LogArgs
+from meta_aggregation_api.utils.errors import (
+    AggregationProviderError,
+    AllowanceError,
+    BaseAggregationProviderError,
+    EstimationError,
+    InsufficientLiquidityError,
+    TokensError,
+    UserBalanceError,
+)
+from meta_aggregation_api.utils.logger import LogArgs, get_logger
 
 LIMIT_ORDER_VERSION = 3.0
 DEFAULT_SLIPPAGE_PERCENTAGE = 0.5
@@ -75,6 +80,20 @@ class OneInchProviderV5(BaseProvider):
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
 
+    def __init__(
+        self,
+        *,
+        config: Config,
+        session: aiohttp.ClientSession,
+        apm_client: ApmClient,
+        **_,
+    ) -> None:
+        super().__init__(config=config, session=session, apm_client=apm_client)
+
+        self.get_swap_price = cached(
+            ttl=30, **get_cache_config(self.config), noself=True
+        )(self.get_swap_price)
+
     @classmethod
     def _limit_order_path_builder(
         cls,
@@ -83,8 +102,14 @@ class OneInchProviderV5(BaseProvider):
         endpoint: str,
         chain_id: int,
     ) -> URL:
-        url = URL(f'https://{cls.LIMIT_ORDERS_DOMAIN}') / f'v{version}' / str(chain_id) \
-              / 'limit-order' / path / endpoint
+        url = (
+            URL(f'https://{cls.LIMIT_ORDERS_DOMAIN}')
+            / f'v{version}'
+            / str(chain_id)
+            / 'limit-order'
+            / path
+            / endpoint
+        )
         return url
 
     @classmethod
@@ -93,8 +118,12 @@ class OneInchProviderV5(BaseProvider):
         path: str,
         chain_id: int,
     ) -> URL:
-        url = URL(f'https://{cls.TRADING_API_DOMAIN}') / f'v{cls.TRADING_API_VERSION}' \
-                / str(chain_id) / path
+        url = (
+            URL(f'https://{cls.TRADING_API_DOMAIN}')
+            / f'v{cls.TRADING_API_VERSION}'
+            / str(chain_id)
+            / path
+        )
         return url
 
     async def get_response(
@@ -105,8 +134,13 @@ class OneInchProviderV5(BaseProvider):
         body: Optional[Dict] = None,
     ) -> Union[List, Dict]:
         request_function = getattr(self.aiohttp_session, method.lower())
-        async with request_function(str(url), params=params, timeout=self.REQUEST_TIMEOUT,
-                                    ssl=ssl.SSLContext(), json=body) as response:
+        async with request_function(
+            str(url),
+            params=params,
+            timeout=self.REQUEST_TIMEOUT,
+            ssl=ssl.SSLContext(),
+            json=body,
+        ) as response:
             response: ClientResponse
             logger.debug(f'Request GET {response.url}')
             data = await response.json()
@@ -160,7 +194,10 @@ class OneInchProviderV5(BaseProvider):
         try:
             response = await self.get_response(url, query)
         except (
-            ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
+            ClientResponseError,
+            asyncio.TimeoutError,
+            ServerDisconnectedError,
+        ) as e:
             e = self.handle_exception(e, params=query, wallet=trader)
             raise e
         return response
@@ -181,7 +218,10 @@ class OneInchProviderV5(BaseProvider):
         try:
             response = await self.get_response(url, None)
         except (
-            ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
+            ClientResponseError,
+            asyncio.TimeoutError,
+            ServerDisconnectedError,
+        ) as e:
             e = self.handle_exception(e)
             raise e
         return response
@@ -210,12 +250,14 @@ class OneInchProviderV5(BaseProvider):
         try:
             response = await self.get_response(url, None, method, body)
         except (
-            ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
+            ClientResponseError,
+            asyncio.TimeoutError,
+            ServerDisconnectedError,
+        ) as e:
             e = self.handle_exception(e)
             raise e
         return response
 
-    @cached(ttl=30, **get_cache_config())
     async def get_swap_price(
         self,
         buy_token: str,
@@ -247,16 +289,21 @@ class OneInchProviderV5(BaseProvider):
         try:
             response = await self.get_response(url, query)
         except (
-            ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            e = self.handle_exception(e, params=query, token_address=sell_token,
-                                      chain_id=chain_id)
+            ClientResponseError,
+            asyncio.TimeoutError,
+            ServerDisconnectedError,
+        ) as e:
+            e = self.handle_exception(
+                e, params=query, token_address=sell_token, chain_id=chain_id
+            )
             raise e
         sell_amount = int(sell_amount) / 10 ** response['fromToken']['decimals']
-        buy_amount = int(response['toTokenAmount']) / 10 ** response['toToken'][
-            'decimals']
+        buy_amount = (
+            int(response['toTokenAmount']) / 10 ** response['toToken']['decimals']
+        )
         price = buy_amount / sell_amount
         value = '0'
-        if sell_token.lower() == config.NATIVE_TOKEN_ADDRESS:
+        if sell_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             value = str(sell_amount)
         try:
             sources = self.convert_sources_for_meta_aggregation(response['protocols'])
@@ -271,10 +318,15 @@ class OneInchProviderV5(BaseProvider):
                 price=price,
             )
         except (KeyError, ValidationError) as e:
-            e = self.handle_exception(e, response=response,
-                                      method='_convert_response_from_swap_quote',
-                                      price=price, url=url, params=query,
-                                      chain_id=chain_id)
+            e = self.handle_exception(
+                e,
+                response=response,
+                method='_convert_response_from_swap_quote',
+                price=price,
+                url=url,
+                params=query,
+                chain_id=chain_id,
+            )
             raise e
         return res
 
@@ -298,7 +350,9 @@ class OneInchProviderV5(BaseProvider):
         if not slippage_percentage:
             slippage_percentage = DEFAULT_SLIPPAGE_PERCENTAGE
         else:
-            slippage_percentage = slippage_percentage * 100  # 1inch awaits slippage in percents
+            slippage_percentage = (
+                slippage_percentage * 100
+            )  # 1inch awaits slippage in percents
         if not taker_address:
             raise ValueError('Taker address is required')
 
@@ -328,16 +382,22 @@ class OneInchProviderV5(BaseProvider):
         try:
             response = await self.get_response(url, query)
         except (
-            ClientResponseError, asyncio.TimeoutError, ServerDisconnectedError) as e:
-            exc = self.handle_exception(e, params=query, token_address=sell_token,
-                                        chain_id=chain_id)
+            ClientResponseError,
+            asyncio.TimeoutError,
+            ServerDisconnectedError,
+        ) as e:
+            exc = self.handle_exception(
+                e, params=query, token_address=sell_token, chain_id=chain_id
+            )
             raise exc
         sell_amount = int(sell_amount) / 10 ** response['fromToken']['decimals']
-        buy_amount = int(response['toTokenAmount']) / 10 ** response['toToken'][
-            'decimals']
+        buy_amount = (
+            int(response['toTokenAmount']) / 10 ** response['toToken']['decimals']
+        )
         price = buy_amount / sell_amount
-        return self._convert_response_from_swap_quote(response, price, url=url,
-                                                      query=query)
+        return self._convert_response_from_swap_quote(
+            response, price, url=url, query=query
+        )
 
     def _convert_response_from_swap_quote(
         self,
@@ -359,9 +419,13 @@ class OneInchProviderV5(BaseProvider):
                 price=str(price),
             )
         except (KeyError, ValidationError) as e:
-            e = self.handle_exception(e, response=response,
-                                      method='_convert_response_from_swap_quote',
-                                      price=price, **kwargs)
+            e = self.handle_exception(
+                e,
+                response=response,
+                method='_convert_response_from_swap_quote',
+                price=price,
+                **kwargs,
+            )
             raise e
         else:
             return prepared_response
@@ -377,7 +441,8 @@ class OneInchProviderV5(BaseProvider):
         for source in sources_list:
             source['name'] = AMM_MAPPING.get(source['name'], source['name'])
             converted_sources.append(
-                SwapSources(name=source['name'], proportion=source['part']))
+                SwapSources(name=source['name'], proportion=source['part'])
+            )
         return converted_sources
 
     def handle_exception(
@@ -395,12 +460,14 @@ class OneInchProviderV5(BaseProvider):
             logger.error(*exc.to_log_args(), extra=exc.to_dict())
             return exc
         msg = exception.message
-        if isinstance(exception.message, list) and isinstance(exception.message[0],
-                                                              dict):
+        if isinstance(exception.message, list) and isinstance(
+            exception.message[0], dict
+        ):
             msg = exception.message[0].get(
-                'description', exception.message[0].get(
+                'description',
+                exception.message[0].get(
                     'message', exception.message[0].get('error', '')
-                )
+                ),
             )
         for error, error_class in ONE_INCH_ERRORS.items():
             if re.search(error.lower(), msg.lower()):
@@ -417,9 +484,12 @@ class OneInchProviderV5(BaseProvider):
             logger.warning(
                 f'potentially blacklist. %({LogArgs.token_idx})s',
                 {
-                    LogArgs.token_idx: f'{kwargs.get("token_address")}-{kwargs.get("chain_id")}'},
-                extra={'token_address': kwargs.get('token_address'),
-                       'chain_id': kwargs.get('chain_id')},
+                    LogArgs.token_idx: f'{kwargs.get("token_address")}-{kwargs.get("chain_id")}'
+                },
+                extra={
+                    'token_address': kwargs.get('token_address'),
+                    'chain_id': kwargs.get('chain_id'),
+                },
             )
         logger.warning(*exc.to_log_args(), extra=exc.to_dict())
         return exc

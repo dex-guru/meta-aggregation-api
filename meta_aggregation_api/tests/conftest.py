@@ -1,15 +1,21 @@
 import pytest
 from starlette.testclient import TestClient
 
-from meta_aggregation_api.config import config, providers
-from meta_aggregation_api.models.chain import TokenModel, ChainModel
+from meta_aggregation_api.clients.apm_client import ApmClient
+from meta_aggregation_api.config import Config
+from meta_aggregation_api.models.chain import ChainModel, TokenModel
 from meta_aggregation_api.rest_api.create_app import create_app
 from meta_aggregation_api.services.chains import ChainsConfig
 from meta_aggregation_api.tests.fixtures import *  # noqa: F401, F403
 
 
+@pytest.fixture(scope='session')
+def config():
+    return Config()
+
+
 @pytest.fixture()
-async def chains_fixture():
+def chains(config) -> ChainsConfig:
     chains = ChainsConfig(config.PUBLIC_KEY, config.PUBLIC_API_DOMAIN)
     chains.chains = {
         'eth': ChainModel(
@@ -22,7 +28,7 @@ async def chains_fixture():
                 decimals=18,
                 name='Wrapped Ether',
                 symbol='WETH',
-            )
+            ),
         ),
         'bsc': ChainModel(
             name='bsc',
@@ -34,15 +40,18 @@ async def chains_fixture():
                 decimals=18,
                 name='Wrapped BNB',
                 symbol='WBNB',
-            )
+            ),
         ),
     }
     return chains
 
 
 @pytest.fixture()
-def trading_client(chains_fixture) -> TestClient:
+def trading_client(config) -> TestClient:
     app = create_app(config=config)
-    app.chains = chains_fixture
-    app.providers = providers
     return TestClient(app)
+
+
+@pytest.fixture
+def apm_client(config):
+    return ApmClient(config=config)

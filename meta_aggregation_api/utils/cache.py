@@ -6,7 +6,7 @@ from aiocache.serializers import PickleSerializer
 from starlette.requests import Request
 from web3.contract import AsyncContract
 
-from meta_aggregation_api.config import config
+from meta_aggregation_api.config import CacheConfig
 
 
 def key_from_args(func, *args, **kwargs):
@@ -26,36 +26,34 @@ def key_from_args(func, *args, **kwargs):
         kwargs.pop('request')
     ordered_kwargs = sorted(kwargs.items())
     key = (
-            (func.__module__ or "")
-            + func.__name__
-            + str(filtered_args)
-            + str(ordered_kwargs)
+        (func.__module__ or "")
+        + func.__name__
+        + str(filtered_args)
+        + str(ordered_kwargs)
     )
     md5_hash = md5(key.encode()).digest()
     return md5_hash
 
 
-CACHE_CONFIG_COMMON_REDIS = {
-    'cache': Cache.REDIS,
-    'endpoint': config.CACHE_HOST,
-    'port': config.CACHE_PORT,
-    'serializer': PickleSerializer(),
-    'key_builder': key_from_args,
-    'db': config.CACHE_DB,
-    'password': config.CACHE_PASSWORD,
-    'timeout': config.CACHE_TIMEOUT,
-}
+def get_cache_config(config: CacheConfig) -> dict:
+    cache_config_common_redis = {
+        'cache': Cache.REDIS,
+        'endpoint': config.CACHE_HOST,
+        'port': config.CACHE_PORT,
+        'serializer': PickleSerializer(),
+        'key_builder': key_from_args,
+        'db': config.CACHE_DB,
+        'password': config.CACHE_PASSWORD,
+        'timeout': config.CACHE_TIMEOUT,
+    }
 
+    cache_config_common_memory = {
+        'cache': Cache.MEMORY,
+    }
 
-CACHE_CONFIG_COMMON_MEMORY = {
-    'cache': Cache.MEMORY,
-}
+    cache_config = {
+        'memory': cache_config_common_memory,
+        'redis': cache_config_common_redis,
+    }
 
-CACHE_CONFIG = {
-    'memory': CACHE_CONFIG_COMMON_MEMORY,
-    'redis': CACHE_CONFIG_COMMON_REDIS,
-}
-
-
-def get_cache_config() -> dict:
-    return CACHE_CONFIG[config.CACHE]
+    return cache_config[config.CACHE]

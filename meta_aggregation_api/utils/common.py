@@ -3,15 +3,15 @@ from urllib.parse import urljoin
 
 from pydantic import constr
 
-from meta_aggregation_api.config import config
+from meta_aggregation_api.config import Config
 
 
-def _camel_to_snake(field: str) -> str:
+def camel_to_snake(field: str) -> str:
     field = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', field)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', field).lower()
 
 
-def get_web3_url(chain_id: int):
+def get_web3_url(chain_id: int, config: Config):
     """
     get web3 url for chain_id
     By default, it uses public api domain from config, assuming that
@@ -21,5 +21,6 @@ def get_web3_url(chain_id: int):
     return urljoin(config.PUBLIC_API_DOMAIN, f'{chain_id}/{config.PUBLIC_KEY}')
 
 
-address_to_lower = constr(strip_whitespace=True, min_length=42, max_length=42,
-                          to_lower=True)
+address_to_lower = constr(
+    strip_whitespace=True, min_length=42, max_length=42, to_lower=True
+)

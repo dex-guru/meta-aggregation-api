@@ -1,13 +1,14 @@
 from urllib.parse import urljoin
 
+from pydantic import BaseSettings
+
 from meta_aggregation_api.config.apm import APMConfig
 from meta_aggregation_api.config.auth import AuthConfig
 from meta_aggregation_api.config.cache import CacheConfig
 from meta_aggregation_api.config.logger import LoggerConfig
-from meta_aggregation_api.config.providers import providers
 
 
-class Config(APMConfig, LoggerConfig, AuthConfig, CacheConfig):
+class Config(APMConfig, LoggerConfig, AuthConfig, CacheConfig, BaseSettings):
     SERVER_HOST: str = 'localhost'
     SERVER_PORT: int = 8000
     RELOAD: bool = True
@@ -29,6 +30,3 @@ class Config(APMConfig, LoggerConfig, AuthConfig, CacheConfig):
 
     class Config:
         env_file = ".env"
-
-
-config = Config()

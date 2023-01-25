@@ -8,4 +8,3 @@ class CacheConfig(BaseSettings):
     CACHE_DB: int = 0
     CACHE_PASSWORD: str = None
     CACHE_TIMEOUT: float = 30
-

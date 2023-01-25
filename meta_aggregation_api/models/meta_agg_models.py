@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -21,7 +21,8 @@ class MetaPriceModel(BaseModel):
     price_response: ProviderPriceResponse  # price response object from provider
     is_allowed: bool  # if the provider has allowance to spend the sell_token of taker_address
     is_best: Optional[
-        bool] = None  # none for request with one provider. True if the provider has the best price
+        bool
+    ] = None  # none for request with one provider. True if the provider has the best price
     approve_cost: int = 0  # 0 for requests without taker_address. Cost of approve transaction for the provider
 
 
@@ -46,7 +47,9 @@ class LimitOrderPostData(BaseModel):
     making_amount: str = Field(..., description='The amount of maker token')
     taking_amount: str = Field(..., description='The amount of taker token')
     salt: str = Field('0x', description='The salt of the order')
-    interactions: Optional[str] = Field('0x', description='The interactions of the order')
+    interactions: Optional[str] = Field(
+        '0x', description='The interactions of the order'
+    )
     offsets: Optional[str] = Field('0x', description='The offsets of the order')
 
     def to_camel_case_dict(self):

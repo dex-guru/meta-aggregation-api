@@ -1,10 +1,13 @@
 from typing import List
 
-from fastapi import APIRouter, Path, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from starlette.requests import Request
 
-from meta_aggregation_api.models.chain import (ProvidersConfigModel,
-                                               AllProvidersConfigModel)
+from meta_aggregation_api.models.chain import (
+    AllProvidersConfigModel,
+    ProvidersConfigModel,
+)
+from meta_aggregation_api.rest_api import dependencies
 
 info_route = APIRouter()
 
@@ -22,19 +25,26 @@ async def get_all_info(
     return info
 
 
-@info_route.get('/{chain_id}', response_model=ProvidersConfigModel,
-                response_model_exclude={'chain_id'},
-                responses={404: {"description": "Chain ID not found"}})
-@info_route.get('/{chain_id}/', include_in_schema=False,
-                response_model=ProvidersConfigModel,
-                response_model_exclude={'chain_id'})
+@info_route.get(
+    '/{chain_id}',
+    response_model=ProvidersConfigModel,
+    response_model_exclude={'chain_id'},
+    responses={404: {"description": "Chain ID not found"}},
+)
+@info_route.get(
+    '/{chain_id}/',
+    include_in_schema=False,
+    response_model=ProvidersConfigModel,
+    response_model_exclude={'chain_id'},
+)
 async def get_info(
-    request: Request,
     chain_id: int = Path(..., description='Chain ID'),
+    providers: dependencies.ProvidersConfig = Depends(dependencies.providers),
 ) -> ProvidersConfigModel:
     """Returns information about the providers for a given chain ID."""
     try:
-        info = request.app.providers.get_providers_on_chain(chain_id)
+        info = providers.get_providers_on_chain(chain_id)
     except ValueError:
         raise HTTPException(status_code=404, detail='Chain ID not found')
-    return info
+    else:
+        return info

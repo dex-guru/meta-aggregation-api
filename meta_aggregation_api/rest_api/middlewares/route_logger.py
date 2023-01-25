@@ -7,10 +7,13 @@ from uuid import uuid4
 from fastapi import FastAPI, Request, Response
 from starlette.datastructures import Headers
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import Scope, Receive, Send
+from starlette.types import Receive, Scope, Send
 
-from meta_aggregation_api.utils.logger import (get_logger, set_correlation_id,
-                                               set_session_id)
+from meta_aggregation_api.utils.logger import (
+    get_logger,
+    set_correlation_id,
+    set_session_id,
+)
 
 
 class RouteLoggerMiddleware(BaseHTTPMiddleware):
@@ -30,7 +33,7 @@ class RouteLoggerMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        """ Headers object is immutable. We should update headers before calling dispatch method """
+        """Headers object is immutable. We should update headers before calling dispatch method"""
 
         if scope["type"] != "http":
             await self.app(scope, receive, send)
