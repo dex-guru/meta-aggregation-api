@@ -37,9 +37,8 @@ def create_app(config: Config):
         # openapi_tags=config.TAGS_METADATA
     )
 
-    apm_client = ApmClient(config)
-
     # Setup and register dependencies.
+    apm_client = ApmClient(config)
     aiohttp_session = aiohttp.ClientSession(trust_env=True)
     chains = dependencies.ChainsConfig(
         api_key=config.PUBLIC_KEY,
@@ -50,20 +49,22 @@ def create_app(config: Config):
         chains=chains,
     )
     providers = dependencies.ProvidersConfig()
+    meta_aggregation_service = dependencies.MetaAggregationService(
+        config=config,
+        gas_service=gas_service,
+        chains=chains,
+        providers=providers,
+        session=aiohttp_session,
+        apm_client=apm_client,
+    )
+    limit_orders_service = dependencies.LimitOrdersService(config=config)
     deps = dependencies.Dependencies(
         aiohttp_session=aiohttp_session,
         config=config,
         chains=chains,
         gas_service=gas_service,
-        limit_orders_service=dependencies.LimitOrdersService(config=config),
-        meta_aggregation_service=dependencies.MetaAggregationService(
-            config=config,
-            gas_service=gas_service,
-            chains=chains,
-            providers=providers,
-            session=aiohttp_session,
-            apm_client=apm_client,
-        ),
+        limit_orders_service=limit_orders_service,
+        meta_aggregation_service=meta_aggregation_service,
         providers=providers,
     )
     deps.register(app)
