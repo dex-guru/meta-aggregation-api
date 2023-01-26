@@ -15,13 +15,13 @@ info_route = APIRouter()
 @info_route.get('/', response_model=List[AllProvidersConfigModel])
 @info_route.get('', include_in_schema=False)
 async def get_all_info(
-    request: Request,
+    providers: dependencies.ProvidersConfig = Depends(dependencies.providers),
 ):
     """
     Returns information about the providers on all supported chains.
     This includes name, spender_address and display_name.
     """
-    info = request.app.providers.get_all_providers()
+    info = providers.get_all_providers()
     return info
 
 
