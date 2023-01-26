@@ -97,18 +97,6 @@ class BaseProvider(ABC):
             A ProviderPriceResponse object with the price for the swap. Check return type for more info.
         """
 
-    @abstractmethod
-    def get_orders_by_trader(
-        self,
-        *,
-        chain_id: int,
-        trader: str,
-        maker_token: str | None = None,
-        taker_token: str | None = None,
-        statuses: list | None = None,
-    ):
-        ...
-
     def handle_exception(
         self, exception: Exception, **kwargs
     ) -> BaseAggregationProviderError:

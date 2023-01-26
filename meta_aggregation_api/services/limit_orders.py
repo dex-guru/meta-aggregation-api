@@ -6,7 +6,7 @@ from aiocache import cached
 from meta_aggregation_api.clients.apm_client import ApmClient
 from meta_aggregation_api.config import Config
 from meta_aggregation_api.models.meta_agg_models import LimitOrderPostData
-from meta_aggregation_api.providers import all_providers
+from meta_aggregation_api.providers import ProviderRegistry
 from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.errors import ProviderNotFound
 from meta_aggregation_api.utils.logger import get_logger
@@ -21,7 +21,9 @@ class LimitOrdersService:
         config: Config,
         session: aiohttp.ClientSession,
         apm_client: ApmClient,
+        provider_registry: ProviderRegistry,
     ):
+        self.provider_registry = provider_registry
         self.config = config
         self.session = session
         self.apm_client = apm_client
@@ -40,7 +42,7 @@ class LimitOrdersService:
         taker_token: Optional[str] = None,
         statuses: Optional[List] = None,
     ) -> List[Dict]:
-        provider_class = all_providers.get(provider)
+        provider_class = self.provider_registry.get(provider)
         if not provider_class:
             raise ProviderNotFound(provider)
         provider_instance = provider_class(self.session, self.config, self.apm_client)
@@ -76,10 +78,9 @@ class LimitOrdersService:
         order_hash: str,
         provider: Optional[str],
     ):
-        provider_class = all_providers.get(provider)
-        if not provider_class:
+        provider_instance = self.provider_registry.get(provider)
+        if not provider_instance:
             raise ProviderNotFound(provider)
-        provider_instance = provider_class(self.session, self.config, self.apm_client)
         logger.info(
             f'Getting limit order by hash: {order_hash}',
             extra={'provider': provider.__class__.__name__, 'order_hash': order_hash},
@@ -98,10 +99,9 @@ class LimitOrdersService:
         signature: str,
         data: LimitOrderPostData,
     ):
-        provider_class = all_providers.get(provider)
-        if not provider_class:
+        provider_instance = self.provider_registry.get(provider)
+        if not provider_instance:
             raise ProviderNotFound(provider)
-        provider_instance = provider_class(self.session, self.config, self.apm_client)
         logger.info(
             f'Posting limit order: {order_hash}',
             extra={'provider': provider.__class__.__name__, 'order_hash': order_hash},

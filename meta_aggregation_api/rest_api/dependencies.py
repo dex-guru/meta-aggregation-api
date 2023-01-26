@@ -27,6 +27,8 @@ class Dependencies(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+        extra = "forbid"
+        allow_mutation = False
 
     def register(self, app: fastapi.FastAPI):
         """

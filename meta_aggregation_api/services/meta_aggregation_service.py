@@ -1,7 +1,7 @@
 import asyncio
 from decimal import Decimal
 from functools import partial
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Tuple
 
 import aiohttp
 from aiocache import cached
@@ -18,8 +18,7 @@ from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
 )
-from meta_aggregation_api.providers import all_providers
-from meta_aggregation_api.providers.base_provider import BaseProvider
+from meta_aggregation_api.providers import ProviderRegistry
 from meta_aggregation_api.services.chains import ChainsConfig
 from meta_aggregation_api.services.gas_service import GasService
 from meta_aggregation_api.utils.cache import get_cache_config
@@ -40,7 +39,9 @@ class MetaAggregationService:
         providers: ProvidersConfig,
         session: aiohttp.ClientSession,
         apm_client: ApmClient,
+        provider_registry: ProviderRegistry,
     ):
+        self.provider_registry = provider_registry
         self.config = config
         self.providers = providers
         self.gas_service = gas_service
@@ -207,15 +208,11 @@ class MetaAggregationService:
             if provider is None:
                 continue
             provider_name = provider['name']
-            provider_class: Type[BaseProvider] = all_providers.get(provider_name)
-            if not provider_class:
+
+            provider_instance = self.provider_registry.get(provider_name)
+            if not provider_instance:
                 continue
-            provider_instance = provider_class(
-                config=self.config,
-                session=self.session,
-                chains=self.chains,
-                apm_client=self.apm_client,
-            )
+
             prices_tasks.append(
                 asyncio.create_task(
                     provider_instance.get_swap_price(
@@ -428,10 +425,12 @@ class MetaAggregationService:
             ProviderNotFound: If passed provider is not supported
             Type[BaseAggregationProviderError]: check utils/errors.py to get all possible errors
         """
-        provider_class = all_providers.get(provider)
-        if not provider_class:
+        provider_name = provider
+
+        provider = self.provider_registry.get(provider_name)
+        if not provider:
             raise ProviderNotFound(provider)
-        provider = provider_class(self.session, self.config, self.apm_client)
+
         quote = await provider.get_swap_quote(
             buy_token=buy_token,
             sell_token=sell_token,
@@ -486,9 +485,10 @@ class MetaAggregationService:
             ProviderNotFound: If passed provider is not supported
             Type[BaseAggregationProviderError]: check utils/errors.py to get all possible errors
         """
-        provider_class = all_providers.get(provider)
-        if not provider_class:
+        provider_instance = self.provider_registry.get(provider)
+        if not provider:
             raise ProviderNotFound(provider)
+
         spender_address = next(
             (
                 spender['address']
@@ -499,7 +499,6 @@ class MetaAggregationService:
             ),
             None,
         )
-        provider_instance = provider_class(self.session, self.config, self.apm_client)
 
         web3_url = get_web3_url(chain_id, config=self.config)
         erc20_contract = Web3Client(web3_url, self.config).get_erc20_contract(
