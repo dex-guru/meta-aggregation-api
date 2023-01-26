@@ -7,6 +7,7 @@ from meta_aggregation_api.clients.apm_client import ApmClient
 from meta_aggregation_api.config import Config
 from meta_aggregation_api.models.meta_agg_models import LimitOrderPostData
 from meta_aggregation_api.providers import ProviderRegistry
+from meta_aggregation_api.providers.one_inch_v5 import OneInchProviderV5
 from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.errors import ProviderNotFound
 from meta_aggregation_api.utils.logger import get_logger
@@ -42,10 +43,13 @@ class LimitOrdersService:
         taker_token: Optional[str] = None,
         statuses: Optional[List] = None,
     ) -> List[Dict]:
-        provider_class = self.provider_registry.get(provider)
-        if not provider_class:
+        provider_instance = self.provider_registry.get(provider)
+        if not provider_instance:
             raise ProviderNotFound(provider)
-        provider_instance = provider_class(self.session, self.config, self.apm_client)
+
+        if not isinstance(provider_instance, OneInchProviderV5):
+            raise NotImplementedError(f"provider {provider} is not supported")
+
         logger.info(
             f'Getting limit orders by wallet address: {trader}',
             extra={
@@ -81,11 +85,15 @@ class LimitOrdersService:
         provider_instance = self.provider_registry.get(provider)
         if not provider_instance:
             raise ProviderNotFound(provider)
+
+        if not isinstance(provider_instance, OneInchProviderV5):
+            raise NotImplementedError(f"provider {provider} is not supported")
+
         logger.info(
             f'Getting limit order by hash: {order_hash}',
             extra={'provider': provider.__class__.__name__, 'order_hash': order_hash},
         )
-        res = await provider_instance.get_order_by_hash(  # TODO: add the method to the base class?
+        res = await provider_instance.get_order_by_hash(
             chain_id=chain_id,
             order_hash=order_hash,
         )
@@ -102,11 +110,15 @@ class LimitOrdersService:
         provider_instance = self.provider_registry.get(provider)
         if not provider_instance:
             raise ProviderNotFound(provider)
+
+        if not isinstance(provider_instance, OneInchProviderV5):
+            raise NotImplementedError(f"provider {provider} is not supported")
+
         logger.info(
             f'Posting limit order: {order_hash}',
             extra={'provider': provider.__class__.__name__, 'order_hash': order_hash},
         )
-        response = await provider_instance.post_limit_order(  # TODO: add the method to the base class?
+        response = await provider_instance.post_limit_order(
             chain_id=chain_id,
             order_hash=order_hash,
             signature=signature,
