@@ -61,7 +61,7 @@ async def test_get_token_allowance_for_native_token(
 
 
 @pytest.mark.asyncio()
-async def test_get_approve_cost(meta_agg_service):
+async def test_get_approve_cost(meta_agg_service: MetaAggregationService):
     owner_address = '0x61e1A8041186CeB8a561F6F264e8B2BB2E20e06D'
     spender_address = '0xdef1c0ded9bec7f1a1670819833240f027b25eff'
 
@@ -182,7 +182,7 @@ async def test_get_decimals_for_native_and_buy_token_call_count(
     get_token_address: Callable[[Config], str],
     call_count: int,
     config,
-    meta_agg_service,
+    meta_agg_service: MetaAggregationService,
 ):
     token_address = get_token_address(config)
     await meta_agg_service.get_decimals_for_native_and_buy_token(1, token_address)
@@ -254,7 +254,7 @@ def test_choose_best_provider(
 
 
 @pytest.mark.asyncio()
-async def test_get_meta_swap_quote(meta_agg_service):
+async def test_get_meta_swap_quote(meta_agg_service: MetaAggregationService):
     provider = 'invalid_provider'
     with pytest.raises(ProviderNotFound):
         await meta_agg_service.get_meta_swap_quote(
