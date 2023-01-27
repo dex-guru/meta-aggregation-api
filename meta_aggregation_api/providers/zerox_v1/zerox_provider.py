@@ -241,7 +241,7 @@ class ZeroXProviderV1(BaseProvider):
     async def get_orders_by_trader(
         self,
         *,
-        chain_id: str,
+        chain_id: int,
         trader: str,
         maker_token: str = None,
         taker_token: Optional[int] = None,
@@ -253,7 +253,7 @@ class ZeroXProviderV1(BaseProvider):
         Examples:
             https://docs.0x.org/0x-api-orderbook/api-references
         """
-        url = self._api_path_builder('orderbook', 'orders', chain_id)
+        url = self._api_path_builder('orderbook', 'orders', str(chain_id))
         query = {}
 
         if taker_token:
