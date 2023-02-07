@@ -22,5 +22,5 @@ def get_web3_url(chain_id: int, config: Config):
 
 
 address_to_lower = constr(
-    strip_whitespace=True, min_length=42, max_length=42, to_lower=True
+    strip_whitespace=True, to_lower=True
 )

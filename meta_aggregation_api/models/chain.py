@@ -4,7 +4,7 @@ from pydantic import BaseModel, conint, constr
 
 
 class TokenModel(BaseModel):
-    address: constr(min_length=42, max_length=42, to_lower=True)
+    address: constr(to_lower=True)
     name: str
     symbol: str
     decimals: conint(gt=0)
@@ -20,7 +20,7 @@ class ChainModel(BaseModel):
 
 class ProviderInfoModel(BaseModel):
     display_name: str
-    address: constr(min_length=42, max_length=42, to_lower=True)
+    address: constr(to_lower=True)
     name: str
 
 
