@@ -1,7 +1,6 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Path
-from starlette.requests import Request
 
 from meta_aggregation_api.models.chain import (
     AllProvidersConfigModel,

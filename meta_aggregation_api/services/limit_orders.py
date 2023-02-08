@@ -1,10 +1,13 @@
 from typing import Dict, List, Optional
 
+import aiohttp
 from aiocache import cached
 
-from meta_aggregation_api.config import CacheConfig
+from meta_aggregation_api.clients.apm_client import ApmClient
+from meta_aggregation_api.config import Config
 from meta_aggregation_api.models.meta_agg_models import LimitOrderPostData
-from meta_aggregation_api.providers import all_providers
+from meta_aggregation_api.providers import ProviderRegistry
+from meta_aggregation_api.providers.one_inch_v5 import OneInchProviderV5
 from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.errors import ProviderNotFound
 from meta_aggregation_api.utils.logger import get_logger
@@ -13,16 +16,26 @@ logger = get_logger(__name__)
 
 
 class LimitOrdersService:
-    def __init__(self, *, config: CacheConfig):
-        self.static_method_cached = cached(ttl=10, **get_cache_config(config))
+    def __init__(
+        self,
+        *,
+        config: Config,
+        session: aiohttp.ClientSession,
+        apm_client: ApmClient,
+        provider_registry: ProviderRegistry,
+    ):
+        self.provider_registry = provider_registry
+        self.config = config
+        self.session = session
+        self.apm_client = apm_client
 
-        self.get_by_wallet_address = self.static_method_cached(
-            self.get_by_wallet_address
-        )
-        self.get_by_hash = self.static_method_cached(self.get_by_hash)
+        self.cached = cached(ttl=10, **get_cache_config(config), noself=True)
 
-    @staticmethod
+        self.get_by_wallet_address = self.cached(self.get_by_wallet_address)
+        self.get_by_hash = self.cached(self.get_by_hash)
+
     async def get_by_wallet_address(
+        self,
         chain_id: int,
         trader: str,
         provider: Optional[str] = None,
@@ -30,10 +43,13 @@ class LimitOrdersService:
         taker_token: Optional[str] = None,
         statuses: Optional[List] = None,
     ) -> List[Dict]:
-        provider_class = all_providers.get(provider)
-        if not provider_class:
+        provider_instance = self.provider_registry.get(provider)
+        if not provider_instance:
             raise ProviderNotFound(provider)
-        provider_instance = provider_class()
+
+        if not isinstance(provider_instance, OneInchProviderV5):
+            raise NotImplementedError(f"provider {provider} is not supported")
+
         logger.info(
             f'Getting limit orders by wallet address: {trader}',
             extra={
@@ -60,16 +76,19 @@ class LimitOrdersService:
         )
         return res
 
-    @staticmethod
     async def get_by_hash(
+        self,
         chain_id: int,
         order_hash: str,
         provider: Optional[str],
     ):
-        provider_class = all_providers.get(provider)
-        if not provider_class:
+        provider_instance = self.provider_registry.get(provider)
+        if not provider_instance:
             raise ProviderNotFound(provider)
-        provider_instance = provider_class()
+
+        if not isinstance(provider_instance, OneInchProviderV5):
+            raise NotImplementedError(f"provider {provider} is not supported")
+
         logger.info(
             f'Getting limit order by hash: {order_hash}',
             extra={'provider': provider.__class__.__name__, 'order_hash': order_hash},
@@ -80,18 +99,21 @@ class LimitOrdersService:
         )
         return res
 
-    @staticmethod
     async def post(
+        self,
         chain_id: int,
         provider: Optional[str],
         order_hash: str,
         signature: str,
         data: LimitOrderPostData,
     ):
-        provider_class = all_providers.get(provider)
-        if not provider_class:
+        provider_instance = self.provider_registry.get(provider)
+        if not provider_instance:
             raise ProviderNotFound(provider)
-        provider_instance = provider_class()
+
+        if not isinstance(provider_instance, OneInchProviderV5):
+            raise NotImplementedError(f"provider {provider} is not supported")
+
         logger.info(
             f'Posting limit order: {order_hash}',
             extra={'provider': provider.__class__.__name__, 'order_hash': order_hash},

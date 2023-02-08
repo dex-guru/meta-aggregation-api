@@ -9,6 +9,13 @@ from fastapi_jwt_auth.exceptions import AuthJWTException
 
 from meta_aggregation_api.clients.apm_client import ApmClient
 from meta_aggregation_api.config import Config
+from meta_aggregation_api.providers import ProviderRegistry
+from meta_aggregation_api.providers.kyberswap_v1 import KyberSwapProviderV1
+from meta_aggregation_api.providers.one_inch_v5 import OneInchProviderV5
+from meta_aggregation_api.providers.openocean_v2 import OpenOceanProviderV2
+from meta_aggregation_api.providers.paraswap_v5 import ParaSwapProviderV5
+from meta_aggregation_api.providers.zerox_v1 import ZeroXProviderV1
+from meta_aggregation_api.rest_api import dependencies
 from meta_aggregation_api.rest_api.middlewares import RouteLoggerMiddleware
 from meta_aggregation_api.rest_api.routes.gas import gas_routes
 from meta_aggregation_api.rest_api.routes.info import info_route
@@ -17,7 +24,6 @@ from meta_aggregation_api.rest_api.routes.rpc import v1_rpc
 from meta_aggregation_api.rest_api.routes.swap import swap_route
 from meta_aggregation_api.utils.errors import BaseAggregationProviderError
 from meta_aggregation_api.utils.logger import get_logger
-from . import dependencies
 
 logger = get_logger(__name__)
 
@@ -37,9 +43,8 @@ def create_app(config: Config):
         # openapi_tags=config.TAGS_METADATA
     )
 
-    apm_client = ApmClient(config)
-
     # Setup and register dependencies.
+    apm_client = ApmClient(config)
     aiohttp_session = aiohttp.ClientSession(trust_env=True)
     chains = dependencies.ChainsConfig(
         api_key=config.PUBLIC_KEY,
@@ -50,20 +55,57 @@ def create_app(config: Config):
         chains=chains,
     )
     providers = dependencies.ProvidersConfig()
+    prorvider_registry = ProviderRegistry(
+        ZeroXProviderV1(
+            session=aiohttp_session,
+            config=config,
+            chains=chains,
+            apm_client=apm_client,
+        ),
+        OneInchProviderV5(
+            config=config,
+            session=aiohttp_session,
+            apm_client=apm_client,
+        ),
+        ParaSwapProviderV5(
+            config=config,
+            session=aiohttp_session,
+            apm_client=apm_client,
+        ),
+        OpenOceanProviderV2(
+            config=config,
+            session=aiohttp_session,
+            apm_client=apm_client,
+        ),
+        KyberSwapProviderV1(
+            config=config,
+            session=aiohttp_session,
+            apm_client=apm_client,
+            chains=chains,
+        ),
+    )
+    meta_aggregation_service = dependencies.MetaAggregationService(
+        config=config,
+        gas_service=gas_service,
+        chains=chains,
+        providers=providers,
+        session=aiohttp_session,
+        apm_client=apm_client,
+        provider_registry=prorvider_registry,
+    )
+    limit_orders_service = dependencies.LimitOrdersService(
+        config=config,
+        session=aiohttp_session,
+        apm_client=apm_client,
+        provider_registry=prorvider_registry,
+    )
     deps = dependencies.Dependencies(
         aiohttp_session=aiohttp_session,
         config=config,
         chains=chains,
         gas_service=gas_service,
-        limit_orders_service=dependencies.LimitOrdersService(config=config),
-        meta_aggregation_service=dependencies.MetaAggregationService(
-            config=config,
-            gas_service=gas_service,
-            chains=chains,
-            providers=providers,
-            session=aiohttp_session,
-            apm_client=apm_client,
-        ),
+        limit_orders_service=limit_orders_service,
+        meta_aggregation_service=meta_aggregation_service,
         providers=providers,
     )
     deps.register(app)

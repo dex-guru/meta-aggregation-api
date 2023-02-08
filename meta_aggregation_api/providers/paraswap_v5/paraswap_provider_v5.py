@@ -69,6 +69,7 @@ class ParaSwapProviderV5(BaseProvider):
     """
 
     MAIN_API_URL: yarl.URL = yarl.URL('https://apiv5.paraswap.io/')
+
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
 

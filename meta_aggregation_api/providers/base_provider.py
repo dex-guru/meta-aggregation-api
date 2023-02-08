@@ -1,5 +1,5 @@
 import asyncio
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Optional
 
 import aiohttp
@@ -19,7 +19,7 @@ from meta_aggregation_api.utils.errors import (
 from meta_aggregation_api.utils.logger import capture_exception
 
 
-class BaseProvider:
+class BaseProvider(ABC):
     PROVIDER_NAME = 'base_provider'
     REQUEST_TIMEOUT = 7
 

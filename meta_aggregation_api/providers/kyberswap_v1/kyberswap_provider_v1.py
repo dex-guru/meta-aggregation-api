@@ -1,11 +1,11 @@
 import asyncio
 import ssl
+from _decimal import Decimal
 from pathlib import Path
 from typing import Optional, Union
 
 import aiohttp
 import ujson
-from _decimal import Decimal
 from aiocache import cached
 from aiohttp import ClientResponse, ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
@@ -43,8 +43,8 @@ class KyberSwapProviderV1(BaseProvider):
     """https://docs.kyberswap.com/Aggregator/aggregator-api"""
 
     TRADING_API = 'https://aggregator-api.kyberswap.com'
-    VERSION = '1'
 
+    VERSION = '1'
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
 

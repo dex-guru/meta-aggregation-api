@@ -240,10 +240,11 @@ class ZeroXProviderV1(BaseProvider):
 
     async def get_orders_by_trader(
         self,
-        taker_token: str,
-        maker_token: str,
+        *,
+        chain_id: int,
         trader: str,
-        chain_id: Optional[int] = None,
+        maker_token: str = None,
+        taker_token: Optional[int] = None,
         statuses: Optional[List] = None,
     ) -> dict:
         """
@@ -252,7 +253,7 @@ class ZeroXProviderV1(BaseProvider):
         Examples:
             https://docs.0x.org/0x-api-orderbook/api-references
         """
-        url = self._api_path_builder('orderbook', 'orders', chain_id)
+        url = self._api_path_builder('orderbook', 'orders', str(chain_id))
         query = {}
 
         if taker_token:
