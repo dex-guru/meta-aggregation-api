@@ -212,7 +212,8 @@ class KyberSwapProviderV1(BaseProvider):
             'tokenIn': sell_token,
             'tokenOut': buy_token,
             'amountIn': str(sell_amount),
-            'clientData': "{'source': '%s'}" % self.config.PARTNER,
+            'clientData': '{"source": "%s"}' % self.config.PARTNER,
+            'gasInclude': 1,
         }
         if taker_address:
             params['to'] = taker_address
