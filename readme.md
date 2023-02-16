@@ -9,6 +9,8 @@ Meta Aggregation API serves as a wrapper for multiple DEX aggregators(Routers) a
 - 1inch v5 
 - 0x  
 - Paraswap
+- Kyberswap
+- Openocean 
 
 # Getting started
 
