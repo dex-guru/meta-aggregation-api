@@ -45,7 +45,10 @@ def create_app(config: Config):
 
     # Setup and register dependencies.
     apm_client = ApmClient(config)
-    aiohttp_session = aiohttp.ClientSession(trust_env=True)
+    aiohttp_session = aiohttp.ClientSession(
+        trust_env=True,
+        headers={'x-sys-key': config.X_SYS_KEY},
+    )
     chains = dependencies.ChainsConfig(
         api_key=config.PUBLIC_KEY,
         domain=config.PUBLIC_API_DOMAIN,

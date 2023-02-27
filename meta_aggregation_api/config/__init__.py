@@ -15,7 +15,7 @@ class Config(APMConfig, LoggerConfig, AuthConfig, CacheConfig, BaseSettings):
     NATIVE_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     VERSION = '0.0.1'
     PUBLIC_KEY = 'Get your key at https://developers.dex.guru/'
-    PUBLIC_API_DOMAIN: HttpUrl = 'https://public-stage-lax.dexguru.biz/'
+    PUBLIC_API_DOMAIN: HttpUrl = 'https://api.dev.dex.guru/'
     API_VERSION = 1
     WEB3_TIMEOUT: int = 10
     CORS_ORIGINS = ['*']
@@ -24,6 +24,7 @@ class Config(APMConfig, LoggerConfig, AuthConfig, CacheConfig, BaseSettings):
     CORS_HEADERS = ['*']
     WORKERS_COUNT: int = 1
     PARTNER: str = 'dex.guru'
+    X_SYS_KEY: str = ''
 
     def get_web3_url(self, chain_id: int):
         return urljoin(self.PUBLIC_API_DOMAIN, f'{chain_id}/{self.PUBLIC_KEY}')
