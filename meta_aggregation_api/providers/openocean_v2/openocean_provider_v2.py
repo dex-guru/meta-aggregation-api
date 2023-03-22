@@ -8,6 +8,7 @@ import ujson
 from aiohttp import ClientResponse, ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
 
+from meta_aggregation_api.models.chain import SingleChainSwapInfo
 from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
@@ -59,13 +60,14 @@ class OpenOceanProviderV2(BaseProvider):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_id: int,
+        chain_info: SingleChainSwapInfo,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = 1,
         taker_address: Optional[str] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
     ):
+        chain_id = chain_info.chain_id
         if buy_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             buy_token = '0x0000000000000000000000000000000000000000'
 
@@ -106,13 +108,14 @@ class OpenOceanProviderV2(BaseProvider):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_id: int,
+        chain_info: SingleChainSwapInfo,
         taker_address: str,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
     ) -> ProviderQuoteResponse:
+        chain_id = chain_info.chain_id
         if buy_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             buy_token = '0x0000000000000000000000000000000000000000'
 

@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from meta_aggregation_api.clients.apm_client import ApmClient
 from meta_aggregation_api.config import Config
+from meta_aggregation_api.models.chain import ChainSwapInfo, SingleChainSwapInfo
 from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
@@ -95,7 +96,7 @@ class KyberSwapProviderV1(BaseProvider):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_id: int,
+        chain_info: SingleChainSwapInfo,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         taker_address: Optional[str] = None,
@@ -106,7 +107,7 @@ class KyberSwapProviderV1(BaseProvider):
             buy_token=buy_token,
             sell_token=sell_token,
             sell_amount=sell_amount,
-            chain_id=chain_id,
+            chain_id=chain_info.chain_id,
             taker_address=taker_address,
             gas_price=gas_price,
             slippage_percentage=slippage_percentage,
@@ -118,7 +119,7 @@ class KyberSwapProviderV1(BaseProvider):
             response,
             sell_token_address=sell_token,
             buy_token_address=buy_token,
-            chain_id=chain_id,
+            chain_id=chain_info.chain_id,
         )
 
     async def get_swap_quote(
@@ -126,7 +127,7 @@ class KyberSwapProviderV1(BaseProvider):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_id: int,
+        chain_info: SingleChainSwapInfo,
         taker_address: str,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
@@ -139,7 +140,7 @@ class KyberSwapProviderV1(BaseProvider):
             buy_token=buy_token,
             sell_token=sell_token,
             sell_amount=sell_amount,
-            chain_id=chain_id,
+            chain_id=chain_info.chain_id,
             taker_address=taker_address,
             gas_price=gas_price,
             slippage_percentage=slippage_percentage,
@@ -147,7 +148,7 @@ class KyberSwapProviderV1(BaseProvider):
             buy_token_percentage_fee=buy_token_percentage_fee,
         )
         return self._convert_response_from_swap_quote(
-            response, sell_token, buy_token, chain_id
+            response, sell_token, buy_token, chain_info.chain_id
         )
 
     def _convert_response_from_swap_quote(

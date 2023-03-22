@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from aiohttp import ClientResponseError, RequestInfo
 
+from meta_aggregation_api.models.chain import SingleChainSwapInfo
 from meta_aggregation_api.models.meta_agg_models import ProviderQuoteResponse
 from meta_aggregation_api.providers.one_inch_v5.one_inch_provider import (
     LIMIT_ORDER_VERSION,
@@ -83,7 +84,7 @@ async def test_get_order_by_hash(get_response_mock: AsyncMock, one_inch_provider
 async def test_get_swap_quote_raises(one_inch_provider):
     with pytest.raises(ValueError, match='chain_id is required'):
         await one_inch_provider.get_swap_quote(
-            chain_id=None,
+            chain_info=SingleChainSwapInfo(None),
             buy_token='test_maker_token',
             sell_token='test_taker_token',
             sell_amount='test_maker_amount',
@@ -92,7 +93,7 @@ async def test_get_swap_quote_raises(one_inch_provider):
         )
     with pytest.raises(ValueError, match='Taker address is required'):
         await one_inch_provider.get_swap_quote(
-            chain_id=1,
+            chain_info=SingleChainSwapInfo(1),
             buy_token='test_maker_token',
             sell_token='test_taker_token',
             sell_amount='test_maker_amount',
@@ -146,7 +147,7 @@ async def test_get_swap_quote(get_response_mock: AsyncMock, one_inch_provider):
     }
     url = one_inch_provider._trading_api_path_builder(path, chain_id)
     res = await one_inch_provider.get_swap_quote(
-        chain_id=chain_id,
+        chain_info=SingleChainSwapInfo(chain_id),
         buy_token=buy_token,
         sell_token=sell_token,
         sell_amount=sell_amount,

@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from meta_aggregation_api.clients.apm_client import ApmClient
 from meta_aggregation_api.config import Config
+from meta_aggregation_api.models.chain import ChainSwapInfo
 from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
@@ -40,7 +41,7 @@ class BaseProvider(ABC):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_id: int,
+        chain_info: ChainSwapInfo,
         taker_address: str,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
@@ -54,7 +55,7 @@ class BaseProvider(ABC):
             buy_token:str: Token is being buy
             sell_token:str: Token is being sold
             sell_amount:int: Amount of sell_token to sell
-            chain_id:int: Specify the chain on which the transaction will be executed
+            chain_info:ChainSwapInfo: Information about chains to execute transaction
             taker_address:str: Address who makes the transaction and will receive tokens
             gas_price:Optional[int]=None: Specify the gas price for the transaction
             slippage_percentage:Optional[float]=None: Specify the percentage of slippage to apply to the quote
@@ -71,7 +72,7 @@ class BaseProvider(ABC):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_id: int,
+        chain_info: ChainSwapInfo,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         taker_address: Optional[str] = None,
@@ -86,7 +87,7 @@ class BaseProvider(ABC):
             buy_token:str: Token is being buy
             sell_token:str: Token is being sold
             sell_amount:int: Amount of sell_token to sell
-            chain_id:int: Specify the chain on which the transaction will be executed
+            chain_info:ChainSwapInfo: Information about chains to execute transaction
             gas_price:Optional[int]=None: Specify the gas price for the transaction
             slippage_percentage:Optional[float]=None: Specify the percentage of slippage to apply to the quote
             taker_address:Optional[str]=None: Address who makes the transaction and will receive tokens

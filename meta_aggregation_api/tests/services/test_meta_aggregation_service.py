@@ -7,6 +7,7 @@ from web3 import Web3
 
 from meta_aggregation_api.config import Config
 from meta_aggregation_api.config.providers import ProvidersConfig
+from meta_aggregation_api.models.chain import SingleChainSwapInfo
 from meta_aggregation_api.models.meta_agg_models import ProviderPriceResponse
 from meta_aggregation_api.services.meta_aggregation_service import (
     MetaAggregationService,
@@ -155,7 +156,7 @@ async def test_get_swap_meta_price_no_price(
             test_str,
             test_str_2,
             test_int,
-            test_int,
+            SingleChainSwapInfo(test_int),
             test_int,
             test_int,
             test_str,
@@ -262,6 +263,6 @@ async def test_get_meta_swap_quote(meta_agg_service: MetaAggregationService):
             sell_token='test',
             buy_token='test',
             sell_amount=1,
-            chain_id=1,
+            chain_info=SingleChainSwapInfo(1),
             taker_address='test',
         )

@@ -5,6 +5,7 @@ from fastapi.security import HTTPBearer
 from pydantic import conint
 
 from meta_aggregation_api.config.auth import AuthJWT
+from meta_aggregation_api.models.chain import CrossChainSwapInfo
 from meta_aggregation_api.models.meta_agg_models import (
     MetaPriceModel,
     ProviderQuoteResponse,
@@ -26,6 +27,7 @@ async def get_swap_price(
     sell_token: address_to_lower = Query(..., alias='sellToken'),
     sell_amount: conint(gt=0) = Query(..., alias='sellAmount'),
     chain_id: int = Path(..., description='Chain ID'),
+    chain_id_to: int = Query(..., alias='chain_id'),
     gas_price: Optional[int] = Query(
         None, description='Gas price', gt=0, alias='gasPrice'
     ),
@@ -61,7 +63,7 @@ async def get_swap_price(
         "buy_token": buy_token,
         "sell_token": sell_token,
         "sell_amount": sell_amount,
-        "chain_id": chain_id,
+        "chain_info": CrossChainSwapInfo(chain_id, chain_id_to),
         "gas_price": gas_price,
         "slippage_percentage": slippage_percentage,
         "taker_address": taker_address,
@@ -91,6 +93,7 @@ async def get_all_swap_prices(
     sell_token: address_to_lower = Query(..., alias='sellToken'),
     sell_amount: conint(gt=0) = Query(..., alias='sellAmount'),
     chain_id: int = Path(..., description='Chain ID'),
+    chain_id_to: int = Query(..., alias='chain_id'),
     gas_price: Optional[int] = Query(
         None, description='Gas price', gt=0, alias='gasPrice'
     ),
@@ -121,7 +124,7 @@ async def get_all_swap_prices(
         buy_token=buy_token,
         sell_token=sell_token,
         sell_amount=sell_amount,
-        chain_id=chain_id,
+        chain_info=CrossChainSwapInfo(chain_id, chain_id_to),
         gas_price=gas_price,
         slippage_percentage=slippage_percentage,
         taker_address=taker_address,
@@ -149,6 +152,7 @@ async def get_swap_quote(
     sell_token: address_to_lower = Query(..., alias='sellToken'),
     sell_amount: conint(gt=0) = Query(..., alias='sellAmount'),
     chain_id: int = Path(..., description='Chain ID'),
+    chain_id_to: int = Query(..., alias='chain_id'),
     provider: str = Query(..., alias='provider'),
     taker_address: address_to_lower = Query(..., alias='takerAddress'),
     gas_price: Optional[int] = Query(
@@ -182,7 +186,7 @@ async def get_swap_quote(
         buy_token=buy_token,
         sell_token=sell_token,
         sell_amount=sell_amount,
-        chain_id=chain_id,
+        chain_info=CrossChainSwapInfo(chain_id, chain_id_to),
         provider=provider,
         gas_price=gas_price,
         slippage_percentage=slippage_percentage,

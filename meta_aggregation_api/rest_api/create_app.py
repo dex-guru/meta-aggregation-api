@@ -10,6 +10,7 @@ from fastapi_jwt_auth.exceptions import AuthJWTException
 from meta_aggregation_api.clients.apm_client import ApmClient
 from meta_aggregation_api.config import Config
 from meta_aggregation_api.providers import ProviderRegistry
+from meta_aggregation_api.providers.debridge_dln_v1 import DebridgeDlnProviderV1
 from meta_aggregation_api.providers.kyberswap_v1 import KyberSwapProviderV1
 from meta_aggregation_api.providers.one_inch_v5 import OneInchProviderV5
 from meta_aggregation_api.providers.openocean_v2 import OpenOceanProviderV2
@@ -81,6 +82,12 @@ def create_app(config: Config):
             apm_client=apm_client,
         ),
         KyberSwapProviderV1(
+            config=config,
+            session=aiohttp_session,
+            apm_client=apm_client,
+            chains=chains,
+        ),
+        DebridgeDlnProviderV1(
             config=config,
             session=aiohttp_session,
             apm_client=apm_client,

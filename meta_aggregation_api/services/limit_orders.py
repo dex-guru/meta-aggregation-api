@@ -7,6 +7,7 @@ from meta_aggregation_api.clients.apm_client import ApmClient
 from meta_aggregation_api.config import Config
 from meta_aggregation_api.models.meta_agg_models import LimitOrderPostData
 from meta_aggregation_api.providers import ProviderRegistry
+from meta_aggregation_api.providers.debridge_dln_v1 import DebridgeDlnProviderV1
 from meta_aggregation_api.providers.one_inch_v5 import OneInchProviderV5
 from meta_aggregation_api.utils.cache import get_cache_config
 from meta_aggregation_api.utils.errors import ProviderNotFound
@@ -47,7 +48,7 @@ class LimitOrdersService:
         if not provider_instance:
             raise ProviderNotFound(provider)
 
-        if not isinstance(provider_instance, OneInchProviderV5):
+        if not isinstance(provider_instance, OneInchProviderV5) and not isinstance(provider_instance, DebridgeDlnProviderV1):
             raise NotImplementedError(f"provider {provider} is not supported")
 
         logger.info(
@@ -86,7 +87,7 @@ class LimitOrdersService:
         if not provider_instance:
             raise ProviderNotFound(provider)
 
-        if not isinstance(provider_instance, OneInchProviderV5):
+        if not isinstance(provider_instance, OneInchProviderV5) and not isinstance(provider_instance, DebridgeDlnProviderV1):
             raise NotImplementedError(f"provider {provider} is not supported")
 
         logger.info(
