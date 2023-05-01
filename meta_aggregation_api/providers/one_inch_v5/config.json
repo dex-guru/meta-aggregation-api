@@ -42,6 +42,11 @@
       "chain_id": 100,
       "limit_order": "0x1111111254eeb25477b68fb85ed929f73a960582",
       "market_order": "0x1111111254eeb25477b68fb85ed929f73a960582"
+    },
+    {
+      "chain_id": 324,
+      "limit_order": "0x6e2b76966cbd9cf4cc2fa0d76d24d5241e0abc2f",
+      "market_order": "0x6131b5fae19ea4f9d964eac0408e4408b66337b5"
     }
   ]
 }
