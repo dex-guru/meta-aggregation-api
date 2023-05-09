@@ -14,8 +14,8 @@ class Config(APMConfig, LoggerConfig, AuthConfig, CacheConfig, BaseSettings):
     RELOAD: bool = True
     NATIVE_TOKEN_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     VERSION = '0.0.1'
-    PUBLIC_KEY = 'Get your key at https://developers.dex.guru/'
-    PUBLIC_API_DOMAIN: HttpUrl = 'https://api.dev.dex.guru/'
+    PUBLIC_KEY = 'Get your key at https://developers.dex.guru'
+    PUBLIC_API_DOMAIN: HttpUrl = 'https://api.dev.dex.guru'
     API_VERSION = 1
     WEB3_TIMEOUT: int = 10
     CORS_ORIGINS = ['*']

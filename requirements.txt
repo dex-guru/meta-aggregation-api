@@ -1,5 +1,5 @@
 # python3.10
-dexguru-sdk==0.2.6
+dexguru-sdk==0.2.8
 
 # api
 fastapi==0.88.0
