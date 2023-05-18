@@ -14,7 +14,6 @@ from yarl import URL
 
 from meta_aggregation_api.clients.apm_client import ApmClient
 from meta_aggregation_api.config import Config
-from meta_aggregation_api.models.chain import SingleChainSwapInfo
 from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
@@ -265,14 +264,13 @@ class OneInchProviderV5(BaseProvider):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_info: SingleChainSwapInfo,
+        chain_id: Optional[int] = None,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = 1,
         taker_address: Optional[str] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
     ):
-        chain_id = chain_info.chain_id
         path = 'quote'
         url = self._trading_api_path_builder(
             path=path,
@@ -338,7 +336,7 @@ class OneInchProviderV5(BaseProvider):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_info: SingleChainSwapInfo,
+        chain_id: int,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         taker_address: Optional[str] = None,
@@ -347,7 +345,6 @@ class OneInchProviderV5(BaseProvider):
         ignore_checks: bool = False,
     ) -> Optional[ProviderQuoteResponse]:
         """https://docs.1inch.io/docs/aggregation-protocol/api/swap-params"""
-        chain_id = chain_info.chain_id
         if not chain_id:
             raise ValueError('chain_id is required')
 

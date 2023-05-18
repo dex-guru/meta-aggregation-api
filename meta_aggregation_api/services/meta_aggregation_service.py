@@ -13,13 +13,12 @@ from meta_aggregation_api.clients.apm_client import ApmClient
 from meta_aggregation_api.clients.blockchain.web3_client import Web3Client
 from meta_aggregation_api.config import Config
 from meta_aggregation_api.config.providers import ProvidersConfig
-from meta_aggregation_api.models.chain import ChainSwapInfo
 from meta_aggregation_api.models.meta_agg_models import (
     MetaPriceModel,
     ProviderPriceResponse,
     ProviderQuoteResponse,
 )
-from meta_aggregation_api.providers import ProviderRegistry
+from meta_aggregation_api.providers import ProviderRegistry, CrossChainProvider
 from meta_aggregation_api.services.chains import ChainsConfig
 from meta_aggregation_api.services.gas_service import GasService
 from meta_aggregation_api.utils.cache import get_cache_config
@@ -41,8 +40,10 @@ class MetaAggregationService:
         session: aiohttp.ClientSession,
         apm_client: ApmClient,
         provider_registry: ProviderRegistry,
+        crosschain_provider_registry: ProviderRegistry,
     ):
         self.provider_registry = provider_registry
+        self.crosschain_provider_registry = crosschain_provider_registry
         self.config = config
         self.providers = providers
         self.gas_service = gas_service
@@ -140,7 +141,7 @@ class MetaAggregationService:
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_info: ChainSwapInfo,
+        chain_id: int,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         taker_address: Optional[str] = None,
@@ -156,7 +157,7 @@ class MetaAggregationService:
             sell_token:str: Specify the token address that is sold in the swap
             sell_amount:int: Specify the amount of tokens to sell in base units (e.g. 1 ETH = 10 ** 18)
             taker_address:str: Specify the address of the user who will be using this price_response
-            chain_info:ChainSwapInfo: Information about chains to execute transaction
+            chain_id:int: Specify the chain on which to perform the swap
             gas_price:Optional[int]=None: Set the gas price for the transaction. If not set, the gas price will be fetched web3
             slippage_percentage:Optional[float]=None: Set a maximum percentage of slippage for the trade. (0.01 = 1%)
             fee_recipient:Optional[str]=None: Specify the address of a fee recipient
@@ -174,10 +175,10 @@ class MetaAggregationService:
         Raises:
             ValueError: If not found any possible swap for the given parameters on all providers
         """
-        spender_addresses = self.providers.get_providers_on_chain(chain_info.chain_id)[
+        spender_addresses = self.providers.get_providers_on_chain(chain_id)[
             'market_order'
         ]
-        web3_url = get_web3_url(chain_info.chain_id, self.config)
+        web3_url = get_web3_url(chain_id, self.config)
         erc20_contract = Web3Client(web3_url, self.config).get_erc20_contract(
             sell_token
         )
@@ -191,18 +192,18 @@ class MetaAggregationService:
             )
         )
         get_decimals_task = asyncio.create_task(
-            self.get_decimals_for_native_and_buy_token(chain_info.chain_id, buy_token)
+            self.get_decimals_for_native_and_buy_token(chain_id, buy_token)
         )
 
         if buy_token == self.config.NATIVE_TOKEN_ADDRESS:
-            buy_token = self.chains.get_chain_by_id(chain_info.chain_id).native_token.address
+            buy_token = self.chains.get_chain_by_id(chain_id).native_token.address
         get_buy_token_price_task = asyncio.create_task(
             DexGuru(
                 self.config.PUBLIC_KEY, domain=self.config.PUBLIC_API_DOMAIN
-            ).get_token_finance(chain_info.chain_id, buy_token)
+            ).get_token_finance(chain_id, buy_token)
         )
         if not gas_price:
-            gas_price = await self.gas_service.get_base_gas_price(chain_info.chain_id)
+            gas_price = await self.gas_service.get_base_gas_price(chain_id)
 
         prices_tasks = []
         for provider in self.providers.values():
@@ -220,7 +221,7 @@ class MetaAggregationService:
                         buy_token,
                         sell_token,
                         sell_amount,
-                        chain_info,
+                        chain_id,
                         gas_price,
                         slippage_percentage,
                         taker_address,
@@ -242,7 +243,7 @@ class MetaAggregationService:
                     'buy_token': buy_token,
                     'sell_token': sell_token,
                     'sell_amount': sell_amount,
-                    'chain_id': chain_info.chain_id,
+                    'chain_id': chain_id,
                     'providers': list(prices.keys()),
                 },
             )
@@ -256,7 +257,7 @@ class MetaAggregationService:
         )
         logger.info(
             'Got swap prices for chain %s',
-            chain_info.chain_id,
+            chain_id,
             extra={
                 'best_provider': best_provider,
                 'buy_token': buy_token,
@@ -398,7 +399,7 @@ class MetaAggregationService:
         sell_amount: int,
         taker_address: str,
         provider: str,
-        chain_info: ChainSwapInfo,
+        chain_id: int,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         fee_recipient: Optional[str] = None,
@@ -413,7 +414,7 @@ class MetaAggregationService:
             sell_amount:int: Specify the amount of tokens to sell in base units (e.g. 1 ETH = 10 ** 18)
             taker_address:str: Specify the address of the user who will be using this price_response
             provider:str: Specify the provider to use
-            chain_info:ChainSwapInfo: Information about chains to execute transaction
+            chain_id:int: Specify the chain on which to perform the swap
             gas_price:Optional[int]=None: Set the gas price for the transaction. If not set, the gas price will be fetched web3
             slippage_percentage:Optional[float]=None: Set a maximum percentage of slippage for the trade. (0.01 = 1%)
             fee_recipient:Optional[str]=None: Specify the address of a fee recipient
@@ -436,7 +437,7 @@ class MetaAggregationService:
             buy_token=buy_token,
             sell_token=sell_token,
             sell_amount=sell_amount,
-            chain_info=chain_info,
+            chain_id=chain_id,
             gas_price=gas_price,
             slippage_percentage=slippage_percentage,
             taker_address=taker_address,
@@ -450,7 +451,7 @@ class MetaAggregationService:
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_info: ChainSwapInfo,
+        chain_id: int,
         provider: str,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
@@ -466,7 +467,7 @@ class MetaAggregationService:
             buy_token:str: Specify the token address that you want to buy
             sell_token:str: Specify the token address that is sold in the swap
             sell_amount:int: Specify the amount of tokens to sell in base units (e.g. 1 ETH = 10 ** 18)
-            chain_info:ChainSwapInfo: Information about chains to execute transaction
+            chain_id:int: Specify the chain on which to perform the swap
             provider: Optional[str]: Specify the provider to use
             gas_price:Optional[int]=None: Set the gas price for the transaction. If not set, the gas price will be fetched web3
             slippage_percentage:Optional[float]=None: Set a maximum percentage of slippage for the trade. (0.01 = 1%)
@@ -493,7 +494,7 @@ class MetaAggregationService:
         spender_address = next(
             (
                 spender['address']
-                for spender in self.providers.get_providers_on_chain(chain_info.chain_id)[
+                for spender in self.providers.get_providers_on_chain(chain_id)[
                     'market_order'
                 ]
                 if spender['name'] == provider
@@ -501,13 +502,13 @@ class MetaAggregationService:
             None,
         )
 
-        web3_url = get_web3_url(chain_info.chain_id, config=self.config)
+        web3_url = get_web3_url(chain_id, config=self.config)
         erc20_contract = Web3Client(web3_url, self.config).get_erc20_contract(
             sell_token
         )
         if not gas_price:
             gas_price = asyncio.create_task(
-                self.gas_service.get_base_gas_price(chain_info.chain_id)
+                self.gas_service.get_base_gas_price(chain_id)
             )
         allowance = await self.get_token_allowance(
             sell_token, spender_address, erc20_contract, taker_address
@@ -526,7 +527,162 @@ class MetaAggregationService:
             buy_token=buy_token,
             sell_token=sell_token,
             sell_amount=sell_amount,
-            chain_info=chain_info,
+            chain_id=chain_id,
+            gas_price=gas_price,
+            slippage_percentage=slippage_percentage,
+            taker_address=taker_address,
+            fee_recipient=fee_recipient,
+            buy_token_percentage_fee=buy_token_percentage_fee,
+        )
+        return MetaPriceModel(
+            provider=provider,
+            price_response=price,
+            is_allowed=bool(allowance),
+            approve_cost=approve_cost,
+        )
+
+    async def get_crosschain_meta_swap_quote(
+        self,
+        buy_token: str,
+        sell_token: str,
+        sell_amount: int,
+        taker_address: str,
+        provider: str,
+        chain_id_from: int,
+        chain_id_to: int,
+        gas_price: Optional[int] = None,
+        slippage_percentage: Optional[float] = None,
+        fee_recipient: Optional[str] = None,
+        buy_token_percentage_fee: Optional[float] = None,
+    ) -> ProviderQuoteResponse:
+        """
+        Get a data for crosschain swap from a specific provider.
+
+        Args:
+            buy_token:str: Specify the token address that you want to buy
+            sell_token:str: Specify the token address that is sold in the swap
+            sell_amount:int: Specify the amount of tokens to sell in base units (e.g. 1 ETH = 10 ** 18)
+            taker_address:str: Specify the address of the user who will be using this price_response
+            provider:str: Specify the provider to use
+            chain_id_from:int: Specify the chain on which the transaction will be executed, a chain where the cross-chain swap will start
+            chain_id_to:int: chain where the cross-chain swap will finish
+            gas_price:Optional[int]=None: Set the gas price for the transaction. If not set, the gas price will be fetched web3
+            slippage_percentage:Optional[float]=None: Set a maximum percentage of slippage for the trade. (0.01 = 1%)
+            fee_recipient:Optional[str]=None: Specify the address of a fee recipient
+            buy_token_percentage_fee:Optional[float]=None: Specify a percentage of the buy_amount that will be used to pay fees
+
+        Returns:
+            ProviderQuoteResponse: The price_response object
+
+        Raises:
+            ProviderNotFound: If passed provider is not supported
+            Type[BaseAggregationProviderError]: check utils/errors.py to get all possible errors
+        """
+        provider_name = provider
+
+        provider = self.provider_registry.get(provider_name)
+        if not provider:
+            raise ProviderNotFound(provider)
+
+        quote = await provider.get_swap_quote(
+            buy_token=buy_token,
+            sell_token=sell_token,
+            sell_amount=sell_amount,
+            chain_id_from=chain_id_from,
+            chain_id_to=chain_id_to,
+            gas_price=gas_price,
+            slippage_percentage=slippage_percentage,
+            taker_address=taker_address,
+            fee_recipient=fee_recipient,
+            buy_token_percentage_fee=buy_token_percentage_fee,
+        )
+        return quote
+
+    async def get_crosschain_provider_price(
+        self,
+        buy_token: str,
+        sell_token: str,
+        sell_amount: int,
+        chain_id_from: int,
+        chain_id_to: int,
+        provider: str,
+        gas_price: Optional[int] = None,
+        slippage_percentage: Optional[float] = None,
+        taker_address: Optional[str] = None,
+        fee_recipient: Optional[str] = None,
+        buy_token_percentage_fee: Optional[float] = None,
+    ) -> MetaPriceModel:
+        """
+        Get crosschain swap price from chosen provider.
+        Works in the same way as get_swap_meta_price, but returns only one object.
+
+        Args:
+            buy_token:str: Specify the token address that you want to buy
+            sell_token:str: Specify the token address that is sold in the swap
+            sell_amount:int: Specify the amount of tokens to sell in base units (e.g. 1 ETH = 10 ** 18)
+            chain_id_from:int: Specify the chain on which the transaction will be executed, a chain where the cross-chain swap will start
+            chain_id_to:int: chain where the cross-chain swap will finish
+            provider: Optional[str]: Specify the provider to use
+            gas_price:Optional[int]=None: Set the gas price for the transaction. If not set, the gas price will be fetched web3
+            slippage_percentage:Optional[float]=None: Set a maximum percentage of slippage for the trade. (0.01 = 1%)
+            taker_address:str: Specify the address of the user who will be using this price_response
+            fee_recipient:Optional[str]=None: Specify the address of a fee recipient
+            buy_token_percentage_fee:Optional[float]=None: Specify a percentage of the buy_amount that will be used to pay fees
+
+        Returns:
+            MetaPriceModel object, which contain the following fields:
+                provider:str: The name of the provider
+                price_response:ProviderPriceResponse: The price_response from the provider
+                approve_cost:int: The cost of the approve transaction
+                is_allowed:bool: The user has enough allowance for the swap on this provider
+                is_best:bool: Always None, because only one provider is used
+
+        Raises:
+            ProviderNotFound: If passed provider is not supported
+            Type[BaseAggregationProviderError]: check utils/errors.py to get all possible errors
+        """
+        provider_instance: CrossChainProvider = self.provider_registry.get(provider)
+        if not provider_instance:
+            raise ProviderNotFound(provider)
+
+        spender_address = next(
+            (
+                spender['address']
+                for spender in self.providers.get_providers_on_chain(chain_id_from)[
+                    'market_order'
+                ]
+                if spender['name'] == provider
+            ),
+            None,
+        )
+
+        web3_url = get_web3_url(chain_id_from, config=self.config)
+        erc20_contract = Web3Client(web3_url, self.config).get_erc20_contract(
+            sell_token
+        )
+        if not gas_price:
+            gas_price = asyncio.create_task(
+                self.gas_service.get_base_gas_price(chain_id_from)
+            )
+        allowance = await self.get_token_allowance(
+            sell_token, spender_address, erc20_contract, taker_address
+        )
+        approve_cost = 0
+        if allowance < sell_amount:
+            approve_cost = await self.get_approve_cost(
+                owner_address=taker_address,
+                spender_address=spender_address,
+                erc20_contract=erc20_contract,
+            )
+        gas_price = (
+            await gas_price if isinstance(gas_price, asyncio.Task) else gas_price
+        )
+        price = await provider_instance.get_swap_price(
+            buy_token=buy_token,
+            sell_token=sell_token,
+            sell_amount=sell_amount,
+            chain_id_from=chain_id_from,
+            chain_id_to=chain_id_to,
             gas_price=gas_price,
             slippage_percentage=slippage_percentage,
             taker_address=taker_address,

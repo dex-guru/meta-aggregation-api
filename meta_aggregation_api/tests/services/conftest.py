@@ -44,6 +44,7 @@ async def meta_agg_service(
         session=aiohttp.ClientSession(),
         apm_client=apm_client,
         provider_registry=provider_registry,
+        crosschain_provider_registry=provider_registry,
     )
     return service
 

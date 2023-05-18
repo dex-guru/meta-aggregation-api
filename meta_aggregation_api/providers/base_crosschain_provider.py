@@ -19,8 +19,8 @@ from meta_aggregation_api.utils.errors import (
 from meta_aggregation_api.utils.logger import capture_exception
 
 
-class BaseProvider(ABC):
-    PROVIDER_NAME = 'base_provider'
+class CrossChainProvider(ABC):
+    PROVIDER_NAME = 'base_crosschain_provider'
     REQUEST_TIMEOUT = 7
 
     def __init__(
@@ -40,7 +40,8 @@ class BaseProvider(ABC):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_id: int,
+        chain_id_from: int,
+        chain_id_to: int,
         taker_address: str,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
@@ -54,7 +55,8 @@ class BaseProvider(ABC):
             buy_token:str: Token is being buy
             sell_token:str: Token is being sold
             sell_amount:int: Amount of sell_token to sell
-            chain_id:int: Specify the chain on which the transaction will be executed
+            chain_id_from:int: Specify the chain on which the transaction will be executed, a chain where the cross-chain swap will start
+            chain_id_to:int: chain where the cross-chain swap will finish
             taker_address:str: Address who makes the transaction and will receive tokens
             gas_price:Optional[int]=None: Specify the gas price for the transaction
             slippage_percentage:Optional[float]=None: Specify the percentage of slippage to apply to the quote
@@ -71,7 +73,8 @@ class BaseProvider(ABC):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_id: int,
+        chain_id_from: int,
+        chain_id_to: int,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         taker_address: Optional[str] = None,
@@ -86,7 +89,8 @@ class BaseProvider(ABC):
             buy_token:str: Token is being buy
             sell_token:str: Token is being sold
             sell_amount:int: Amount of sell_token to sell
-            chain_id:int: Specify the chain on which the transaction will be executed
+            chain_id_from:int: Specify the chain on which the transaction will be executed, a chain where the cross-chain swap will start
+            chain_id_to:int: chain where the cross-chain swap will finish
             gas_price:Optional[int]=None: Specify the gas price for the transaction
             slippage_percentage:Optional[float]=None: Specify the percentage of slippage to apply to the quote
             taker_address:Optional[str]=None: Address who makes the transaction and will receive tokens

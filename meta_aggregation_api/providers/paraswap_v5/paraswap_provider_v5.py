@@ -12,7 +12,6 @@ from aiocache import cached
 from aiohttp import ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
 
-from meta_aggregation_api.models.chain import SingleChainSwapInfo
 from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
@@ -108,14 +107,13 @@ class ParaSwapProviderV5(BaseProvider):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_info: SingleChainSwapInfo,
+        chain_id: Optional[int] = None,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         taker_address: Optional[str] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
     ):
-        chain_id = chain_info.chain_id
         path = 'prices'
         params = {
             'srcToken': sell_token,
@@ -151,14 +149,13 @@ class ParaSwapProviderV5(BaseProvider):
         sell_token: str,
         sell_amount: int,
         taker_address: str,
-        chain_info: SingleChainSwapInfo,
+        chain_id: Optional[int] = None,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
         ignore_checks: bool = False,
     ) -> Optional[ProviderQuoteResponse]:
-        chain_id = chain_info.chain_id
         params = {
             'srcToken': sell_token,
             'destToken': buy_token,

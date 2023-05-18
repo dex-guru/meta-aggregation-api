@@ -12,7 +12,6 @@ from pydantic import ValidationError
 
 from meta_aggregation_api.clients.apm_client import ApmClient
 from meta_aggregation_api.config import Config
-from meta_aggregation_api.models.chain import SingleChainSwapInfo
 from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
@@ -186,7 +185,7 @@ class ZeroXProviderV1(BaseProvider):
         sell_token: str,
         sell_amount: int,
         taker_address: str,
-        chain_info: SingleChainSwapInfo,
+        chain_id: Optional[int] = None,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         fee_recipient: Optional[str] = None,
@@ -201,7 +200,6 @@ class ZeroXProviderV1(BaseProvider):
             - https://api.0x.org/swap/v1/quote?buyToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&sellAmount=1000000000000000000&sellToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
             - https://api.0x.org/swap/v1/quote?affiliateAddress=0x720c9244473Dfc596547c1f7B6261c7112A3dad4&buyToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&gasPrice=26000000000&sellAmount=1000000000000000000&sellToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&slippagePercentage=0.0100&takerAddress=0xA0942D8352FFaBCc0f6dEE32b2b081C703e726A5
         """
-        chain_id = chain_info.chain_id
         url = self._api_path_builder('swap', 'quote', chain_id)
         ignore_checks = str(ignore_checks).lower()
         query = {
@@ -275,7 +273,7 @@ class ZeroXProviderV1(BaseProvider):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_info: SingleChainSwapInfo,
+        chain_id: Optional[int] = None,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         taker_address: Optional[str] = None,
@@ -285,7 +283,6 @@ class ZeroXProviderV1(BaseProvider):
         """
         Docs: https://0x.org/docs/api#get-swapv1price
         """
-        chain_id = chain_info.chain_id
         url = self._api_path_builder('swap', 'price', chain_id)
         query = {
             'buyToken': buy_token,

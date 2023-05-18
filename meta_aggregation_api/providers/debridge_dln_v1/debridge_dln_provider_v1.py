@@ -10,13 +10,12 @@ import ujson
 from aiohttp import ClientResponse, ClientResponseError, ServerDisconnectedError
 from pydantic import ValidationError
 
-from meta_aggregation_api.models.chain import CrossChainSwapInfo
 from meta_aggregation_api.models.meta_agg_models import (
     ProviderPriceResponse,
     ProviderQuoteResponse,
 )
 from meta_aggregation_api.models.provider_response_models import SwapSources
-from meta_aggregation_api.providers.base_provider import BaseProvider
+from meta_aggregation_api.providers.base_crosschain_provider import CrossChainProvider
 from meta_aggregation_api.utils.errors import (
     AggregationProviderError,
     BaseAggregationProviderError,
@@ -26,10 +25,10 @@ from meta_aggregation_api.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-class DebridgeDlnProviderV1(BaseProvider):
+class DebridgeDlnProviderV1(CrossChainProvider):
     """https://docs.debridge.finance"""
 
-    TRADING_API = os.environ.get('DEBRIDGE_TRADING_API', 'https://api.dln.trade/v1.0/dln')
+    TRADING_API = os.environ.get('DEBRIDGE_TRADING_API', 'https://api.dln.trade/v1.0/dln/order')
     ORDER_API = os.environ.get('DEBRIDGE_ORDER_API', 'https://dln-api.debridge.finance/api')
 
     with open(Path(__file__).parent / 'config.json') as f:
@@ -90,15 +89,14 @@ class DebridgeDlnProviderV1(BaseProvider):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_info: CrossChainSwapInfo,
+        chain_id_from: int,
+        chain_id_to: int,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = 1,
         taker_address: Optional[str] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
     ):
-        give_chain_id = chain_info.give_chain_id
-        take_chain_id = chain_info.take_chain_id
         if buy_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             buy_token = '0x0000000000000000000000000000000000000000'
 
@@ -107,10 +105,10 @@ class DebridgeDlnProviderV1(BaseProvider):
 
         url = '%s/quote' % (self.TRADING_API)
         params = {
-            'srcChainId': give_chain_id,
+            'srcChainId': chain_id_from,
             'srcChainTokenIn': sell_token,
             'srcChainTokenInAmount': sell_amount,
-            'dstChainId': take_chain_id,
+            'dstChainId': chain_id_to,
             'dstChainTokenOut': buy_token,
             'affiliateFeePercent': 0,
             'prependOperatingExpenses': 'false',
@@ -123,8 +121,8 @@ class DebridgeDlnProviderV1(BaseProvider):
             ServerDisconnectedError,
         ) as e:
             exc = self.handle_exception(
-                e, params=params, token_address=sell_token, give_chain_id=give_chain_id,
-                take_chain_id=take_chain_id
+                e, params=params, token_address=sell_token, give_chain_id=chain_id_from,
+                take_chain_id=chain_id_to
             )
             raise exc
         return self._convert_response_from_swap_price(response)
@@ -134,35 +132,32 @@ class DebridgeDlnProviderV1(BaseProvider):
         buy_token: str,
         sell_token: str,
         sell_amount: int,
-        chain_info: CrossChainSwapInfo,
+        chain_id_from: int,
+        chain_id_to: int,
         taker_address: str,
         gas_price: Optional[int] = None,
         slippage_percentage: Optional[float] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
     ) -> ProviderQuoteResponse:
-        give_chain_id = chain_info.give_chain_id
-        take_chain_id = chain_info.take_chain_id
         if buy_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             buy_token = '0x0000000000000000000000000000000000000000'
 
         if sell_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             sell_token = '0x0000000000000000000000000000000000000000'
 
-        url = '%s/createOrder' % (self.TRADING_API)
+        url = '%s/create-tx' % (self.TRADING_API)
         params = {
-            'srcChainId': give_chain_id,
+            'srcChainId': chain_id_from,
             'srcChainTokenIn': sell_token,
             'srcChainTokenInAmount': sell_amount,
-            'dstChainId': take_chain_id,
+            'dstChainId': chain_id_to,
             'dstChainTokenOut': buy_token,
             'affiliateFeePercent': 0,
             'dstChainTokenOutAmount': 'auto',
+            'srcChainOrderAuthorityAddress': taker_address,
             'dstChainTokenOutRecipient': taker_address,
-            'srcChainRefundAddress': taker_address,
             'dstChainOrderAuthorityAddress': taker_address,
-            'senderAddress': taker_address,
-            'enableEstimate': 'true',
         }
 
         try:
@@ -173,7 +168,7 @@ class DebridgeDlnProviderV1(BaseProvider):
             ServerDisconnectedError,
         ) as e:
             exc = self.handle_exception(
-                e, params=params, token_address=sell_token, chain_id=chain_info.chain_id
+                e, params=params, token_address=sell_token, chain_id=chain_id_from
             )
             raise exc
         return self._convert_response_from_swap_quote(response)
@@ -224,7 +219,7 @@ class DebridgeDlnProviderV1(BaseProvider):
                 buy_amount=estimation['dstChainTokenOut']['amount'],
                 sell_amount=estimation['srcChainTokenIn']['amount'],
                 gas_price=0,
-                gas=tx['gasLimit'],
+                gas=0,
                 value=tx['value'],
                 price=str(price),
                 data=tx['data'],
