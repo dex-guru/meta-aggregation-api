@@ -1,6 +1,6 @@
 {
-  "name": "debridge",
-  "display_name": "Debridge",
+  "name": "dln",
+  "display_name": "DLN",
   "enabled": false,
   "spenders": [
     {

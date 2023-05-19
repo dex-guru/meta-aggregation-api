@@ -281,7 +281,7 @@ class DebridgeDlnProviderV1(CrossChainProvider):
         chain_id: Optional[int],
         order_hash: str,
     ) -> Optional[Dict[str, List[Dict]]]:
-        url = '%s/Orders/%s' % (self.ORDER_API, order_hash)
+        url = '%s/%s' % (self.TRADING_API, order_hash)
 
         try:
             response = await self._get_response(url, {})
