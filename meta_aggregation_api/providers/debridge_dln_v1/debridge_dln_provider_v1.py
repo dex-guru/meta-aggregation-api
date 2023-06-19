@@ -34,6 +34,9 @@ class DebridgeDlnProviderV1(CrossChainProvider):
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
 
+    def is_require_gas_price(self) -> bool:
+        return True
+
     async def _get_response(self, url: str, params: Optional[dict] = None) -> dict:
         async with self.aiohttp_session.get(
             url, params=params, timeout=self.REQUEST_TIMEOUT, ssl=ssl.SSLContext()
@@ -110,8 +113,8 @@ class DebridgeDlnProviderV1(CrossChainProvider):
             'srcChainTokenInAmount': sell_amount,
             'dstChainId': chain_id_to,
             'dstChainTokenOut': buy_token,
-            'affiliateFeePercent': 0,
-            'prependOperatingExpenses': 'false',
+            'affiliateFeePercent': int(buy_token_percentage_fee * 100),
+            'prependOperatingExpenses': 'true',
         }
         try:
             response = await self._get_response(url, params)
@@ -153,7 +156,8 @@ class DebridgeDlnProviderV1(CrossChainProvider):
             'srcChainTokenInAmount': sell_amount,
             'dstChainId': chain_id_to,
             'dstChainTokenOut': buy_token,
-            'affiliateFeePercent': 0,
+            'affiliateFeePercent': int(buy_token_percentage_fee * 100),
+            "affiliateFeeRecipient": taker_address,
             'dstChainTokenOutAmount': 'auto',
             'srcChainOrderAuthorityAddress': taker_address,
             'dstChainTokenOutRecipient': taker_address,
@@ -194,6 +198,7 @@ class DebridgeDlnProviderV1(CrossChainProvider):
                 gas_price='0',
                 value='0',
                 price=str(price),
+                allowance_target=response['tx']['allowanceTarget'],
             )
         except (KeyError, ValidationError) as e:
             e = self.handle_exception(

@@ -35,6 +35,11 @@ class CrossChainProvider(ABC):
         self.config = config
 
     @abstractmethod
+    def is_require_gas_price(self) -> bool:
+        pass
+
+
+    @abstractmethod
     async def get_swap_quote(
         self,
         buy_token: str,

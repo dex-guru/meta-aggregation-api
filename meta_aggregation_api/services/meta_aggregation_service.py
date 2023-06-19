@@ -645,38 +645,15 @@ class MetaAggregationService:
         if not provider_instance:
             raise ProviderNotFound(provider)
 
-        spender_address = next(
-            (
-                spender['address']
-                for spender in self.providers.get_providers_on_chain(chain_id_from)[
-                    'market_order'
-                ]
-                if spender['name'] == provider
-            ),
-            None,
-        )
+        if provider_instance.is_require_gas_price():
+            if not gas_price:
+                gas_price = asyncio.create_task(
+                    self.gas_service.get_base_gas_price(chain_id_from)
+                )
+            gas_price = (
+                await gas_price if isinstance(gas_price, asyncio.Task) else gas_price
+            )
 
-        web3_url = get_web3_url(chain_id_from, config=self.config)
-        erc20_contract = Web3Client(web3_url, self.config).get_erc20_contract(
-            sell_token
-        )
-        if not gas_price:
-            gas_price = asyncio.create_task(
-                self.gas_service.get_base_gas_price(chain_id_from)
-            )
-        allowance = await self.get_token_allowance(
-            sell_token, spender_address, erc20_contract, taker_address
-        )
-        approve_cost = 0
-        if allowance < sell_amount:
-            approve_cost = await self.get_approve_cost(
-                owner_address=taker_address,
-                spender_address=spender_address,
-                erc20_contract=erc20_contract,
-            )
-        gas_price = (
-            await gas_price if isinstance(gas_price, asyncio.Task) else gas_price
-        )
         price = await provider_instance.get_swap_price(
             buy_token=buy_token,
             sell_token=sell_token,
@@ -689,6 +666,38 @@ class MetaAggregationService:
             fee_recipient=fee_recipient,
             buy_token_percentage_fee=buy_token_percentage_fee,
         )
+
+        web3_url = get_web3_url(chain_id_from, config=self.config)
+        erc20_contract = Web3Client(web3_url, self.config).get_erc20_contract(
+            sell_token
+        )
+
+        approve_cost = 0
+        if price.allowance_target is None:
+            spender_address = next(
+                (
+                    spender['address']
+                    for spender in self.providers.get_providers_on_chain(chain_id_from)[
+                        'market_order'
+                    ]
+                    if spender['name'] == provider
+                ),
+                None,
+            )
+
+        else:
+            spender_address = price.allowance_target
+
+        allowance = await self.get_token_allowance(
+            sell_token, spender_address, erc20_contract, taker_address
+        )
+        if allowance < sell_amount:
+            approve_cost = await self.get_approve_cost(
+                owner_address=taker_address,
+                spender_address=spender_address,
+                erc20_contract=erc20_contract,
+            )
+
         return MetaPriceModel(
             provider=provider,
             price_response=price,
