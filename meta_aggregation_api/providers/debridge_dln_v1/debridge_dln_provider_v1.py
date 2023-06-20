@@ -106,6 +106,10 @@ class DebridgeDlnProviderV1(CrossChainProvider):
         if sell_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             sell_token = '0x0000000000000000000000000000000000000000'
 
+        affiliate_fee_percent = 0
+        if buy_token_percentage_fee is not None:
+            affiliate_fee_percent = int(buy_token_percentage_fee * 100)
+
         url = '%s/quote' % (self.TRADING_API)
         params = {
             'srcChainId': chain_id_from,
@@ -113,7 +117,7 @@ class DebridgeDlnProviderV1(CrossChainProvider):
             'srcChainTokenInAmount': sell_amount,
             'dstChainId': chain_id_to,
             'dstChainTokenOut': buy_token,
-            'affiliateFeePercent': int(buy_token_percentage_fee * 100),
+            'affiliateFeePercent': affiliate_fee_percent,
             'prependOperatingExpenses': 'true',
         }
         try:
@@ -149,6 +153,10 @@ class DebridgeDlnProviderV1(CrossChainProvider):
         if sell_token.lower() == self.config.NATIVE_TOKEN_ADDRESS:
             sell_token = '0x0000000000000000000000000000000000000000'
 
+        affiliate_fee_percent = 0
+        if buy_token_percentage_fee is not None:
+            affiliate_fee_percent = int(buy_token_percentage_fee * 100)
+
         url = '%s/create-tx' % (self.TRADING_API)
         params = {
             'srcChainId': chain_id_from,
@@ -156,8 +164,8 @@ class DebridgeDlnProviderV1(CrossChainProvider):
             'srcChainTokenInAmount': sell_amount,
             'dstChainId': chain_id_to,
             'dstChainTokenOut': buy_token,
-            'affiliateFeePercent': int(buy_token_percentage_fee * 100),
-            "affiliateFeeRecipient": taker_address,
+            'affiliateFeePercent': affiliate_fee_percent,
+            "affiliateFeeRecipient": fee_recipient,
             'dstChainTokenOutAmount': 'auto',
             'srcChainOrderAuthorityAddress': taker_address,
             'dstChainTokenOutRecipient': taker_address,
