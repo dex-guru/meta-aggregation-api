@@ -18,7 +18,7 @@ def get_web3_url(chain_id: int, config: Config):
     nodes for specific chains are proxied under /{chain_id/{public_key} routes
     please adjust to return correct web3 url for your setup if needed
     """
-    return urljoin(config.PUBLIC_API_DOMAIN, f'{chain_id}/{config.PUBLIC_KEY}')
+    return urljoin(config.PUBLIC_API_DOMAIN, f'rpc/{chain_id}/{config.PUBLIC_KEY}')
 
 
 address_to_lower = constr(
