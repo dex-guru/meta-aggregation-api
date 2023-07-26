@@ -31,3 +31,4 @@ class ProvidersConfigModel(BaseModel):
 
 class AllProvidersConfigModel(ProvidersConfigModel, BaseModel):
     chain_id: Optional[int] = None
+

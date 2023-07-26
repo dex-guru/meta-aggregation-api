@@ -14,6 +14,7 @@ class ProviderPriceResponse(BaseModel):
     gas_price: str  # gas price for the swap
     value: str  # amount of native token that should be sent with the transaction
     price: str  # price for buy_token in sell_token
+    allowance_target: Optional[str]
 
 
 class MetaPriceModel(BaseModel):

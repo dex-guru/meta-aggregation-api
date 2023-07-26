@@ -10,6 +10,7 @@ from fastapi_jwt_auth.exceptions import AuthJWTException
 from meta_aggregation_api.clients.apm_client import ApmClient
 from meta_aggregation_api.config import Config
 from meta_aggregation_api.providers import ProviderRegistry
+from meta_aggregation_api.providers.debridge_dln_v1 import DebridgeDlnProviderV1
 from meta_aggregation_api.providers.kyberswap_v1 import KyberSwapProviderV1
 from meta_aggregation_api.providers.one_inch_v5 import OneInchProviderV5
 from meta_aggregation_api.providers.openocean_v2 import OpenOceanProviderV2
@@ -22,6 +23,7 @@ from meta_aggregation_api.rest_api.routes.info import info_route
 from meta_aggregation_api.rest_api.routes.limit_orders import limit_orders
 from meta_aggregation_api.rest_api.routes.rpc import v1_rpc
 from meta_aggregation_api.rest_api.routes.swap import swap_route
+from meta_aggregation_api.rest_api.routes.crosschain_swap import crosschain_swap_route
 from meta_aggregation_api.utils.errors import BaseAggregationProviderError
 from meta_aggregation_api.utils.logger import get_logger
 
@@ -58,7 +60,7 @@ def create_app(config: Config):
         chains=chains,
     )
     providers = dependencies.ProvidersConfig()
-    prorvider_registry = ProviderRegistry(
+    provider_registry = ProviderRegistry(
         ZeroXProviderV1(
             session=aiohttp_session,
             config=config,
@@ -86,6 +88,20 @@ def create_app(config: Config):
             apm_client=apm_client,
             chains=chains,
         ),
+        DebridgeDlnProviderV1(
+            config=config,
+            session=aiohttp_session,
+            apm_client=apm_client,
+            chains=chains,
+        ),
+    )
+    crosschain_provider_registry = ProviderRegistry(
+        DebridgeDlnProviderV1(
+            config=config,
+            session=aiohttp_session,
+            apm_client=apm_client,
+            chains=chains,
+        ),
     )
     meta_aggregation_service = dependencies.MetaAggregationService(
         config=config,
@@ -94,13 +110,14 @@ def create_app(config: Config):
         providers=providers,
         session=aiohttp_session,
         apm_client=apm_client,
-        provider_registry=prorvider_registry,
+        provider_registry=provider_registry,
+        crosschain_provider_registry=crosschain_provider_registry,
     )
     limit_orders_service = dependencies.LimitOrdersService(
         config=config,
         session=aiohttp_session,
         apm_client=apm_client,
-        provider_registry=prorvider_registry,
+        provider_registry=provider_registry,
     )
     deps = dependencies.Dependencies(
         aiohttp_session=aiohttp_session,
@@ -209,4 +226,5 @@ def register_route(app: FastAPI):
     app.include_router(gas_routes, prefix="/v1/gas", tags=["Gas"])
     app.include_router(info_route, prefix="/v1/info", tags=["Info"])
     app.include_router(swap_route, prefix="/v1/market", tags=["Swap"])
+    app.include_router(crosschain_swap_route, prefix="/v1/crosschain", tags=["CrossChain Swap"])
     app.include_router(limit_orders, prefix="/v1/limit", tags=["Limit Orders"])

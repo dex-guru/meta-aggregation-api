@@ -3,6 +3,7 @@ import pytest
 
 from meta_aggregation_api.config.providers import ProvidersConfig
 from meta_aggregation_api.providers import ProviderRegistry
+from meta_aggregation_api.providers.debridge_dln_v1 import DebridgeDlnProviderV1
 from meta_aggregation_api.providers.kyberswap_v1 import KyberSwapProviderV1
 from meta_aggregation_api.providers.one_inch_v5 import OneInchProviderV5
 from meta_aggregation_api.providers.openocean_v2 import OpenOceanProviderV2
@@ -43,6 +44,7 @@ async def meta_agg_service(
         session=aiohttp.ClientSession(),
         apm_client=apm_client,
         provider_registry=provider_registry,
+        crosschain_provider_registry=provider_registry,
     )
     return service
 
@@ -72,6 +74,12 @@ def provider_registry(config, chains, apm_client, aiohttp_session):
             apm_client=apm_client,
         ),
         KyberSwapProviderV1(
+            config=config,
+            session=aiohttp_session,
+            apm_client=apm_client,
+            chains=chains,
+        ),
+        DebridgeDlnProviderV1(
             config=config,
             session=aiohttp_session,
             apm_client=apm_client,

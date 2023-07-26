@@ -1,5 +1,6 @@
 import pytest
 
+from meta_aggregation_api.providers.debridge_dln_v1 import DebridgeDlnProviderV1
 from meta_aggregation_api.providers.one_inch_v5.one_inch_provider import (
     OneInchProviderV5,
 )
@@ -26,5 +27,11 @@ def zerox_provider(aiohttp_session, config, chains, apm_client):
 @pytest.fixture()
 def paraswap_provider(aiohttp_session, config, apm_client):
     return ParaSwapProviderV5(
+        session=aiohttp_session, config=config, apm_client=apm_client
+    )
+
+@pytest.fixture()
+def debridge_provider(aiohttp_session, config, apm_client):
+    return DebridgeDlnProviderV1(
         session=aiohttp_session, config=config, apm_client=apm_client
     )

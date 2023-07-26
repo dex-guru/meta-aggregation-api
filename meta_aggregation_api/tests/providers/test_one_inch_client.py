@@ -83,7 +83,6 @@ async def test_get_order_by_hash(get_response_mock: AsyncMock, one_inch_provider
 async def test_get_swap_quote_raises(one_inch_provider):
     with pytest.raises(ValueError, match='chain_id is required'):
         await one_inch_provider.get_swap_quote(
-            chain_id=None,
             buy_token='test_maker_token',
             sell_token='test_taker_token',
             sell_amount='test_maker_amount',

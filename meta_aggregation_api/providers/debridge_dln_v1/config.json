@@ -1,0 +1,27 @@
+{
+  "name": "dln",
+  "display_name": "DLN",
+  "enabled": false,
+  "spenders": [
+    {
+      "chain_id": 1,
+      "limit_order": null
+    },
+    {
+      "chain_id": 56,
+      "limit_order": null
+    },
+    {
+      "chain_id": 137,
+      "limit_order": null
+    },
+    {
+      "chain_id": 42161,
+      "limit_order": null
+    },
+    {
+      "chain_id": 43114,
+      "limit_order": null
+    }
+  ]
+}
