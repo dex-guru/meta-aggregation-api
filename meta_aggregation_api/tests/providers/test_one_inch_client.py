@@ -23,7 +23,7 @@ def test_build_limit_order_url(one_inch_provider):
     )
     assert (
         str(url)
-        == f'https://{one_inch_provider.LIMIT_ORDERS_DOMAIN}/v{version}/{chain_id}/limit-order/{path}/{endpoint}'
+        == f'https://{one_inch_provider.LIMIT_ORDERS_DOMAIN}/v{version}/{chain_id}/{path}/{endpoint}'
     )
 
 

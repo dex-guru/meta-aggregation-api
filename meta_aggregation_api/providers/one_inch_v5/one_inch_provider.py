@@ -74,8 +74,8 @@ class OneInchProviderV5(BaseProvider):
         Limit orders: https://{limit_orders_domain}/v{version}/{chain_id}/limit_order/{operation}?queryParams
     """
 
-    LIMIT_ORDERS_DOMAIN = 'limit-orders.1inch.io'
-    TRADING_API_DOMAIN = 'api.1inch.io'
+    LIMIT_ORDERS_DOMAIN = 'api.1inch.dev/orderbook'
+    TRADING_API_DOMAIN = 'api.1inch.dev/swap'
     TRADING_API_VERSION = 5.0
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
@@ -89,7 +89,7 @@ class OneInchProviderV5(BaseProvider):
         **_,
     ) -> None:
         super().__init__(config=config, session=session, apm_client=apm_client)
-
+        self.api_key = self.config.ONE_INCH_API_KEY
         self.get_swap_price = cached(
             ttl=30, **get_cache_config(self.config), noself=True
         )(self.get_swap_price)
@@ -106,7 +106,6 @@ class OneInchProviderV5(BaseProvider):
             URL(f'https://{cls.LIMIT_ORDERS_DOMAIN}')
             / f'v{version}'
             / str(chain_id)
-            / 'limit-order'
             / path
             / endpoint
         )
@@ -140,6 +139,7 @@ class OneInchProviderV5(BaseProvider):
             timeout=self.REQUEST_TIMEOUT,
             ssl=ssl.SSLContext(),
             json=body,
+            headers={'Authorization': 'Bearer ' + self.api_key},
         ) as response:
             response: ClientResponse
             logger.debug(f'Request GET {response.url}')
