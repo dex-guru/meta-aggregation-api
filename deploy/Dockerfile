@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN pip install -U pip
 
-ADD ./requirements.txt /app/src/requirements.txt
+ADD ../requirements.txt /app/src/requirements.txt
 
 WORKDIR /app/src
 
@@ -18,6 +18,6 @@ RUN apt-get purge -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Copying actuall application
-COPY . /app/src/
+COPY ../ /app/src/
 
 CMD ["/usr/local/bin/python", "-m", "meta_aggregation_api"]
