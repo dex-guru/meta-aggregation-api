@@ -37,6 +37,16 @@
       "chain_id": 43114,
       "limit_order": null,
       "market_order": "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5"
+    },
+    {
+      "chain_id": 1101,
+      "limit_order": null,
+      "market_order": "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5"
+    },
+    {
+      "chain_id": 8453,
+      "limit_order": null,
+      "market_order": "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5"
     }
   ]
 }
