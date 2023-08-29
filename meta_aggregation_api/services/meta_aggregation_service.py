@@ -207,7 +207,7 @@ class MetaAggregationService:
 
         prices_tasks = []
         for provider in self.providers.values():
-            if provider is None:
+            if provider is None or chain_id not in provider:
                 continue
             provider_name = provider['name']
 

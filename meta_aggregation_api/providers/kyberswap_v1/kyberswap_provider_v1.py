@@ -36,6 +36,7 @@ CHAIN_ID_TO_NETWORK = {
     42161: 'arbitrum',
     43114: 'avalanche',
     250: 'fantom',
+    8453: 'base',
 }
 
 
