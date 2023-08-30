@@ -23,6 +23,7 @@ class ApmClient:
             'LOG_LEVEL': config.LOG_LEVEL,
             'ENVIRONMENT': config.ENVIRONMENT,
             'SERVICE_VERSION': config.VERSION,
+            'CAPTURE_BODY': 'all',
         }
         self.client = make_apm_client(apm_config)
         return self.client
