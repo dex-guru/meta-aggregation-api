@@ -143,7 +143,8 @@ class OneInchProviderV5(BaseProvider):
         ) as response:
             response: ClientResponse
             logger.debug(f'Request GET {response.url}')
-            data = await response.json()
+            data = await response.read()
+            data = ujson.loads(data)
             try:
                 response.raise_for_status()
             except ClientResponseError as e:
