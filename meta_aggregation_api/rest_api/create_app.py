@@ -176,7 +176,11 @@ def create_app(config: Config):
     @app.exception_handler(AuthJWTException)
     def authjwt_exception_handler(request: Request, exc: AuthJWTException):
         request.app.apm_client.client.capture_exception()
-        logger.error('JWT error', exc, extra={'request': request})
+        logger.error('JWT error', exc, extra={
+            'request': request,
+            'jwt': request.headers.get('Authorization'),
+            'path': request.url.path,
+        })
         return JSONResponse(
             status_code=exc.status_code, content={"detail": exc.message}
         )
