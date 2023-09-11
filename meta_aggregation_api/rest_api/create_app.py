@@ -48,6 +48,7 @@ def create_app(config: Config):
 
     # Setup and register dependencies.
     apm_client = ApmClient(config)
+    app.apm_client = apm_client
     aiohttp_session = aiohttp.ClientSession(
         trust_env=True,
         headers={'x-sys-key': config.X_SYS_KEY},
@@ -137,7 +138,7 @@ def create_app(config: Config):
     register_route(app)
     register_route_logging(app)
     if config.APM_ENABLED:
-        register_elastic_apm(app, ApmClient(config))
+        register_elastic_apm(app, apm_client)
 
     # Common RFC 5741 Exceptions handling, https://tools.ietf.org/html/rfc5741#section-2
     @app.exception_handler(Exception)
@@ -150,6 +151,7 @@ def create_app(config: Config):
         }
         pretty_exc = InternalError('code', exc)
         logger.error(pretty_exc.to_log_args(), extra=pretty_exc.to_dict())
+        request.app.apm_client.client.capture_exception()
         return JSONResponse(exception_dict, status_code=500)
 
     @app.exception_handler(pydantic.error_wrappers.ValidationError)
@@ -159,16 +161,22 @@ def create_app(config: Config):
         """
         Handles validation errors.
         """
+        request.app.apm_client.client.capture_exception()
+        logger.error(exc.errors())
         return JSONResponse({"message": exc.errors()}, status_code=422)
 
     @app.exception_handler(BaseAggregationProviderError)
     async def handle_aggregation_provider_error(
         request: Request, exc: BaseAggregationProviderError
     ):
+        request.app.apm_client.client.capture_exception()
+        logger.error(exc.to_log_args(), extra=exc.to_dict())
         return exc.to_http_exception()
 
     @app.exception_handler(AuthJWTException)
     def authjwt_exception_handler(request: Request, exc: AuthJWTException):
+        request.app.apm_client.client.capture_exception()
+        logger.error('JWT error', exc, extra={'request': request})
         return JSONResponse(
             status_code=exc.status_code, content={"detail": exc.message}
         )
