@@ -24,7 +24,8 @@ from meta_aggregation_api.rest_api.routes.limit_orders import limit_orders
 from meta_aggregation_api.rest_api.routes.rpc import v1_rpc
 from meta_aggregation_api.rest_api.routes.swap import swap_route
 from meta_aggregation_api.rest_api.routes.crosschain_swap import crosschain_swap_route
-from meta_aggregation_api.utils.errors import BaseAggregationProviderError
+from meta_aggregation_api.utils.errors import (BaseAggregationProviderError,
+                                               InternalError)
 from meta_aggregation_api.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -147,11 +148,8 @@ def create_app(config: Config):
             "instance": f"{config.SERVER_HOST}{request.url.path}",
             "detail": f"{exc.__class__.__name__} at {str(exc)} when executing {request.method} request",
         }
-        logger.error(
-            "Exception when %s: %s",
-            exception_dict["instance"],
-            exception_dict["detail"],
-        )
+        pretty_exc = InternalError('code', exc)
+        logger.error(pretty_exc.to_log_args(), extra=pretty_exc.to_dict())
         return JSONResponse(exception_dict, status_code=500)
 
     @app.exception_handler(pydantic.error_wrappers.ValidationError)

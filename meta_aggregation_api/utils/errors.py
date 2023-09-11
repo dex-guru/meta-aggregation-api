@@ -148,6 +148,12 @@ class SpenderAddressNotFound(OurMistakes, BaseAggregationProviderError):
     msg_to_log = 'Spender address not found'
 
 
+class InternalError(OurMistakes, BaseAggregationProviderError):
+    """Internal error"""
+
+    msg_to_log = 'Internal error'
+
+
 responses = {
     UserMistakes.code: {
         'description': 'One of the following errors:<br><br>%s<br>%s<br>%s<br>%s<br>'
