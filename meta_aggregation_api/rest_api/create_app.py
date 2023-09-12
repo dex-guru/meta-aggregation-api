@@ -174,7 +174,7 @@ def create_app(config: Config):
     @app.exception_handler(AuthJWTException)
     def authjwt_exception_handler(request: Request, exc: AuthJWTException):
         kwargs = {
-            'jwt': request.headers.get('Authorization', b'no jwt').decode('utf-8'),
+            'jwt': request.headers.get('Authorization', 'no_jwt'),
             'path': request.url.path,
         }
         pretty_exc = InternalError('code', exc.message, **kwargs)
