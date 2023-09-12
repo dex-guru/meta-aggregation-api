@@ -247,7 +247,7 @@ class MetaAggregationService:
                     'providers': list(prices.keys()),
                 },
             )
-            raise ValueError('No prices found')
+            return []
         approve_costs = await approve_costs
         native_decimals, buy_token_decimals = await get_decimals_task
         buy_token_price = await get_buy_token_price_task

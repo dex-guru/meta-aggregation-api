@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Path, Query
+from fastapi import APIRouter, Depends, Path, Query, HTTPException
 from fastapi.security import HTTPBearer
 from pydantic import conint
 
@@ -72,9 +72,19 @@ async def get_swap_price(
         res = await meta_aggregation_service.get_provider_price(
             provider=provider, **params
         )
+        if not res:
+            raise HTTPException(
+                status_code=404,
+                detail='No prices found',
+            )
         return res
     else:
         res = await meta_aggregation_service.get_swap_meta_price(**params)
+    if not res:
+        raise HTTPException(
+            status_code=404,
+            detail='No prices found',
+        )
     return next((quote for quote in res if quote.is_best), None)
 
 
@@ -128,6 +138,11 @@ async def get_all_swap_prices(
         fee_recipient=fee_recipient,
         buy_token_percentage_fee=buy_token_percentage_fee,
     )
+    if not res:
+        raise HTTPException(
+            status_code=404,
+            detail='No prices found',
+        )
     return res
 
 

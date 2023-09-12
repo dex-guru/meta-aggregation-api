@@ -150,8 +150,7 @@ async def test_get_swap_meta_price_no_price(
     test_str = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
     test_str_2 = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
     test_int = 10
-    with pytest.raises(ValueError, match='No prices found'):
-        await meta_agg_service.get_swap_meta_price(
+    res = await meta_agg_service.get_swap_meta_price(
             test_str,
             test_str_2,
             test_int,
@@ -162,6 +161,7 @@ async def test_get_swap_meta_price_no_price(
             test_str,
             None,
         )
+    assert res == []
 
 
 @pytest.mark.asyncio()

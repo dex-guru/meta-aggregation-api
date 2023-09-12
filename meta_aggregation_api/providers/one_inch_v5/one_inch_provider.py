@@ -144,6 +144,8 @@ class OneInchProviderV5(BaseProvider):
             response: ClientResponse
             logger.debug(f'Request GET {response.url}')
             data = await response.read()
+            if not data:
+                return {}
             data = ujson.loads(data)
             try:
                 response.raise_for_status()
