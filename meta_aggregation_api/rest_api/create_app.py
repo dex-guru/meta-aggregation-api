@@ -180,7 +180,7 @@ def create_app(config: Config):
         pretty_exc = InternalError('code', exc.message, **kwargs)
         logger.error(pretty_exc.to_log_args(), extra=pretty_exc.to_dict())
         request.app.apm_client.client.capture_exception(
-            (type(exc), exc.message, exc.__traceback__)
+            (type(exc), exc, exc.__traceback__)
         )
         return JSONResponse({"detail": exc.message}, status_code=exc.status_code)
 
