@@ -142,14 +142,14 @@ def create_app(config: Config):
 
     # Common RFC 5741 Exceptions handling, https://tools.ietf.org/html/rfc5741#section-2
     @app.exception_handler(Exception)
-    async def http_exception_handler(request: Request, exc):
+    async def http_exception_handler(request: Request, exc: Exception):
         exception_dict = {
             "type": "Internal Server Error",
             "title": exc.__class__.__name__,
             "instance": f"{config.SERVER_HOST}{request.url.path}",
             "detail": f"{exc.__class__.__name__} at {str(exc)} when executing {request.method} request",
         }
-        pretty_exc = InternalError('code', exc)
+        pretty_exc = InternalError('code', exc.__traceback__)
         logger.error(pretty_exc.to_log_args(), extra=pretty_exc.to_dict())
         request.app.apm_client.client.capture_exception()
         return JSONResponse(exception_dict, status_code=500)
@@ -161,7 +161,6 @@ def create_app(config: Config):
         """
         Handles validation errors.
         """
-        request.app.apm_client.client.capture_exception()
         logger.error(exc.errors())
         return JSONResponse({"message": exc.errors()}, status_code=422)
 
@@ -169,21 +168,21 @@ def create_app(config: Config):
     async def handle_aggregation_provider_error(
         request: Request, exc: BaseAggregationProviderError
     ):
-        request.app.apm_client.client.capture_exception()
         logger.error(exc.to_log_args(), extra=exc.to_dict())
         return exc.to_http_exception()
 
     @app.exception_handler(AuthJWTException)
     def authjwt_exception_handler(request: Request, exc: AuthJWTException):
-        request.app.apm_client.client.capture_exception()
-        logger.error('JWT error', exc, extra={
-            'request': request,
-            'jwt': request.headers.get('Authorization'),
+        kwargs = {
+            'jwt': request.headers.get('Authorization', b'no jwt').decode('utf-8'),
             'path': request.url.path,
-        })
-        return JSONResponse(
-            status_code=exc.status_code, content={"detail": exc.message}
+        }
+        pretty_exc = InternalError('code', exc.message, **kwargs)
+        logger.error(pretty_exc.to_log_args(), extra=pretty_exc.to_dict())
+        request.app.apm_client.client.capture_exception(
+            (type(exc), exc.message, exc.__traceback__)
         )
+        return JSONResponse({"detail": exc.message}, status_code=exc.status_code)
 
     @app.on_event("startup")
     async def startup_event():
