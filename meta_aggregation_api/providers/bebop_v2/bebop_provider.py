@@ -131,7 +131,7 @@ class BebopProviderV2(BaseProvider):
         Docs: https://api.bebop.xyz/docs#/v2/v2_quote_v2_quote_get
 
         Examples:
-            - https://api.bebop.xyz/ethereum/v2/quote?buy_tokens=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&sell_tokens=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&sell_amounts=1000000000000000000&taker_address=0x0000000000000000000000000000000000000001&approval_type=Standard&skip_validation=true&gasless=false
+            - https://api.bebop.xyz/ethereum/v2/quote?buy_tokens=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&sell_tokens=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell_amounts=100000000&taker_address=0x0000000000000000000000000000000000000001&approval_type=Standard&skip_validation=true&gasless=false
         """
         url = self._api_path_builder(chain_id=chain_id, endpoint="quote")
         params = {
