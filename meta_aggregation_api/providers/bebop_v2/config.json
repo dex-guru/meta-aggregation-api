@@ -1,0 +1,22 @@
+{
+    "name": "bebop",
+    "display_name": "Bebop",
+    "enabled": true,
+    "spenders": [
+      {
+        "chain_id": 1,
+        "limit_order": null,
+        "market_order": "0xBeB09000fa59627dc02Bb55448AC1893EAa501A5"
+      },
+      {
+        "chain_id": 137,
+        "limit_order": null,
+        "market_order": "0xBeB09000fa59627dc02Bb55448AC1893EAa501A5"
+      },
+      {
+        "chain_id": 42161,
+        "limit_order": null,
+        "market_order": "0xBeB09000fa59627dc02Bb55448AC1893EAa501A5"
+      }
+    ]
+  }
