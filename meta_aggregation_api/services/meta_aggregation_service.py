@@ -172,8 +172,6 @@ class MetaAggregationService:
                 is_allowed:bool: The user has enough allowance for the swap on this provider
                 is_best:bool: The best price_response for the swap
 
-        Raises:
-            ValueError: If not found any possible swap for the given parameters on all providers
         """
         spender_addresses = self.providers.get_providers_on_chain(chain_id)[
             'market_order'
