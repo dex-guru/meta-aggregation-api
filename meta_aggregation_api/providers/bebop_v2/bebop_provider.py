@@ -14,6 +14,7 @@ from meta_aggregation_api.utils.logger import get_logger
 from meta_aggregation_api.config import Config
 from meta_aggregation_api.clients.apm_client import ApmClient
 from meta_aggregation_api.services.chains import ChainsConfig
+from web3 import Web3
 
 from meta_aggregation_api.utils.errors import (
     BaseAggregationProviderError,
@@ -73,7 +74,7 @@ class BebopError(BaseModel):
 class BebopProviderV2(BaseProvider):
     """Docs: https://docs.bebop.xyz"""
 
-    BASE_URL: yarl.URL = yarl.URL("api.bebop.xyz")
+    BASE_URL: yarl.URL = yarl.URL("https://api.bebop.xyz")
     TRADING_API_VERSION: int = 2
 
     with open(Path(__file__).parent / "config.json") as f:
@@ -89,20 +90,26 @@ class BebopProviderV2(BaseProvider):
         super().__init__(session=session, config=config, apm_client=apm_client)
         self.chains = chains
 
-    def _api_path_builder(self, chain_id: int, endpoint: str) -> str:
+    def _api_path_builder(self, chain_id: int, endpoint: str) -> yarl.URL:
         network = (
-            ""
+            "ethereum"
             if not chain_id or chain_id == self.chains.eth.chain_id
-            else f"{self.chains.get_chain_by_id(chain_id).name}."
+            else f"{self.chains.get_chain_by_id(chain_id).name}"
         )
-        return f"{self.BASE_URL}/{network}/v{self.TRADING_API_VERSION}/{endpoint}"
+        return self.BASE_URL / network / f'v{self.TRADING_API_VERSION}' / endpoint
 
     async def _get_response(self, url: str, params: dict | None = None) -> dict:
         async with self.aiohttp_session.get(
             url, params=params, timeout=self.REQUEST_TIMEOUT, ssl=ssl.SSLContext()
         ) as response:
             logger.debug(f"Request GET {response.url}")
-            data: dict = await response.json()
+            data = await response.read()
+            if not data:
+                return {}
+            try:
+                data = ujson.loads(data)
+            except ValueError:
+                data = {"message": data.decode("utf-8")}
             try:
                 response.raise_for_status()
             except aiohttp.ClientResponseError as e:
@@ -135,22 +142,22 @@ class BebopProviderV2(BaseProvider):
         """
         url = self._api_path_builder(chain_id=chain_id, endpoint="quote")
         params = {
-            "sell_tokens": sell_token,
-            "buy_tokens": buy_token,
+            "sell_tokens": Web3.toChecksumAddress(sell_token),
+            "buy_tokens": Web3.toChecksumAddress(buy_token),
             "sell_amounts": sell_amount,
-            "buy_amounts": None,
             "source": self.config.PARTNER,
-            "taker_address": taker_address
+            "taker_address": Web3.toChecksumAddress(taker_address)
             or "0x0000000000000000000000000000000000000001",
             "approval_type": "Standard",
-            "gasless": False,
-            "skip_validation": skip_validation,
+            "gasless": 0,
+            "skip_validation": int(skip_validation),
         }
 
         try:
-            response = await self._get_response(url=url, params=params)
-        except Exception:
-            raise self.handle_exception(exception=Exception(response))
+            response = await self._get_response(url=str(url), params=params)
+        except Exception as e:
+            self.handle_exception(exception=e, **params)
+            raise e
 
         logger.info(f"Bebop response: {response}")
         return response
@@ -236,14 +243,14 @@ class BebopProviderV2(BaseProvider):
                 buy_amount=next(iter(response["buyTokens"].values()))["amount"],
                 gas_price=response["tx"]["gasPrice"],
                 gas=response["tx"]["gas"],
-                price=next(iter(response["sellTokens"].values()))["rate"],
+                price=next(iter(response["sellTokens"].values()))["price"],
                 provider=self.PROVIDER_NAME,
                 sell_amount=next(iter(response["sellTokens"].values()))["amount"],
                 sources=sources,
                 value=response["tx"]["value"],
             )
-        except Exception:
-            raise self.handle_exception(Exception(response))
+        except Exception as e:
+            raise self.handle_exception(e)
         else:
             return prepared_response
 
@@ -262,13 +269,15 @@ class BebopProviderV2(BaseProvider):
             }
         }
         """
-        msg: dict = exception.args[0]
+        msg: dict = getattr(exception, 'message', '')
 
         if "error" not in msg:
             if exc := super().handle_exception(exception, **kwargs):
                 exc = exc
             else:
-                exc = AggregationProviderError
+                exc = AggregationProviderError(
+                    self.PROVIDER_NAME, str(exception), **kwargs
+                )
             logger.error(*exc.to_log_args(), extra=exc.to_dict())
             return exc
 
