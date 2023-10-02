@@ -210,7 +210,7 @@ class BebopProviderV2(BaseProvider):
     def convert_sources_for_meta_aggregation(
         sources: dict | list[dict] | None = None,
     ) -> list[SwapSources]:
-        return []
+        return [SwapSources(name="bebop", proportion=100)]
 
     def _convert_response_from_swap_quote(
         self,
