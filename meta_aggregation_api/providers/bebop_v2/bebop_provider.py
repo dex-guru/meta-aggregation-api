@@ -112,7 +112,7 @@ class BebopProviderV2(BaseProvider):
                 raise Exception(data.decode("utf-8"))
             # Handle status 200 error response
             if data_json.get("error"):
-                raise Exception(data)
+                raise Exception(data_json)
             try:
                 response.raise_for_status()
             except aiohttp.ClientResponseError as e:
