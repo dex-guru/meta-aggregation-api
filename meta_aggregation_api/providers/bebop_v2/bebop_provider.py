@@ -96,7 +96,7 @@ class BebopProviderV2(BaseProvider):
             if not chain_id or chain_id == self.chains.eth.chain_id
             else f"{self.chains.get_chain_by_id(chain_id).name}"
         )
-        return self.BASE_URL / network / f'v{self.TRADING_API_VERSION}' / endpoint
+        return self.BASE_URL / network / f"v{self.TRADING_API_VERSION}" / endpoint
 
     async def _get_response(self, url: str, params: dict | None = None) -> dict:
         async with self.aiohttp_session.get(
@@ -107,14 +107,17 @@ class BebopProviderV2(BaseProvider):
             if not data:
                 return {}
             try:
-                data = ujson.loads(data)
+                data_json: dict = ujson.loads(data)
             except ValueError:
-                data = {"message": data.decode("utf-8")}
+                raise Exception(data.decode("utf-8"))
+            # Handle status 200 error response
+            if data_json.get("error"):
+                raise Exception(data)
             try:
                 response.raise_for_status()
             except aiohttp.ClientResponseError as e:
                 status = 500 if e.status not in range(100, 600) else e.status
-                data["source"] = "Bebop API Proxy"
+                data_json["source"] = "Bebop API Proxy"
                 raise aiohttp.ClientResponseError(
                     request_info=e.request_info,
                     history=e.history,
@@ -123,7 +126,7 @@ class BebopProviderV2(BaseProvider):
                     headers=e.headers,
                 )
 
-        return data
+        return data_json
 
     async def __get_price(
         self,
@@ -142,12 +145,13 @@ class BebopProviderV2(BaseProvider):
         """
         url = self._api_path_builder(chain_id=chain_id, endpoint="quote")
         params = {
-            "sell_tokens": Web3.toChecksumAddress(sell_token),
-            "buy_tokens": Web3.toChecksumAddress(buy_token),
+            "sell_tokens": Web3.to_checksum_address(sell_token),
+            "buy_tokens": Web3.to_checksum_address(buy_token),
             "sell_amounts": sell_amount,
             "source": self.config.PARTNER,
-            "taker_address": Web3.toChecksumAddress(taker_address)
-            or "0x0000000000000000000000000000000000000001",
+            "taker_address": Web3.to_checksum_address(taker_address)
+            if taker_address
+            else "0x0000000000000000000000000000000000000001",
             "approval_type": "Standard",
             "gasless": 0,
             "skip_validation": int(skip_validation),
@@ -229,8 +233,8 @@ class BebopProviderV2(BaseProvider):
                 to=response["tx"]["to"],
                 value=response["tx"]["value"],
             )
-        except Exception:
-            raise self.handle_exception(Exception(response))
+        except Exception as e:
+            raise self.handle_exception(e)
         return prepared_response
 
     def _convert_response_from_swap_price(
@@ -269,7 +273,7 @@ class BebopProviderV2(BaseProvider):
             }
         }
         """
-        msg: dict = getattr(exception, 'message', '')
+        msg: dict = exception.args[0]
 
         if "error" not in msg:
             if exc := super().handle_exception(exception, **kwargs):
