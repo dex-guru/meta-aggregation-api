@@ -145,11 +145,11 @@ class BebopProviderV2(BaseProvider):
         """
         url = self._api_path_builder(chain_id=chain_id, endpoint="quote")
         params = {
-            "sell_tokens": Web3.to_checksum_address(sell_token),
-            "buy_tokens": Web3.to_checksum_address(buy_token),
+            "sell_tokens": Web3.toChecksumAddress(sell_token),
+            "buy_tokens": Web3.toChecksumAddress(buy_token),
             "sell_amounts": sell_amount,
             "source": self.config.PARTNER,
-            "taker_address": Web3.to_checksum_address(taker_address)
+            "taker_address": Web3.toChecksumAddress(taker_address)
             if taker_address
             else "0x0000000000000000000000000000000000000001",
             "approval_type": "Standard",
