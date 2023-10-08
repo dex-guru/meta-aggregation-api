@@ -227,7 +227,7 @@ class BebopProviderV2(BaseProvider):
                 data=response["tx"]["data"],
                 gas_price=response["tx"]["gasPrice"],
                 gas=response["tx"]["gas"],
-                price=next(iter(response["sellTokens"].values()))["rate"],
+                price=next(iter(response["sellTokens"].values()))["price"],
                 sell_amount=next(iter(response["sellTokens"].values()))["amount"],
                 sources=sources,
                 to=response["tx"]["to"],
