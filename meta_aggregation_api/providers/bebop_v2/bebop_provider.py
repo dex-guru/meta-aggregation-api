@@ -244,10 +244,10 @@ class BebopProviderV2(BaseProvider):
             sources = self.convert_sources_for_meta_aggregation()
             prepared_response = ProviderPriceResponse(
                 allowance_target=response["tx"]["to"],
-                buy_amount=next(iter(response["buyTokens"].values()))["amount"],
+                buy_amount=next(iter(response["buyTokens"].values()))["amountBeforeFee"],
                 gas_price=response["tx"]["gasPrice"],
                 gas=response["tx"]["gas"],
-                price=next(iter(response["sellTokens"].values()))["price"],
+                price=next(iter(response["sellTokens"].values()))["priceBeforeFee"],
                 provider=self.PROVIDER_NAME,
                 sell_amount=next(iter(response["sellTokens"].values()))["amount"],
                 sources=sources,
