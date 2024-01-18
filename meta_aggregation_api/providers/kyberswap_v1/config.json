@@ -1,7 +1,7 @@
 {
   "name": "kyberswap",
   "display_name": "KyberSwap",
-  "enabled": false,
+  "enabled": true,
   "spenders": [
     {
       "chain_id": 1,
