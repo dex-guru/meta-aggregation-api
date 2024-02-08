@@ -16,6 +16,7 @@ from meta_aggregation_api.providers.kyberswap_v1 import KyberSwapProviderV1
 from meta_aggregation_api.providers.one_inch_v5 import OneInchProviderV5
 from meta_aggregation_api.providers.openocean_v2 import OpenOceanProviderV2
 from meta_aggregation_api.providers.paraswap_v5 import ParaSwapProviderV5
+from meta_aggregation_api.providers.sifi_v1 import SifiProviderV1
 from meta_aggregation_api.providers.zerox_v1 import ZeroXProviderV1
 from meta_aggregation_api.rest_api import dependencies
 from meta_aggregation_api.rest_api.middlewares import RouteLoggerMiddleware
@@ -102,7 +103,12 @@ def create_app(config: Config):
             session=aiohttp_session,
             apm_client=apm_client,
             chains=chains,
-        )
+        ),
+        SifiProviderV1(
+            config=config,
+            session=aiohttp_session,
+            apm_client=apm_client,
+        ),
     )
     crosschain_provider_registry = ProviderRegistry(
         DebridgeDlnProviderV1(
