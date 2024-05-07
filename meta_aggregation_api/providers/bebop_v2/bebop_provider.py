@@ -89,6 +89,7 @@ class BebopProviderV2(BaseProvider):
     ):
         super().__init__(session=session, config=config, apm_client=apm_client)
         self.chains = chains
+        self.api_key = self.config.BEBOP_API_KEY
 
     def _api_path_builder(self, chain_id: int, endpoint: str) -> yarl.URL:
         network = (
@@ -99,8 +100,11 @@ class BebopProviderV2(BaseProvider):
         return self.BASE_URL / network / f"v{self.TRADING_API_VERSION}" / endpoint
 
     async def _get_response(self, url: str, params: dict | None = None) -> dict:
+        headers = {
+            "source-auth": self.api_key
+        }
         async with self.aiohttp_session.get(
-            url, params=params, timeout=self.REQUEST_TIMEOUT, ssl=ssl.SSLContext()
+            url, params=params, timeout=self.REQUEST_TIMEOUT, headers=headers, ssl=ssl.SSLContext()
         ) as response:
             logger.debug(f"Request GET {response.url}")
             data = await response.read()
