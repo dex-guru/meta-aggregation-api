@@ -26,6 +26,7 @@ class Config(APMConfig, LoggerConfig, AuthConfig, CacheConfig, BaseSettings):
     PARTNER: str = 'dex.guru'
     X_SYS_KEY: str = ''
     ONE_INCH_API_KEY: str = ''
+    BEBOP_API_KEY: str = ''
 
     def get_web3_url(self, chain_id: int):
         return urljoin(self.PUBLIC_API_DOMAIN, f'{chain_id}/{self.PUBLIC_KEY}')
