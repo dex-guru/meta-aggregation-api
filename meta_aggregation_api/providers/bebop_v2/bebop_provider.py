@@ -101,17 +101,19 @@ class BebopProviderV2(BaseProvider):
 
     async def _get_response(self, url: str, params: dict | None = None) -> dict:
         headers = {
-            "source-auth": self.api_key
+            "Source-Auth": self.api_key
         }
         async with self.aiohttp_session.get(
             url, params=params, timeout=self.REQUEST_TIMEOUT, headers=headers, ssl=ssl.SSLContext()
         ) as response:
             logger.debug(f"Request GET {response.url}")
+            logger.debug(f"Request headers {response.request_info.headers}")
             data = await response.read()
             if not data:
                 return {}
             try:
                 data_json: dict = ujson.loads(data)
+                logger.debug("Response Body {data_json}")
             except ValueError:
                 raise Exception(data.decode("utf-8"))
             # Handle status 200 error response
