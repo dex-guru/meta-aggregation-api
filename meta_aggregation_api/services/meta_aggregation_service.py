@@ -216,15 +216,20 @@ class MetaAggregationService:
                 continue
             src_decimals, dest_decimals = 0, 0
             if provider_name == 'paraswap':
-                src_inv, dest_inv = await asyncio.gather(
-                    self.guru_sdk.get_token_inventory_by_address(
+                if sell_token == self.config.NATIVE_TOKEN_ADDRESS:
+                    src_decimals = self.chains.get_chain_by_id(chain_id).native_token.decimals
+                else:
+                    src_inv = await self.guru_sdk.get_token_inventory_by_address(
                         chain_id, sell_token
-                    ),
-                    self.guru_sdk.get_token_inventory_by_address(
+                    )
+                    src_decimals = src_inv.decimals
+                if buy_token == self.config.NATIVE_TOKEN_ADDRESS:
+                    dest_decimals = self.chains.get_chain_by_id(chain_id).native_token.decimals
+                else:
+                    dest_inv = await self.guru_sdk.get_token_inventory_by_address(
                         chain_id, buy_token
                     )
-                )
-                src_decimals, dest_decimals = src_inv.decimals, dest_inv.decimals
+                    dest_decimals = dest_inv.decimals
 
             prices_tasks.append(
                 asyncio.create_task(
@@ -504,15 +509,23 @@ class MetaAggregationService:
             raise ProviderNotFound(provider)
         src_decimals, dest_decimals = 0, 0
         if provider == 'paraswap':
-            src_inventory, dest_inventory = await asyncio.gather(
-                self.guru_sdk.get_token_inventory_by_address(
+            if sell_token == self.config.NATIVE_TOKEN_ADDRESS:
+                src_decimals = self.chains.get_chain_by_id(
+                    chain_id).native_token.decimals
+            else:
+                src_inv = await self.guru_sdk.get_token_inventory_by_address(
                     chain_id, sell_token
-                ),
-                self.guru_sdk.get_token_inventory_by_address(
+                )
+                src_decimals = src_inv.decimals
+            if buy_token == self.config.NATIVE_TOKEN_ADDRESS:
+                dest_decimals = self.chains.get_chain_by_id(
+                    chain_id).native_token.decimals
+            else:
+                dest_inv = await self.guru_sdk.get_token_inventory_by_address(
                     chain_id, buy_token
                 )
-            )
-            src_decimals, dest_decimals = src_inventory.decimals, dest_inventory.decimals
+                dest_decimals = dest_inv.decimals
+
         spender_address = next(
             (
                 spender['address']
