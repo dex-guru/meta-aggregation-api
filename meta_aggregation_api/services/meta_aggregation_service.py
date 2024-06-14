@@ -50,6 +50,8 @@ class MetaAggregationService:
         self.chains = chains
         self.session = session
         self.apm_client = apm_client
+        self.guru_sdk = DexGuru(self.config.PUBLIC_KEY,
+                                domain=self.config.PUBLIC_API_DOMAIN)
 
         cached_ = partial(cached, **get_cache_config(config))
 
@@ -69,7 +71,7 @@ class MetaAggregationService:
     ) -> int:
         logger.debug('Getting allowance for token %s', token_address)
         if token_address == self.config.NATIVE_TOKEN_ADDRESS or not owner_address:
-            return 2**256 - 1
+            return 2 ** 256 - 1
         owner_address = Web3.toChecksumAddress(owner_address)
         spender_address = Web3.toChecksumAddress(spender_address)
         token_address = Web3.toChecksumAddress(token_address)
@@ -88,7 +90,7 @@ class MetaAggregationService:
         owner_address = Web3.toChecksumAddress(owner_address)
         spender_address = Web3.toChecksumAddress(spender_address)
         approve_cost = await erc20_contract.functions.approve(
-            spender_address, 2**256 - 1
+            spender_address, 2 ** 256 - 1
         ).estimate_gas({'from': owner_address})
         return approve_cost
 
@@ -212,6 +214,17 @@ class MetaAggregationService:
             provider_instance = self.provider_registry.get(provider_name)
             if not provider_instance:
                 continue
+            src_decimals, dest_decimals = 0, 0
+            if provider_name == 'paraswap':
+                src_inv, dest_inv = await asyncio.gather(
+                    self.guru_sdk.get_token_inventory_by_address(
+                        chain_id, sell_token
+                    ),
+                    self.guru_sdk.get_token_inventory_by_address(
+                        chain_id, buy_token
+                    )
+                )
+                src_decimals, dest_decimals = src_inv.decimals, dest_inv.decimals
 
             prices_tasks.append(
                 asyncio.create_task(
@@ -225,6 +238,8 @@ class MetaAggregationService:
                         taker_address,
                         fee_recipient,
                         buy_token_percentage_fee,
+                        src_decimals=src_decimals,
+                        dest_decimals=dest_decimals,
                     )
                 )
             )
@@ -293,14 +308,13 @@ class MetaAggregationService:
         wrapped_native = self.chains.get_chain_by_id(chain_id).native_token
         native_decimals = wrapped_native.decimals
         buy_token = buy_token.lower()
-        guru_sdk = DexGuru(self.config.PUBLIC_KEY, domain=self.config.PUBLIC_API_DOMAIN)
         if (
             buy_token == self.config.NATIVE_TOKEN_ADDRESS
             or buy_token == wrapped_native.address
         ):
             buy_token_decimals = native_decimals
         else:
-            buy_token_inventory = await guru_sdk.get_token_inventory_by_address(
+            buy_token_inventory = await self.guru_sdk.get_token_inventory_by_address(
                 chain_id, buy_token
             )
             buy_token_decimals = buy_token_inventory.decimals
@@ -378,9 +392,9 @@ class MetaAggregationService:
             approve_gas_cost = Decimal(approve_costs[provider]) * Decimal(
                 price_response.gas_price
             )
-            sum_cost = (tx_gas_cost + approve_gas_cost) / Decimal(10**native_decimals)
+            sum_cost = (tx_gas_cost + approve_gas_cost) / Decimal(10 ** native_decimals)
             buy_token_amount = Decimal(price_response.buy_amount) / Decimal(
-                10**buy_token_decimals
+                10 ** buy_token_decimals
             )
             buy_token_in_native = buy_token_amount * buy_token_price
             profit = Decimal(buy_token_in_native) - Decimal(sum_cost)
@@ -486,9 +500,19 @@ class MetaAggregationService:
             Type[BaseAggregationProviderError]: check utils/errors.py to get all possible errors
         """
         provider_instance = self.provider_registry.get(provider)
-        if not provider:
+        if not provider_instance:
             raise ProviderNotFound(provider)
-
+        src_decimals, dest_decimals = 0, 0
+        if provider == 'paraswap':
+            src_inventory, dest_inventory = await asyncio.gather(
+                self.guru_sdk.get_token_inventory_by_address(
+                    chain_id, sell_token
+                ),
+                self.guru_sdk.get_token_inventory_by_address(
+                    chain_id, buy_token
+                )
+            )
+            src_decimals, dest_decimals = src_inventory.decimals, dest_inventory.decimals
         spender_address = next(
             (
                 spender['address']
@@ -531,6 +555,8 @@ class MetaAggregationService:
             taker_address=taker_address,
             fee_recipient=fee_recipient,
             buy_token_percentage_fee=buy_token_percentage_fee,
+            src_decimals=src_decimals,
+            dest_decimals=dest_decimals,
         )
         return MetaPriceModel(
             provider=provider,

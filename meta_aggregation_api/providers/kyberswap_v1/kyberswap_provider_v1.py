@@ -102,6 +102,7 @@ class KyberSwapProviderV1(BaseProvider):
         taker_address: Optional[str] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
+        **_,
     ) -> ProviderPriceResponse:
         response = await self._make_request(
             buy_token=buy_token,

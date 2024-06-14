@@ -183,6 +183,7 @@ class BebopProviderV2(BaseProvider):
         taker_address: str | None = None,
         fee_recipient: str | None = None,
         buy_token_percentage_fee: float | None = None,
+        **_,
     ) -> ProviderPriceResponse:
         response = await self.__get_price(
             buy_token=buy_token,

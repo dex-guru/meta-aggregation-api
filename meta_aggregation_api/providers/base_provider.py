@@ -77,6 +77,7 @@ class BaseProvider(ABC):
         taker_address: Optional[str] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
+        **kwargs,
     ) -> ProviderPriceResponse:
         """
         The get_swap_price function is used to find the best price for a swap from the provider.

@@ -273,6 +273,7 @@ class OneInchProviderV5(BaseProvider):
         taker_address: Optional[str] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
+        **_,
     ):
         path = 'quote'
         url = self._trading_api_path_builder(

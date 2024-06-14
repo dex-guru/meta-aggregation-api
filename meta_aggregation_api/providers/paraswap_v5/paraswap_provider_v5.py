@@ -113,6 +113,7 @@ class ParaSwapProviderV5(BaseProvider):
         taker_address: Optional[str] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
+        **kwargs,
     ):
         path = 'prices'
         params = {
@@ -123,6 +124,8 @@ class ParaSwapProviderV5(BaseProvider):
             'network': chain_id,
             'otherExchangePrices': 'false',
             'partner': self.config.PARTNER,
+            'srcDecimals': kwargs.get('src_decimals'),
+            'destDecimals': kwargs.get('dest_decimals'),
         }
 
         try:

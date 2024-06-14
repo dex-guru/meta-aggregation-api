@@ -279,6 +279,7 @@ class ZeroXProviderV1(BaseProvider):
         taker_address: Optional[str] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
+        **_,
     ) -> Optional[ProviderPriceResponse]:
         """
         Docs: https://0x.org/docs/api#get-swapv1price
