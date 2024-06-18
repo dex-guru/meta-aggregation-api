@@ -71,11 +71,11 @@ class BebopError(BaseModel):
         )
 
 
-class BebopProviderV2(BaseProvider):
+class BebopProviderV3(BaseProvider):
     """Docs: https://docs.bebop.xyz"""
 
-    BASE_URL: yarl.URL = yarl.URL("https://api.bebop.xyz")
-    TRADING_API_VERSION: int = 2
+    BASE_URL: yarl.URL = yarl.URL("https://api.bebop.xyz/pmm")
+    TRADING_API_VERSION: int = 3
 
     with open(Path(__file__).parent / "config.json") as f:
         PROVIDER_NAME = ujson.load(f)["name"]
@@ -92,11 +92,17 @@ class BebopProviderV2(BaseProvider):
         self.api_key = self.config.BEBOP_API_KEY
 
     def _api_path_builder(self, chain_id: int, endpoint: str) -> yarl.URL:
-        network = (
-            "ethereum"
-            if not chain_id or chain_id == self.chains.eth.chain_id
-            else f"{self.chains.get_chain_by_id(chain_id).name}"
-        )
+        match chain_id:
+            case None:
+                network = "ethereum"
+            case self.chains.eth.chain_id:
+                network = "ethereum"
+            case 167000:
+                network = "taiko"
+            case 81457:
+                network = "blast"
+            case _:
+                network = f"{self.chains.get_chain_by_id(chain_id).name}"
         return self.BASE_URL / network / f"v{self.TRADING_API_VERSION}" / endpoint
 
     async def _get_response(self, url: str, params: dict | None = None) -> dict:
@@ -144,10 +150,10 @@ class BebopProviderV2(BaseProvider):
         taker_address: str | None = None,
     ) -> dict:
         """
-        Docs: https://api.bebop.xyz/docs#/v2/v2_quote_v2_quote_get
+        Docs: https://api.bebop.xyz/pmm/ethereum/docs#/v3/v3_quote_v3_quote_get
 
         Examples:
-            - https://api.bebop.xyz/ethereum/v2/quote?buy_tokens=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&sell_tokens=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell_amounts=100000000&taker_address=0x0000000000000000000000000000000000000001&approval_type=Standard&skip_validation=true&gasless=false
+            - https://api.bebop.xyz/pmm/ethereum/v3/quote?buy_tokens=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&sell_tokens=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&sell_amounts=100000000&taker_address=0x0000000000000000000000000000000000000001&approval_type=Standard&skip_validation=true&gasless=false
         """
         url = self._api_path_builder(chain_id=chain_id, endpoint="quote")
         params = {
