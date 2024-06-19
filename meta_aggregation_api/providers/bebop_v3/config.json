@@ -1,0 +1,47 @@
+{
+  "name": "bebop",
+  "display_name": "Bebop",
+  "enabled": true,
+  "spenders": [
+    {
+      "chain_id": 1,
+      "limit_order": null,
+      "market_order": "0xbbbbbBB520d69a9775E85b458C58c648259FAD5F"
+    },
+    {
+      "chain_id": 137,
+      "limit_order": null,
+      "market_order": "0xbbbbbBB520d69a9775E85b458C58c648259FAD5F"
+    },
+    {
+      "chain_id": 42161,
+      "limit_order": null,
+      "market_order": "0xbbbbbBB520d69a9775E85b458C58c648259FAD5F"
+    },
+    {
+      "chain_id": 42161,
+      "limit_order": null,
+      "market_order": "0xbbbbbBB520d69a9775E85b458C58c648259FAD5F"
+    },
+    {
+      "chain_id": 8543,
+      "limit_order": null,
+      "market_order": "0xbbbbbBB520d69a9775E85b458C58c648259FAD5F"
+    },
+    {
+      "chain_id": 10,
+      "limit_order": null,
+      "market_order": "0xbbbbbBB520d69a9775E85b458C58c648259FAD5F"
+    },
+    {
+      "chain_id": 81457,
+      "limit_order": null,
+      "market_order": "0xbbbbbBB520d69a9775E85b458C58c648259FAD5F"
+    },
+    {
+      "chain_id": 167000,
+      "limit_order": null,
+      "market_order": "0xbbbbbBB520d69a9775E85b458C58c648259FAD5F"
+    }
+  ]
+}
