@@ -150,16 +150,16 @@ async def get_all_swap_prices(
     '/{chain_id}/quote',
     response_model=ProviderQuoteResponse,
     responses=responses,
-    dependencies=[Depends(HTTPBearer())],
+    # dependencies=[Depends(HTTPBearer())],
 )
 @swap_route.get(
     '/{chain_id}/quote/',
     response_model=ProviderQuoteResponse,
     include_in_schema=False,
-    dependencies=[Depends(HTTPBearer())],
+    # dependencies=[Depends(HTTPBearer())],
 )
 async def get_swap_quote(
-    authorize: AuthJWT = Depends(),
+    # authorize: AuthJWT = Depends(),
     buy_token: address_to_lower = Query(..., alias='buyToken'),
     sell_token: address_to_lower = Query(..., alias='sellToken'),
     sell_amount: conint(gt=0) = Query(..., alias='sellAmount'),
@@ -192,7 +192,7 @@ async def get_swap_quote(
     - **fee_recipient**: Address of the fee recipient (optional)
     - **buy_token_percentage_fee**: Percentage of the buy token fee (optional) (0.01 = 1%)
     """
-    authorize.jwt_required()
+    # authorize.jwt_required()
     quote = await meta_aggregation_service.get_meta_swap_quote(
         buy_token=buy_token,
         sell_token=sell_token,
