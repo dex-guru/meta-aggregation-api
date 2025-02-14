@@ -347,6 +347,7 @@ class OneInchProviderV5(BaseProvider):
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
         ignore_checks: bool = False,
+        **_,
     ) -> Optional[ProviderQuoteResponse]:
         """https://docs.1inch.io/docs/aggregation-protocol/api/swap-params"""
         if not chain_id:

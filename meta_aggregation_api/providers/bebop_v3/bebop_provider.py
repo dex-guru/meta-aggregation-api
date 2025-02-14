@@ -212,6 +212,7 @@ class BebopProviderV3(BaseProvider):
         slippage_percentage: float | None = 0,
         fee_recipient: str | None = None,
         buy_token_percentage_fee: float | None = None,
+        **_,
     ) -> ProviderQuoteResponse:
         response = await self.__get_price(
             buy_token=buy_token,

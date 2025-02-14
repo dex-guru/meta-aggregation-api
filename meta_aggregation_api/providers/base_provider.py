@@ -46,6 +46,7 @@ class BaseProvider(ABC):
         slippage_percentage: Optional[float] = None,
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
+        **kwargs,
     ) -> ProviderQuoteResponse:
         """
         The get_swap_quote function is used to get the data for a swap from the provider.

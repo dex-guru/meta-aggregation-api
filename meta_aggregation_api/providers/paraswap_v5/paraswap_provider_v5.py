@@ -68,8 +68,8 @@ class ParaSwapProviderV5(BaseProvider):
     Docs: https://developers.paraswap.network/api/master
     """
 
-    MAIN_API_URL: yarl.URL = yarl.URL('https://apiv5.paraswap.io/')
-
+    MAIN_API_URL: yarl.URL = yarl.URL('https://api.paraswap.io/')
+    VERSION = 6.2
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
 
@@ -126,6 +126,7 @@ class ParaSwapProviderV5(BaseProvider):
             'partner': self.config.PARTNER,
             'srcDecimals': kwargs.get('src_decimals'),
             'destDecimals': kwargs.get('dest_decimals'),
+            'version': self.VERSION,
         }
 
         try:
@@ -158,6 +159,7 @@ class ParaSwapProviderV5(BaseProvider):
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
         ignore_checks: bool = False,
+        **kwargs,
     ) -> Optional[ProviderQuoteResponse]:
         params = {
             'srcToken': sell_token,
@@ -167,6 +169,9 @@ class ParaSwapProviderV5(BaseProvider):
             'network': chain_id,
             'otherExchangePrices': 'false',
             'partner': self.config.PARTNER,
+            'version': self.VERSION,
+            'srcDecimals': kwargs.get('src_decimals'),
+            'destDecimals': kwargs.get('dest_decimals'),
         }
         if taker_address:
             params['userAddress'] = taker_address

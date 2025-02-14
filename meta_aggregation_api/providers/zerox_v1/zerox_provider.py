@@ -191,6 +191,7 @@ class ZeroXProviderV1(BaseProvider):
         fee_recipient: Optional[str] = None,
         buy_token_percentage_fee: Optional[float] = None,
         ignore_checks: bool = False,
+        **_,
     ) -> Optional[ProviderQuoteResponse]:
         """
         Docs: https://0x.org/docs/api#get-swapv1quote

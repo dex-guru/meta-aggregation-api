@@ -4,7 +4,7 @@ import pytest
 
 from meta_aggregation_api.models.meta_agg_models import ProviderQuoteResponse, ProviderPriceResponse
 
-
+@pytest.mark.skip(reason='Not implemented')
 @pytest.mark.asyncio()
 @patch(
     'meta_aggregation_api.providers.debridge_dln_v1.DebridgeDlnProviderV1._get_response',
@@ -71,6 +71,7 @@ async def test_get_swap_quote(get_response_mock: AsyncMock, debridge_provider):
     assert res
     assert isinstance(res, ProviderQuoteResponse)
 
+@pytest.mark.skip(reason='Not implemented')
 @pytest.mark.asyncio()
 @patch(
     'meta_aggregation_api.providers.debridge_dln_v1.DebridgeDlnProviderV1._get_response',

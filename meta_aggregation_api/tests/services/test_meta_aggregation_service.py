@@ -149,7 +149,7 @@ async def test_get_swap_meta_price_no_price(
     approve_patcher.start()
     test_str = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
     test_str_2 = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'
-    test_int = 10
+    test_int = 1
     res = await meta_agg_service.get_swap_meta_price(
             test_str,
             test_str_2,

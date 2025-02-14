@@ -449,7 +449,24 @@ class MetaAggregationService:
         provider = self.provider_registry.get(provider_name)
         if not provider:
             raise ProviderNotFound(provider)
-
+        src_decimals, dest_decimals = 0, 0
+        if provider_name == 'paraswap':
+            if sell_token == self.config.NATIVE_TOKEN_ADDRESS:
+                src_decimals = self.chains.get_chain_by_id(
+                    chain_id).native_token.decimals
+            else:
+                src_inv = await self.guru_sdk.get_token_inventory_by_address(
+                    chain_id, sell_token
+                )
+                src_decimals = src_inv.decimals
+            if buy_token == self.config.NATIVE_TOKEN_ADDRESS:
+                dest_decimals = self.chains.get_chain_by_id(
+                    chain_id).native_token.decimals
+            else:
+                dest_inv = await self.guru_sdk.get_token_inventory_by_address(
+                    chain_id, buy_token
+                )
+                dest_decimals = dest_inv.decimals
         quote = await provider.get_swap_quote(
             buy_token=buy_token,
             sell_token=sell_token,
@@ -460,6 +477,8 @@ class MetaAggregationService:
             taker_address=taker_address,
             fee_recipient=fee_recipient,
             buy_token_percentage_fee=buy_token_percentage_fee,
+            src_decimals=src_decimals,
+            dest_decimals=dest_decimals
         )
         return quote
 
