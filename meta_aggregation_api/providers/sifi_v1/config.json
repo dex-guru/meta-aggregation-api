@@ -1,0 +1,42 @@
+{
+  "name": "sifi",
+  "display_name": "Sifi",
+  "enabled": true,
+  "spenders": [
+    {
+      "chain_id": 1,
+      "limit_order": null,
+      "market_order": "0x65c49e9996a877d062085b71e1460ffbe3c4c5aa"
+    },
+    {
+      "chain_id": 10,
+      "limit_order": null,
+      "market_order": "0x65c49e9996a877d062085b71e1460ffbe3c4c5aa"
+    },
+    {
+      "chain_id": 56,
+      "limit_order": null,
+      "market_order": "0x65c49e9996a877d062085b71e1460ffbe3c4c5aa"
+    },
+    {
+      "chain_id": 137,
+      "limit_order": null,
+      "market_order": "0x65c49e9996a877d062085b71e1460ffbe3c4c5aa"
+    },
+    {
+      "chain_id": 42161,
+      "limit_order": null,
+      "market_order": "0x65c49e9996a877d062085b71e1460ffbe3c4c5aa"
+    },
+    {
+      "chain_id": 43114,
+      "limit_order": null,
+      "market_order": "0x65c49e9996a877d062085b71e1460ffbe3c4c5aa"
+    },
+    {
+      "chain_id": 8453,
+      "limit_order": null,
+      "market_order": "0x65c49e9996a877d062085b71e1460ffbe3c4c5aa"
+    }
+  ]
+}
