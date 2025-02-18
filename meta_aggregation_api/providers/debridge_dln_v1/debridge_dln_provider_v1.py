@@ -117,9 +117,11 @@ class DebridgeDlnProviderV1(CrossChainProvider):
             'srcChainTokenInAmount': sell_amount,
             'dstChainId': chain_id_to,
             'dstChainTokenOut': buy_token,
-            'affiliateFeePercent': affiliate_fee_percent,
             'prependOperatingExpenses': 'true',
         }
+        if affiliate_fee_percent:
+            params['affiliateFeePercent'] = affiliate_fee_percent
+
         try:
             response = await self._get_response(url, params)
         except (
@@ -164,13 +166,16 @@ class DebridgeDlnProviderV1(CrossChainProvider):
             'srcChainTokenInAmount': sell_amount,
             'dstChainId': chain_id_to,
             'dstChainTokenOut': buy_token,
-            'affiliateFeePercent': affiliate_fee_percent,
-            "affiliateFeeRecipient": fee_recipient,
             'dstChainTokenOutAmount': 'auto',
             'srcChainOrderAuthorityAddress': taker_address,
             'dstChainTokenOutRecipient': taker_address,
             'dstChainOrderAuthorityAddress': taker_address,
         }
+
+        if affiliate_fee_percent:
+            params['affiliateFeePercent'] = affiliate_fee_percent
+        if fee_recipient:
+            params['affiliateFeeRecipient'] = fee_recipient
 
         try:
             response = await self._get_response(url, params)
