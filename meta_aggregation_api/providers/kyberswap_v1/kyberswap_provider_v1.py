@@ -47,7 +47,8 @@ class KyberSwapProviderV1(BaseProvider):
 
     VERSION = '1'
     with open(Path(__file__).parent / 'config.json') as f:
-        PROVIDER_NAME = ujson.load(f)['name']
+        provider_config = ujson.load(f)
+        PROVIDER_NAME = provider_config['name']
 
     def __init__(
         self,
@@ -287,6 +288,7 @@ class KyberSwapProviderV1(BaseProvider):
                 gas_price=str(int(Decimal(response['gasPriceGwei']) * 10**9)),
                 value=value,
                 price=price,
+                allowance_target=response['routerAddress'],
             )
         except (KeyError, ValidationError) as e:
             e = self.handle_exception(e)

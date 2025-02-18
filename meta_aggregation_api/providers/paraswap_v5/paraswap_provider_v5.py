@@ -288,6 +288,7 @@ class ParaSwapProviderV5(BaseProvider):
                 gas_price='0',
                 value='0',
                 price=str(price),
+                allowance_target=price_response['tokenTransferProxy'],
             )
         except (KeyError, ValidationError) as e:
             e = self.handle_exception(
