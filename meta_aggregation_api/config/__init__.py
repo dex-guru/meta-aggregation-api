@@ -27,8 +27,11 @@ class Config(APMConfig, LoggerConfig, AuthConfig, CacheConfig, BaseSettings):
     X_SYS_KEY: str = ''
     ONE_INCH_API_KEY: str = ''
     BEBOP_API_KEY: str = ''
+    RPC_URL: HttpUrl = ''
 
     def get_web3_url(self, chain_id: int):
+        if self.RPC_URL:
+            return self.RPC_URL
         return urljoin(self.PUBLIC_API_DOMAIN, f'{chain_id}/{self.PUBLIC_KEY}')
 
     class Config:
