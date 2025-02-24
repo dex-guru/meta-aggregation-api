@@ -31,7 +31,8 @@ class Config(APMConfig, LoggerConfig, AuthConfig, CacheConfig, BaseSettings):
 
     def get_web3_url(self, chain_id: int):
         if self.RPC_URL:
-            return self.RPC_URL
+            return f'{self.RPC_URL}/{chain_id}'
+
         return urljoin(self.PUBLIC_API_DOMAIN, f'{chain_id}/{self.PUBLIC_KEY}')
 
     class Config:

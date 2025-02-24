@@ -19,7 +19,7 @@ def get_web3_url(chain_id: int, config: Config):
     please adjust to return correct web3 url for your setup if needed
     """
     if config.RPC_URL:
-        return urljoin(config.RPC_URL, f'{chain_id}')
+        return f'{config.RPC_URL}/{chain_id}'
     return urljoin(config.PUBLIC_API_DOMAIN, f'rpc/{chain_id}/{config.PUBLIC_KEY}')
 
 
