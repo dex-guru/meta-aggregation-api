@@ -27,6 +27,11 @@
             "chain_id": 43114,
             "limit_order": null,
             "market_order": null
+        },
+        {
+            "chain_id": 146,
+            "limit_order": null,
+            "market_order": null
         }
     ]
 }
