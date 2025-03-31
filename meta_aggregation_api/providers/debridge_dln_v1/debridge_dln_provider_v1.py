@@ -30,7 +30,9 @@ class DebridgeDlnProviderV1(CrossChainProvider):
 
     TRADING_API = os.environ.get('DEBRIDGE_TRADING_API', 'https://api.dln.trade/v1.0/dln/order')
     ORDER_API = os.environ.get('DEBRIDGE_ORDER_API', 'https://dln-api.debridge.finance/api')
-
+    CHAIN_TO_DLN_CHAIN_ID = {
+        100000014: 146,
+    }
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
 
@@ -112,10 +114,10 @@ class DebridgeDlnProviderV1(CrossChainProvider):
 
         url = '%s/quote' % (self.TRADING_API)
         params = {
-            'srcChainId': chain_id_from,
+            'srcChainId': self.CHAIN_TO_DLN_CHAIN_ID.get(chain_id_from, chain_id_from),
             'srcChainTokenIn': sell_token,
             'srcChainTokenInAmount': sell_amount,
-            'dstChainId': chain_id_to,
+            'dstChainId': self.CHAIN_TO_DLN_CHAIN_ID.get(chain_id_to, chain_id_to),
             'dstChainTokenOut': buy_token,
             'prependOperatingExpenses': 'true',
         }
@@ -161,10 +163,10 @@ class DebridgeDlnProviderV1(CrossChainProvider):
 
         url = '%s/create-tx' % (self.TRADING_API)
         params = {
-            'srcChainId': chain_id_from,
+            'srcChainId': self.CHAIN_TO_DLN_CHAIN_ID.get(chain_id_from, chain_id_from),
             'srcChainTokenIn': sell_token,
             'srcChainTokenInAmount': sell_amount,
-            'dstChainId': chain_id_to,
+            'dstChainId': self.CHAIN_TO_DLN_CHAIN_ID.get(chain_id_to, chain_id_to),
             'dstChainTokenOut': buy_token,
             'dstChainTokenOutAmount': 'auto',
             'srcChainOrderAuthorityAddress': taker_address,
