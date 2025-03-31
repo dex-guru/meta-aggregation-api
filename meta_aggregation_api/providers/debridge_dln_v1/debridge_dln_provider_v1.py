@@ -31,7 +31,7 @@ class DebridgeDlnProviderV1(CrossChainProvider):
     TRADING_API = os.environ.get('DEBRIDGE_TRADING_API', 'https://api.dln.trade/v1.0/dln/order')
     ORDER_API = os.environ.get('DEBRIDGE_ORDER_API', 'https://dln-api.debridge.finance/api')
     CHAIN_TO_DLN_CHAIN_ID = {
-        100000014: 146,
+        146: 100000014,
     }
     with open(Path(__file__).parent / 'config.json') as f:
         PROVIDER_NAME = ujson.load(f)['name']
