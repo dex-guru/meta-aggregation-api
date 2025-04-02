@@ -37,6 +37,7 @@ CHAIN_ID_TO_NETWORK = {
     43114: 'avalanche',
     250: 'fantom',
     8453: 'base',
+    146: 'sonic'
 }
 
 
